@@ -1,0 +1,13 @@
+--create table
+create table winner_chart (event_id int, 
+						  participant_name varchar(50),
+						  score float);
+        
+-- insert data into the table created						  
+insert into winner_chart(event_id, participant_name, score) 
+values (1,'A',8),
+		(1,'B',6),
+		(2,'C', 7),
+		(2,'D',8);
+
+  
