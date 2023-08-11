@@ -10,4 +10,7 @@ values (1,'A',8),
 		(2,'C', 7),
 		(2,'D',8);
 
+
+-- delete table
+DROP TABLE IF EXISTS table_name
   
