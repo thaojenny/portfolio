@@ -26,3 +26,16 @@ create temporary table table_name (
 
 -- or the second way
 create temp table table_name as ......;
+
+-- import csv file using syntax
+create table table_name	 ( product_id int,
+			category varchar (20),
+			animal varchar (20),
+			size varchar (20),
+			price float,
+			sales float, 
+			rating int, 
+			repeat_purchase bit
+							)
+copy table_name (product_id, category, animal, size, price, sales, rating, repeat_purchase) 
+from 'C:\Users\Administrator\Downloads\pet_supplies.csv' WITH CSV HEADER;
