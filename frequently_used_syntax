@@ -13,4 +13,16 @@ values (1,'A',8),
 
 -- delete table
 DROP TABLE IF EXISTS table_name
-  
+
+
+-- create a table CTE 
+with table_name as ( 
+                       )
+select...
+
+-- create a temporary table 
+create temporary table table_name (
+					);
+
+-- or the second way
+create temp table table_name as ......;
