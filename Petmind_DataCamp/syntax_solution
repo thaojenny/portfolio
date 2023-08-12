@@ -1,1 +1,15 @@
+-- Petmind is a retailer of products for pets. It sells products that are mix of luxury items and everyday items. Luxury items include toys. Everyday items include food
+-- The company wants to increase sales by selling more everyday products repeatedly. They have been testing this approach for the last year, they now want a report on how repeat purchases impact sales
 
+
+-- Q1: Wragle data as information given 
+
+--Q2: Create a visualization that shows how many products are repeat purchases. Indicate
+-- a. State which category of the variable repeat purchases has the most observations
+-- b. Explain whether the observations are balanced across categories of the variable repeat purchases
+
+
+-- Q3: Describe the distribution of all the sales.
+
+
+-- Q4: Describe the relationship between repeat purchases and sales.
