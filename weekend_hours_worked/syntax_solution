@@ -1,3 +1,17 @@
 --requirement: Return a list of employee ids and weekend hours worked, descending by hours worked
 
+--create a table which includes emp_id and hours worked of each date and emp_id
+with table1 as (
+select emp_id,
+		case when extract(minute from time_stamp ::timestamp) >= extract(minute from lag(time_stamp ::timestamp) over (partition by cast(time_stamp as date), emp_id order by time_stamp :: timestamp))
+				   then extract(hour from time_stamp ::timestamp)- extract(hour from lag(time_stamp :: timestamp) over (partition by cast(time_stamp as date), emp_id order by time_stamp :: timestamp))
+		else extract(hour from time_stamp ::timestamp)- extract(hour from lag(time_stamp :: timestamp) over (partition by cast(time_stamp as date), emp_id order by time_stamp :: timestamp)) -1
+		 end as hours
+from attendance)
+
+-- calculate total number of hours worked by each distinct employee id from above table created
+select emp_id, sum(hours) as total_hours_worked
+from table1
+group by emp_id
+order by total_hours_worked desc;
 
