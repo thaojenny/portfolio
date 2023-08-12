@@ -1,15 +1,40 @@
 -- Petmind is a retailer of products for pets. It sells products that are mix of luxury items and everyday items. Luxury items include toys. Everyday items include food
 -- The company wants to increase sales by selling more everyday products repeatedly. They have been testing this approach for the last year, they now want a report on how repeat purchases impact sales
 
-
--- Q1: Wragle data as information given 
+-- import data 
+create table public.petmind ( product_id int,
+						   category varchar (20),
+						   animal varchar (20),
+						   size varchar (20),
+						   price float,
+						   sales float, 
+						   rating int, 
+						   repeat_purchase bit
+							)
+copy public.petmind (product_id, category, animal, size, price, sales, rating, repeat_purchase) 
+from 'C:\Users\Administrator\Downloads\pet_supplies.csv' WITH CSV HEADER;
 
 --Q2: Create a visualization that shows how many products are repeat purchases. Indicate
 -- a. State which category of the variable repeat purchases has the most observations
 -- b. Explain whether the observations are balanced across categories of the variable repeat purchases
 
+select category, 
+        sum(repeat_purchase :: int) as sum_repeat_purchase
+from petmind
+group by category
+order by sum_repeat_purchase desc;
 
 -- Q3: Describe the distribution of all the sales.
 
+-- calculate mean and median of sales. Result: median > mean --> sales: skewed to right
+
+select avg(sales) as mean,
+		percentile_disc(0.5) within group (order by sales) as median
+from petmind;
+
+-- calculate mean and median of price.
+select avg(sales) as mean,
+		percentile_disc(0.5) within group (order by sales) as median
+from petmind;
 
 -- Q4: Describe the relationship between repeat purchases and sales.
