@@ -1,5 +1,13 @@
 --requirement: Return a list of employee ids and weekend hours worked, descending by hours worked
 
+
+-- take minute from time_stamp and lag(time_stamp) to check. Result: if minute from time_stamp < minute from lag(time_stamp) then -1 
+select emp_id,
+	extract(minute from time_stamp ::timestamp),
+	extract(minute from lag(time_stamp ::timestamp) over (partition by cast(time_stamp as date), emp_id order by time_stamp :: timestamp))
+from attendance
+
+
 --create a table which includes emp_id and hours worked of each date and emp_id
 with table1 as (
 select emp_id,
