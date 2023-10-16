@@ -36,6 +36,6 @@ create table table_name	 ( product_id int,
 			sales float, 
 			rating int, 
 			repeat_purchase bit
-							)
+							);
 copy table_name (product_id, category, animal, size, price, sales, rating, repeat_purchase) 
 from 'C:\Users\Administrator\Downloads\pet_supplies.csv' WITH CSV HEADER;
