@@ -1,0 +1,18 @@
+--import data from csv
+create table linkid ( 
+    customer varchar(20),
+    gift_name text,
+    quantity int,
+    sale_out_price int,
+    total int,
+    physical_gift_status varchar(50),
+    vendor varchar(20),
+    redeem_source varchar(50),
+    thang int,
+    cat_l2 text,
+    brand varchar(30),
+    diamond text
+);
+
+copy linkid (customer, gift_name, sale_out_price, total, physical_gift_status, vendor, redeem_source, thang, cat_l2, brand, diamond) 
+from 'C:\Users\Administrator\Downloads\2023BD.csv' WITH CSV HEADER;
