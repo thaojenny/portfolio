@@ -14,5 +14,46 @@ create table linkid (
     diamond text
 );
 
-copy linkid (customer, gift_name, sale_out_price, total, physical_gift_status, vendor, redeem_source, thang, cat_l2, brand, diamond) 
+copy linkid (customer, gift_name, quantity, sale_out_price, total, physical_gift_status, vendor, redeem_source, thang, cat_l2, brand, diamond) 
 from 'C:\Users\Administrator\Downloads\2023BD.csv' WITH CSV HEADER;
+
+select distinct customer, 
+			sum(total) as amount_spent_customer,
+			cat_l2
+from linkid
+group by cat_l2,customer
+order by amount_spent desc;
+
+--total amount spent, grouped by cat
+select cat_l2, 
+		sum(total) as amount_spent_cat
+from linkid
+group by cat_l2
+order by amount_spent desc;
+
+--total amount grouped by brand
+select brand, 
+		sum(total) as amount_spent_brand,
+		cat_l2
+from linkid
+group by brand, cat_l2
+order by amount_spent desc
+limit 10;
+
+--amount spent is grouped by thang
+select thang, 
+		sum(total) as amount_spent_month
+from linkid
+group by thang
+order by amount_spent_month desc;
+
+--why month 8 is highest?
+select brand,
+		sum(total) as amount_spent_cat
+from linkid
+where thang = '8'
+group by  brand
+order by amount_spent_cat desc;
+		
+
+
