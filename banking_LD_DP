@@ -35,3 +35,13 @@ from (
 					where [LoaiSp] ='Lending') as spdt
 					on ld.[Tên SP] = spdt.[TenSP]) as t1
 where Group_product is null or [Khoi] is null
+--mapping ld_104 product into group LD vs OD
+select [RPT_DATE],
+		[Tên SP],
+		case when [Tên SP] like N'%thấu chi%' or [Tên SP] like N'%thau chi%' then 'OD'
+					else 'LD' end [product_group],
+		[Khoi]
+from [10.1.123.130].[BI_DATA].[dbo].[LD_104] as ld
+left join [10.1.123.130].[MAPPING].[dbo].[SP_dacthu] as spdt
+on spdt.[TenSP] = ld.[Tên SP] ------results: there are some null values in [Khoi]
+
