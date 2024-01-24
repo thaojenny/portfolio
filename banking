@@ -1,3 +1,4 @@
+------------------------------------ 
 ------------mapping ten san pham LD
 SELECT [TenSP],
 	CASE WHEN [TenSP] like N'%thấu chi%' or [TenSP] LIKE N'%thau chi%' then 'OD'
@@ -45,3 +46,14 @@ from [10.1.123.130].[BI_DATA].[dbo].[LD_104] as ld
 left join [10.1.123.130].[MAPPING].[dbo].[SP_dacthu] as spdt
 on spdt.[TenSP] = ld.[Tên SP] ------results: there are some null values in [Khoi]
 
+----------------------------------------Báo cáo ngành FMCG------------------------------------------------------------
+------Update bảng mã ngành ---
+select format([Mã Ngành cấp 5 VISIC 2018],'00000','en-US') [Mã ngành C5 VISIC],
+		format([Mã ngành cấp 4 Visic 2018],'0000','en-US') [Mã ngành C4 VISIC],
+		[Cấp 4 (là Ngành cấp 5 VISIC 2018)],
+		[Cấp 3]
+      ,[Cấp 2]
+      ,[Cấp 1]
+      ,[Cấp 1_GSO]
+into [practice]..[Mã ngành VISIC]
+FROM [10.1.123.130].[CLKD].[dbo].[Bo_nganh_kinh_te_new]
