@@ -57,3 +57,7 @@ select format([Mã Ngành cấp 5 VISIC 2018],'00000','en-US') [Mã ngành C5 VI
       ,[Cấp 1_GSO]
 into [practice]..[Mã ngành VISIC]
 FROM [10.1.123.130].[CLKD].[dbo].[Bo_nganh_kinh_te_new]
+
+------chỉnh format----
+case when len([MaNganhC5_Chinh]) =3 then replace(format([MaNganhC5_Chinh],'0000.0', 'en-US'),'.','')
+			else format([MaNganhC5_Chinh],'00000','en-US') end [Mã ngành C5]
