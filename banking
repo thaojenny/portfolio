@@ -46,7 +46,7 @@ from [10.1.123.130].[BI_DATA].[dbo].[LD_104] as ld
 left join [10.1.123.130].[MAPPING].[dbo].[SP_dacthu] as spdt
 on spdt.[TenSP] = ld.[Tên SP] ------results: there are some null values in [Khoi]
 
-----------------------------------------Báo cáo ngành FMCG------------------------------------------------------------
+----------------------------------------------------Báo cáo ngành FMCG--------------------------------------------------------------------
 ------Update bảng mã ngành ---
 select format([Mã Ngành cấp 5 VISIC 2018],'00000','en-US') [Mã ngành C5 VISIC],
 		format([Mã ngành cấp 4 Visic 2018],'0000','en-US') [Mã ngành C4 VISIC],
@@ -58,6 +58,50 @@ select format([Mã Ngành cấp 5 VISIC 2018],'00000','en-US') [Mã ngành C5 VI
 into [practice]..[Mã ngành VISIC]
 FROM [10.1.123.130].[CLKD].[dbo].[Bo_nganh_kinh_te_new]
 
-------chỉnh format----
+------chỉnh format tạo column ngành cấp 5 (5 ký tự) ----
 case when len([MaNganhC5_Chinh]) =3 then replace(format([MaNganhC5_Chinh],'0000.0', 'en-US'),'.','')
 			else format([MaNganhC5_Chinh],'00000','en-US') end [Mã ngành C5]
+
+--------------------complete table with data of companies in FMCG sector in 2021-------------------
+  select '2021' as [Năm],
+		[Masothue] [Mã số thuế],
+		[TenDN] [ Tên DN],
+		[Mã ngành C5],
+		[Co_XNK],
+		case when [NamSL] between 2019 and 2020 then [dn].[LHDN]
+			else [DN1].[LHDN] end [Loại hình DN],
+		[TINH].[Tên] [Tỉnh],
+		[Cấp 1],
+		[Cấp 2],
+		[Cấp 3],
+		[Doanhthu_Thuan_BH_CCDV] [DTT],
+		[SR_Loinhuan_SauThue] [LNST],
+		(isnull(SR_Tien,0) + isnull(SR_DautuTC_NH,0) + isnull(SR_PhaiThu_NH,0))*1e6 [TSLD_khong_gom_HTK],
+		(isnull(SR_Phaitra_NBan_NH,0) + isnull([SR_NMua_Tratruoc_NH],0)  + isnull([SR_Thue],0) + isnull([SR_PhaiTra_NguoiLD],0) + isnull([SR_VayNoTC_NH],0) + isnull([SR_DP_Phaitra_NH],0))*1e6 [No ngan han],
+		[SR_Von_ChuSohuu_CK],
+		[SR_Nguonvon_Tong_CK],
+		[SR_Tien],
+		[SR_DautuTC_NH],
+		[SR_NoPhaitra_CK]/nullif([SR_Von_ChuSohuu_CK],0) [He so no],
+		(isnull(SR_Tien,0) + isnull(SR_DautuTC_NH,0) + isnull(SR_PhaiThu_NH,0))*1e6/nullif((isnull(SR_Phaitra_NBan_NH,0) + isnull([SR_NMua_Tratruoc_NH],0)  + isnull([SR_Thue],0) + isnull([SR_PhaiTra_NguoiLD],0) + isnull([SR_VayNoTC_NH],0) + isnull([SR_DP_Phaitra_NH],0))*1e6,0) [HSTTN],
+		[SR_Von_ChuSohuu_CK]/nullif([SR_Nguonvon_Tong_CK],0) [HSTTT],
+		[SR_Taisan_NH_CK]/nullif((isnull(SR_Phaitra_NBan_NH,0) + isnull([SR_NMua_Tratruoc_NH],0)  + isnull([SR_Thue],0) + isnull([SR_PhaiTra_NguoiLD],0) + isnull([SR_VayNoTC_NH],0) + isnull([SR_DP_Phaitra_NH],0))*1e6,0) [HSTTNHN],
+		[SR_Loinhuan_SauThue] *2 / nullif([SR_Nguonvon_Tong_CK]+[SR_Nguonvon_Tong_DK],0) [ROA],
+		[SR_Loinhuan_SauThue] *2/ nullif([SR_Von_ChuSohuu_CK]+[SR_Von_ChuSohuu_DK],0) [ROE],
+		[SR_TSCD_CK],
+		[SR_LoinhuanGop] /nullif([SR_Doanhthu_Thuan_BH_CCDV],0) [TSLN_gop],
+		365*[SR_Phaitra_NBan_NH]/nullif([SR_Gia_VonHangban]+[SR_Tonkho_CK]-[SR_Tonkho_DK],0) [VQKPTRA],
+		365/2*([SR_Gia_VonHangban]+[SR_Tonkho_CK]-[SR_Tonkho_DK])/nullif([SR_Gia_VonHangban],0) [VQHTK],
+		365*[SR_PhaiThu_NH]/nullif([SR_Doanhthu_Thuan_BH_CCDV],0) [VQKPTHU]
+from [practice].[dbo].[GSO 2021] [gso]
+left join [practice].[dbo].[Mã ngành VISIC] [mn]
+on gso.[Mã ngành C5] = mn.[Mã ngành C5 VISIC]
+left join [10.1.123.130].[MAPPING].[dbo].[LoaihinhDN] [dn]
+on gso.[LoaihinhDN] = dn.[MA_LHDN]
+left join [10.1.123.130].[MAPPING].[dbo].[LoaihinhDN_2] [DN1]
+ON gso.[LoaihinhDN] =dn1.[MA_LHDN]
+left join [10.1.123.130].[MAPPING].[dbo].[GSO_ma_tinh] [TINH]
+ON gso.[DNTB_MaTinh] = [TINH].[Mã]
+where [Cấp 2] like '%FMCG%'
+
+
