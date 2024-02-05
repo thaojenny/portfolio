@@ -104,4 +104,45 @@ left join [10.1.123.130].[MAPPING].[dbo].[GSO_ma_tinh] [TINH]
 ON gso.[DNTB_MaTinh] = [TINH].[Mã]
 where [Cấp 2] like '%FMCG%'
 
-
+---------------------------------------------------------PBI- KHCN------------------------------------------------------------------------
+-----------------------------Tín dụng-------------------------------------------
+select  convert(date,[rpt_date]) [Date],
+		RPT_DATE, 
+		[Mã chi nhánh GD],
+		[Mã SP],
+		case when [Tên SP] like '%thấu chi%' or [Tên SP] like '%thau chi%' then 'OD'
+				else 'LD' end [PLSP],
+		case when [Mã chi nhánh GD] = N'VN0010001' then '10.XLN'
+				WHEN b.LoaiSp is not null then b.Khoi
+				ELSE c.PhanKhuc end [Segment],
+		[Mã mục đích GN],  
+		[Nhóm nợ],
+		[Kỳ hạn],
+		case when convert(int,REPLACE([Kỳ hạn], 'M', '')) > 60 then N'Vay dài hạn'
+			when convert(int,REPLACE([Kỳ hạn], 'M', '')) between 12 and 60 then N'Vay trung hạn'
+			when [Kỳ hạn] is null then 'N/a'
+			else N'Vay ngắn hạn' end [Kỳ hạn TT],
+			sum([Số dư BQ qui đổi])/1e9 [SDBQ], 
+			SUM([Số dư cuối kỳ qui đổi])/1e9 [SDCK]
+from (select * from [10.1.123.130].[BI_DATA].[dbo].[LD_104] where rpt_date >= '20210101') a
+left join (select * from [10.1.123.130].[MAPPING].[dbo].[SP_dacthu] where [loaisp] ='Lending') b
+on a.[Tên SP] = b.[TenSp]
+left join [10.1.123.130].[MAPPING].[dbo].[PhanKhuc] c
+on a.[Nhóm KH] = c.[NhomKH]
+where rpt_date ='20231231'
+group by  convert(date,[rpt_date]),
+			RPT_DATE,
+			[Mã chi nhánh GD],
+			[Mã SP],
+			case when [Tên SP] like '%thấu chi%' or [Tên SP] like '%thau chi%' then 'OD'
+				else 'LD' end,
+			case when [Mã chi nhánh GD] = N'VN0010001' then '10.XLN'
+				WHEN b.LoaiSp is not null then b.Khoi
+				ELSE c.PhanKhuc end,
+				[Mã mục đích GN],  
+		[Nhóm nợ],
+		[Kỳ hạn],
+		case when convert(int,REPLACE([Kỳ hạn], 'M', '')) > 60 then N'Vay dài hạn'
+			when convert(int,REPLACE([Kỳ hạn], 'M', '')) between 12 and 60 then N'Vay trung hạn'
+			when [Kỳ hạn] is null then 'N/a'
+			else N'Vay ngắn hạn' end
