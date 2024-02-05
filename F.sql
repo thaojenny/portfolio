@@ -330,3 +330,64 @@ left join [practice].[dbo].[Mã ngành VISIC] [v]
 on g.[manganhc4] = v.[Mã ngành C4 VISIC]
 where v.[Cấp 2] like '%FMCG%'
 
+
+	  
+----------------------------------------------------NHS-CASA----------------------------------------------------------------------------
+---------------CASA BQ THÁNG NĂM 2023 (TỪ 50K ĐẾN DƯỚI 10TR) KHCN
+select (N'Tháng ' +substring([Rpt_date],5,2)) [Tháng],
+		count(distinct [Mã KH]) [Số lượng KH],
+		avg([Số dư BQ quy đổi]) [Số dư bình quân]
+From (
+		select [Rpt_date], [Mã KH], [Số dư BQ quy đổi], [LoaiSp]
+		from [10.1.123.130].[BI_DATA].[dbo].[AC_101] a
+		left join [10.1.123.130].[MAPPING].[dbo].[SP_dacthu] s
+		on a. [Tên Sản phẩm] = s. [TenSP]
+		where [LoaiSp] ='CASA' and [Rpt_date] >= '20230131' and [Nhóm Khách hàng] = 'Cá nhân'
+		and [Số dư BQ quy đổi] between 50000 and 10000000 
+		) [table]
+group by (N'Tháng ' +substring([Rpt_date],5,2))
+order by (N'Tháng ' +substring([Rpt_date],5,2))
+
+----------------filter sum(số dư BQ) CASA BQ THÁNG NĂM 2023 (TỪ 50K ĐẾN DƯỚI 10TR) KHCN
+select (N'Tháng ' +substring([Rpt_date],5,2)) [Tháng],
+		count(distinct [Mã KH]) [Số lượng KH],
+		(sum([Số dư BQ quy đổi])/count(distinct [Mã KH])) [Số dư bình quân]
+From (
+		select [Rpt_date], [Mã KH], [Số dư BQ quy đổi], [LoaiSp]
+		from [10.1.123.130].[BI_DATA].[dbo].[AC_101] a
+		left join [10.1.123.130].[MAPPING].[dbo].[SP_dacthu] s
+		on a. [Tên Sản phẩm] = s. [TenSP]
+		where [LoaiSp] ='CASA' and [Rpt_date] >= '20230131' and [Nhóm Khách hàng] = 'Cá nhân'
+		) [table]
+
+group by (N'Tháng ' +substring([Rpt_date],5,2))
+having sum([Số dư BQ quy đổi]) between 50000 and 10000000
+order by (N'Tháng ' +substring([Rpt_date],5,2))
+---------------CASA BQ THÁNG NĂM 2023 (TỪ 0K ĐẾN DƯỚI 10TR) KHCN
+
+select (N'Tháng '+ substring([Rpt_date],5,2)) [Tháng],
+		count(distinct [Mã KH]) [Số lượng KH],
+		avg([Số dư BQ quy đổi]) [Số dư BQ]
+From (
+		select [Rpt_date], [Mã KH], [Số dư BQ quy đổi], [LoaiSp]
+		from [10.1.123.130].[BI_DATA].[dbo].[AC_101] a
+		left join [10.1.123.130].[MAPPING].[dbo].[SP_dacthu] s
+		on a. [Tên Sản phẩm] = s. [TenSP]
+		where [LoaiSp] ='CASA' and [Rpt_date] >= '20230131' and [Nhóm Khách hàng] = 'Cá nhân'
+		and [Số dư BQ quy đổi] < 10000000
+		) [table]
+group by (N'Tháng '+ substring([Rpt_date],5,2))
+order by (N'Tháng '+ substring([Rpt_date],5,2)) 
+
+-------FD dưới 100tr trong năm 2023 KHCN
+select (N'Tháng ' + substring([Rpt_date],5,2)) [Tháng],
+		count(distinct [Mã KH]) [Số lượng KH]
+From (
+		select [Rpt_date], [Mã KH], [LoaiSp]
+		from [10.1.123.130].[BI_DATA].[dbo].[AC_101] a
+		left join [10.1.123.130].[MAPPING].[dbo].[SP_dacthu] s
+		on a. [Tên Sản phẩm] = s. [TenSP]
+		where [LoaiSp] ='FD' and [Rpt_date] >= '20230131' and [Nhóm Khách hàng] = 'Cá nhân'
+		and [Số dư BQ quy đổi] < 100000000
+		) [fd]
+group by (N'Tháng ' + substring([Rpt_date],5,2))
