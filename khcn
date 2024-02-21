@@ -1,0 +1,237 @@
+---------------------FTP FD---------------------------
+Select 
+ EOMONTH([từ ngày],0) rpt_date_2
+ ,'T'+ convert(nvarchar(10),month([Từ ngày]))+'/'+convert(nvarchar(10),year([từ ngày])) Rpt_date
+ ,'Huy dong' AS Group_Product
+ ,case when ( [tên sản phẩm] like N'%Chứng chỉ%' or [tên sản phẩm] like N'%Chung chi%'  or [tên sản phẩm] like N'%CCTG%' ) then 'GTCG'
+	  else 'TG_CKH'end [Product]
+,case when a.[Trạng thái cầm cố] = 'Y' then '8.SLH'
+	  when [Loại khách hàng] = N'5000 - Tổ chức tín dụng' then '4.NV'
+	  when b.Khoi is not null then b.Khoi
+	  when a.[Tên khối khách hàng] = N'Khối KHCN' then '1.KHCN'
+	  when a.[Tên khối khách hàng] = N'Khối KHDN' then '2.KHDN'
+	  when a.[Tên khối khách hàng] = N'Khối KHDNL' then '3.KHDNL'
+	  else a.[Tên khối khách hàng] end Segment
+,sum([Chi phí thực tế]* isnull([DTNB quy đổi]/nullif([DTNB quy đổi],0),1)/1e9) [Chi lãi]
+,sum([DTNB quy đổi]/1e9) [Thu lãi]
+from BI_DATA..FTP_FD a
+left join 
+(SELECT * FROM MAPPING..SP_dacthu WHERE LoaiSp = 'FD') b
+on a.[tên sản phẩm] = b.[TenSP]
+where a.[Kỳ hạn (KKH/CKH)] = 'CKH'
+group by 
+EOMONTH([từ ngày],0)
+,convert(nvarchar(10),month([Từ ngày])),convert(nvarchar(10),year([từ ngày]))
+,case when a.[Trạng thái cầm cố] = 'Y' then '8.SLH'
+	  when [Loại khách hàng] = N'5000 - Tổ chức tín dụng' then '4.NV'
+	  when b.Khoi is not null then b.Khoi
+	  when a.[Tên khối khách hàng] = N'Khối KHCN' then '1.KHCN'
+	  when a.[Tên khối khách hàng] = N'Khối KHDN' then '2.KHDN'
+	  when a.[Tên khối khách hàng] = N'Khối KHDNL' then '3.KHDNL'
+	  else a.[Tên khối khách hàng] end
+,case when ( [tên sản phẩm] like N'%Chứng chỉ%' or [tên sản phẩm] like N'%Chung chi%'  or [tên sản phẩm] like N'%CCTG%' ) then 'GTCG'
+	  else 'TG_CKH'end
+
+union all
+
+SELECT 
+  EOMONTH([từ ngày],0) rpt_date_2
+,'T'+ convert(nvarchar(10),month([Từ ngày]))+'/'+convert(nvarchar(10),year([từ ngày])) Rpt_date
+,'Huy dong' as [Group_product]
+,'TG_KKH' as [Product]
+,case when c.Khoi is not null then c.Khoi
+	  when a.[Tên khối khách hàng] = N'Khối KHCN' then '1.KHCN'
+	  when a.[Tên khối khách hàng] = N'Khối KHDN' then '2.KHDN'
+	  when a.[Tên khối khách hàng] = N'Khối KHDNL' then '3.KHDNL'
+	  else a.[Tên khối khách hàng] end Segment
+,sum([Chi phí thực tế]* isnull([DTNB quy đổi]/nullif([DTNB quy đổi],0),1)/1e9) [Chi lãi]
+,sum([DTNB quy đổi]/1e9) [Thu lãi]
+from BI_DATA..FTP_CASA a
+left join
+(SELECT * FROM MAPPING..SP_dacthu WHERE LoaiSp = 'CASA') c
+on a.[Tên Sản phẩm] = c.[TenSP]
+group by
+EOMONTH([từ ngày],0)
+,case when c.Khoi is not null then c.Khoi
+	  when a.[Tên khối khách hàng] = N'Khối KHCN' then '1.KHCN'
+	  when a.[Tên khối khách hàng] = N'Khối KHDN' then '2.KHDN'
+	  when a.[Tên khối khách hàng] = N'Khối KHDNL' then '3.KHDNL'
+	  else a.[Tên khối khách hàng] end
+,convert(nvarchar(10),month([Từ ngày]))
+,convert(nvarchar(10),year([từ ngày]))
+
+union all
+-----------------------------------------FTP_LD----------------------------------------------
+Select
+EOMONTH([từ ngày],0) rpt_date_2
+,'T'+ convert(nvarchar(10),month([Từ ngày]))+'/'+convert(nvarchar(10),year([từ ngày])) Rpt_date
+,'Cho vay' as [Group_Product]
+,case when a.[Tên Sản phẩm] like N'%thấu chi%' or [Tên sản phẩm] like N'%Thau chi%' then 'OD'
+	  else 'LD' end [Product]
+,CASE WHEN c.[CIFNO] is not null  then '10.XLN'
+	  WHEN d.LoaiSp is not null then d.Khoi
+	  WHEN (a.[Tên khối khách hàng] like '%KHDN%'
+			AND a.[Tên sản phẩm]  in (N'Cho vay KHCN mua, xây, sửa nhà',N'Cho vay KHCN mua ô tô',
+			N'Cho vay tài trợ vốn SXKD đối với CN,HKD')) THEN '1.KHCN'
+	  when [Tên khối khách hàng] = N'Khối KHCN' then '1.KHCN'
+	  when [Tên khối khách hàng] = N'Khối KHDN' then '2.KHDN'
+	  when [Tên khối khách hàng] = N'Khối KHDNL' then '3.KHDNL'
+	  else [Tên khối khách hàng]  END [Segment]
+
+,sum([CPNB quy đổi]/1e9) 
+ [Chi lãi]
+,sum([DTTT]* isnull([CPNB quy đổi]/nullif([CPNB nguyên tệ],0),1)/1e9) [Thu lãi]
+
+from BI_DATA..FTP_LD a
+
+ LEFT JOIN
+(SELECT * from MAPPING..[SP_dacthu] WHERE Loaisp ='Lending' ) d
+ON a.[Tên Sản phẩm] = d.[TenSP]
+
+ LEFT JOIN
+(select isnull(CIFNO,'ABCDEFGH') CIFNO,Min(TRANSFER_TIME) TRANSFER_TIME  from  MAPPING..[DS_XLN] GROUP BY CIFNO)  c
+ON a.[Mã khách hàng] = c.CIFNO
+
+group by 
+convert(nvarchar(10),month([Từ ngày]))
+,convert(nvarchar(10),year([từ ngày]))
+,case when a.[Tên sản phẩm] like N'%thấu chi%' or [Tên sản phẩm] like N'%Thau chi%' then 'OD'
+	  else 'LD' end
+,CASE WHEN c.[CIFNO] is not null  then '10.XLN'
+	  WHEN d.LoaiSp is not null then d.Khoi
+	  WHEN (a.[Tên khối khách hàng] like '%KHDN%'
+			AND a.[Tên sản phẩm]  in (N'Cho vay KHCN mua, xây, sửa nhà',N'Cho vay KHCN mua ô tô',
+			N'Cho vay tài trợ vốn SXKD đối với CN,HKD')) THEN '1.KHCN'
+	  when [Tên khối khách hàng] = N'Khối KHCN' then '1.KHCN'
+	  when [Tên khối khách hàng] = N'Khối KHDN' then '2.KHDN'
+	  when [Tên khối khách hàng] = N'Khối KHDNL' then '3.KHDNL'
+	  else [Tên khối khách hàng]  END
+,EOMONTH([từ ngày],0)
+
+
+
+----------------------------------Tín dụng ----------------------------------------
+Select convert(date,rpt_date, 101) Rpt_date
+, convert(int,Rpt_date) rpt_date_2
+,'Cho vay' as [Group_Product]
+,case when a.[Tên SP] like N'%thấu chi%' or [Tên SP] like N'%Thau chi%' then 'OD'
+	  else 'LD' end [Product]
+,CASE WHEN a.[Mã chi nhánh GD] =N'VN0010001' then '10.XLN'
+	  WHEN d.LoaiSp is not null then d.Khoi
+	 ELSE b.PhanKhuc END [segment]
+,sum([Số dư BQ qui đổi])/1e9 [AVG]
+,sum([Số dư cuối kỳ qui đổi])/1e9 [EOP]
+
+from (select * from  BI_DATA..LD_104 where rpt_date >='20210101')  a
+
+LEFT JOIN
+MAPPING..[PHANKHUC] b
+ON a.[Nhóm KH] = b.[NHOMKH]
+
+ LEFT JOIN
+(SELECT * from MAPPING..[SP_dacthu] WHERE Loaisp ='Lending' ) d
+ON a.[Tên SP] = d.[TenSP]
+
+
+group by
+convert(date,rpt_date, 101) 
+, convert(int,Rpt_date) 
+,case when a.[Tên SP] like N'%thấu chi%' or [Tên SP] like N'%Thau chi%' then 'OD'
+	  else 'LD' end 
+,CASE WHEN a.[Mã chi nhánh GD] =N'VN0010001' then '10.XLN'
+	  WHEN d.LoaiSp is not null then d.Khoi
+	 ELSE b.PhanKhuc END
+----------------------------------------Huy dong ------------------------
+union 
+SELECT convert(date,rpt_date, 101) Rpt_date
+, convert(int,Rpt_date) rpt_date_2
+, N'Huy động' as Group_product
+,case when ( [tên sản phẩm] like N'%Chứng chỉ%' or [tên sản phẩm] like N'%Chung chi%'  or [tên sản phẩm] like N'%CCTG%' ) then 'GTCG'
+	  else 'TG_CKH'end [Product]
+
+,case when b.TenSP is not null then b.Khoi
+	  when a.[Cầm cố STK SLH] = 'Y' then '8.SLH'
+	  else c.PhanKhuc end [Segment]
+,sum([Số dư BQ quy đổi])/1e9 [AVG]
+,sum([Số dư cuối quy đổi])/1e9 [EOP]
+from (select * from  BI_DATA..DP_104 where rpt_date >='20210101')  a
+ left join 
+ (SELECT * FROM MAPPING..SP_dacthu WHERE LoaiSp = 'FD') b
+ on a.[tên sản phẩm] = b.[TenSP]
+  left join 
+ (SELECT * FROM MAPPING..PhanKhuc) c
+ on a.[Nhóm Khách hàng] = c.NhomKH
+ group by 
+ Rpt_date,
+ case when ( [tên sản phẩm] like N'%Chứng chỉ%' or [tên sản phẩm] like N'%Chung chi%'  or [tên sản phẩm] like N'%CCTG%' ) then 'GTCG'
+	  else 'TG_CKH'end
+,case when b.TenSP is not null then b.Khoi
+	  when a.[Cầm cố STK SLH] = 'Y' then '8.SLH'
+	  else c.PhanKhuc end
+union
+select 
+convert(date,rpt_date, 101) Rpt_date
+, convert(int,Rpt_date) rpt_date_2
+,N'Huy động' as [Group_Product]
+,'TG_KKH'as [Product]
+,isnull(c.Khoi,b.PhanKhuc) [Segment] 
+,sum([Số dư BQ quy đổi])/1e9 [AVG]
+,sum([Số dư cuối quy đổi])/1e9 [EOP]
+from (Select * from BI_DATA..AC_101 where Rpt_date >'20210101') a 
+left join  
+MAPPING..[PHANKHUC]  b 
+ON a.[NHÓM KHÁCH HÀNG] = b.[NHOMKH] 
+left join 
+(SELECT * FROM MAPPING..SP_dacthu WHERE LoaiSp = 'CASA') c 
+on a.[Tên Sản phẩm] = c.TenSP 
+group by Rpt_date,isnull(c.Khoi,b.PhanKhuc)
+
+---------------------slkh new-------------------------------
+Select 
+SLKH.*
+,SLT.[Số lượng thẻ mới]
+,SLTK.[Số lượng TK mới]
+from
+(select eomonth([Ngày tạo CIF],0) Rpt_date
+,convert(nvarchar(8),eomonth([Ngày tạo CIF],0),112) as Rpt_date2
+,b.Phankhuc as Phankhuc
+,COUNT([Mã Khách hàng]) as 'Số lượng KH mới' from BI_DATA..CU_401 a
+left join
+(select * from Mapping..Phankhuc) b
+on a. [Nhóm Khách hàng] = b.[NhomKH]
+where YEAR([Ngày tạo CIF])>='2021'
+group by convert(nvarchar(8),eomonth([Ngày tạo CIF],0),112),eomonth([Ngày tạo CIF],0),b.Phankhuc) SLKH
+
+left join
+
+(select eomonth([Ngày phát hành],0) Rpt_date
+,convert(nvarchar(8),eomonth([Ngày phát hành],0),112) as Rpt_date2
+,'1.KHCN' as [Phankhuc]
+,COUNT([Số thẻ]) as 'Số lượng thẻ mới' from BI_DATA..CARD_101 a
+
+where YEAR([Ngày phát hành])>='2021'
+and [Card Product] like '%credit%'
+group by convert(nvarchar(8),eomonth([Ngày phát hành],0),112),eomonth([Ngày phát hành],0)) SLT
+
+on SLKH.Rpt_date = SLT.Rpt_date
+and SLKH.Rpt_date2 = SLT.Rpt_date2
+and SLKH.Phankhuc = SLT.Phankhuc
+
+left join 
+(Select eomonth([Ngày mở TK],0) Rpt_date
+, convert(nvarchar(20),eomonth([Ngày mở TK],0),112) Rpt_date2
+, b.Phankhuc as Phankhuc
+, COUNT([Số tài khoản]) N'Số lượng TK mới'
+from BI_DATA.[dbo].[AC_101] a
+left join 
+(select * from Mapping..Phankhuc) b
+on a. [Nhóm khách hàng] = b.[NhomKH]
+where YEAR(a.[Ngày mở TK])>='2021'
+and convert(nvarchar(20),eomonth([Ngày mở TK],0),112) = a.Rpt_date
+group by eomonth([Ngày mở TK],0) 
+, convert(nvarchar(20),eomonth([Ngày mở TK],0),112) 
+, b.Phankhuc) SLTK
+
+on SLKH.Rpt_date = SLTK.Rpt_date
+and SLKH.Rpt_date2 = SLTK.Rpt_date2
+and SLKH.Phankhuc = SLTK.Phankhuc
