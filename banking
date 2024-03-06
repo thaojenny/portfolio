@@ -146,3 +146,84 @@ group by  convert(date,[rpt_date]),
 			when convert(int,REPLACE([Kỳ hạn], 'M', '')) between 12 and 60 then N'Vay trung hạn'
 			when [Kỳ hạn] is null then 'N/a'
 			else N'Vay ngắn hạn' end
+------------------------------Huy động----------------------------------------
+---------------------------------Huy dong _ TG_CKH & GTCG-----------------------------------------------
+--with tonghop as (
+
+--with khcn as
+--( 
+create view Huydong_J as
+select rpt_date,
+		concat(left([rpt_date],4),'-', substring([rpt_date],5,2)) [Year-Month],
+		[mã chi nhánh], 
+		[Mã sản phẩm],
+		[Kỳ hạn],
+		case when [tên sản phẩm] in ('%CCTG%','%CHUNG CHI%','%Chung chi%','%Chứng chỉ%','%CHỨNG CHỈ%') then 'GTCG'
+					else 'TG_CKH' end [PLSP],
+		case when d.[cầm cố STK SLH] ='Y' then '8.SLH'
+				when s.[TenSP] is not null then s.[Khoi]
+				else p.[PhanKhuc] end [Segment],
+		sum([số dư bq quy đổi])/1e9 [SDBQ],
+		sum([số dư cuối quy đổi])/1e9 [SDCK]
+FROM 
+		(select * 
+			from [10.1.123.130].[BI_DATA].[dbo].[DP_104] 
+			where rpt_date >= '20210101') d
+left join [10.1.123.130].[MAPPING].[dbo].[PhanKhuc] p
+on d.[Nhóm Khách hàng]  =p.[NhomKH]
+left join 
+		(select * 
+			from [10.1.123.130].[MAPPING].[dbo].[SP_dacthu]
+			where [LoaiSP] = 'FD'
+			 ) s
+on d.[Tên sản phẩm] = s.[TenSP]
+group by rpt_date,
+		[mã chi nhánh], 
+		[Mã sản phẩm],
+		[Kỳ hạn],
+		case when [tên sản phẩm] in ('%CCTG%','%CHUNG CHI%','%Chung chi%','%Chứng chỉ%','%CHỨNG CHỈ%') then 'GTCG'
+					else 'TG_CKH' end ,
+		case when d.[cầm cố STK SLH] ='Y' then '8.SLH'
+				when s.[TenSP] is not null then s.[Khoi]
+				else p.[PhanKhuc] end 
+--)
+--select rpt_date, sum([SDBQ]), sum([SDCK])
+--from khcn 
+
+--where rpt_date = '20231231' and [segment]= '1.KHCN'
+--group by rpt_date
+
+-----------------------------------Huy dong_CASA-----------------------------------
+union all
+select rpt_date,
+		concat(left([rpt_date],4),'-', substring([rpt_date],5,2)) [Year-Month],
+		[Mã chi nhánh],
+		[Mã SP],
+		'0' as [Kỳ hạn],
+		'TG_KKH' as [PLSP],
+		isnull(s.[Khoi],p.[PhanKhuc]) [Segment],
+		--case when s.[Khoi] is null then p.[PhanKhuc] end [Segment] ,
+		sum([Số dư BQ quy đổi])/1e9 [SDBQ],
+		sum([Số dư cuối quy đổi])/1e9 [SDCK]
+
+from  (select * from [10.1.123.130].[BI_DATA].[dbo].[AC_101] where rpt_date >= '20210101') a
+left join [10.1.123.130].[MAPPING].[dbo].[PhanKhuc] p
+on a.[Nhóm khách hàng] = p.[NhomKH]
+left join (select * from [10.1.123.130].[MAPPING].[dbo].[SP_dacthu] where [LoaiSP] ='CASA' ) s
+on a.[Tên Sản phẩm] = s.[TenSP]
+group by rpt_date,
+		[Mã chi nhánh],
+		[Mã SP],
+		isnull(s.[Khoi],p.[PhanKhuc]) 
+
+--select concat(left([rpt_date],4),'-', substring([rpt_date],5,2)) [ym]
+--from [10.1.123.130].[BI_DATA].[dbo].[DP_104]
+--where rpt_date ='20230131'
+
+--)
+
+--select [Year-Month], [Segment], sum([SDBQ]), sum([SDCK])
+--from tonghop
+--where [Segment] ='1.KHCN' and rpt_date = '20230131'
+--group by [Year-Month], [Segment]
+
