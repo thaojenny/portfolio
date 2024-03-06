@@ -45,3 +45,7 @@ CREATE PROCEDURE SelectAllCustomers
 AS
 SELECT * FROM Customers
 GO;
+
+
+----------The correct order of execution in SQL is -------------
+FROM, WHERE, GROUP BY, HAVING, SELECT, DISTINCT, ORDER BY and LIMIT
