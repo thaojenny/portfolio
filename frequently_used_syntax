@@ -49,3 +49,19 @@ GO;
 
 ----------The correct order of execution in SQL is -------------
 FROM, WHERE, GROUP BY, HAVING, SELECT, DISTINCT, ORDER BY and LIMIT
+
+
+---------update/adjust data-----------
+update [dbo].[FB map]
+set [Nhóm con] = N'Nguyên liệu TACN'
+WHERE [Nhóm con]= 'Nguyên li?u TACN'
+
+------------add column-----------------
+alter table [dbo].[FB map]
+add [Nhóm con] nvarchar(50)
+
+
+-----------insert data to column------------
+insert into [dbo].[FB map] ([Nhóm con])
+values ('Dịch vụ hỗ trợ')
+where [Mã ngành C5] in ('73100','73200','82920','10611')
