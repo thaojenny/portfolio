@@ -1,5 +1,19 @@
-﻿  
-  ----------------complete table of 2021 FMCG company data-------------------
+--------------F&B NPP---------------
+  select b.[Nhóm con], AVG(a.[Vay Ngắn hạn 2022]/a.[Vốn chủ sở hữu 2022]) [avg_he so no]
+	  FROM (	select * 
+			from [practice].[dbo].[KHDN_GSO_2022]
+			where  [Vay Ngắn hạn 2022] <> '0' and [Vốn chủ sở hữu 2022] <> '0') a
+	left join  (SELECT *
+				from [practice].[dbo].[FB map]
+				where [Nhóm] = 'NPP') b
+	on a.VSIC_GSO = b.[Mã ngành C4]
+	where b.[Nhóm] is not null
+	group by b.[Nhóm con]
+  
+
+
+
+----------------complete table of 2021 FMCG company data-------------------
   select '2021' as [Năm],
 		[Masothue] [Mã số thuế],
 		[TenDN] [ Tên DN],
