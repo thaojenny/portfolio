@@ -1,0 +1,68 @@
+with solieu as
+(
+select '2021' as [Năm],
+		[Masothue] [Mã số thuế],
+		[TenDN] [Tên DN],
+		gso.[Mã ngành C5] [Mã C5],
+		[Co_XNK],
+		[DN1].[LHDN] [Loại hình DN],
+		[TINH].[Tên] [Tỉnh],
+		[Cấp 1],
+		[Cấp 2],
+		[Cấp 3],
+		fb.[Lĩnh vực] [Lĩnh vực]
+		 ,fb.[Tiểu ngành FMCG]
+		,fb.[Nhóm]
+		,fb.[Nhóm con]
+		,[Doanhthu_Thuan_BH_CCDV] [DTT],
+		[SR_Loinhuan_SauThue] [LNST],
+		(isnull(SR_Tien,0) + isnull(SR_DautuTC_NH,0) + isnull(SR_PhaiThu_NH,0))*1e6 [TSLD_khong_gom_HTK],
+		(isnull(SR_Phaitra_NBan_NH,0) + isnull([SR_NMua_Tratruoc_NH],0)  + isnull([SR_Thue],0) + isnull([SR_PhaiTra_NguoiLD],0) + isnull([SR_VayNoTC_NH],0) + isnull([SR_DP_Phaitra_NH],0))*1e6 [No ngan han],
+		[SR_Von_ChuSohuu_CK],
+		[SR_Nguonvon_Tong_CK],
+		[SR_Tien],
+		[SR_DautuTC_NH],
+		[SR_NoPhaitra_CK]/nullif([SR_Von_ChuSohuu_CK],0) [He so no],
+		(isnull(SR_Tien,0) + isnull(SR_DautuTC_NH,0) + isnull(SR_PhaiThu_NH,0)- isnull([SR_Tonkho_CK],0))*1e6/nullif((isnull(SR_Phaitra_NBan_NH,0) + isnull([SR_NMua_Tratruoc_NH],0)  + isnull([SR_Thue],0) + isnull([SR_PhaiTra_NguoiLD],0) + isnull([SR_VayNoTC_NH],0) + isnull([SR_DP_Phaitra_NH],0))*1e6,0) [HSTTN],
+		[SR_Von_ChuSohuu_CK]/nullif([SR_Nguonvon_Tong_CK],0) [HSTTT],
+		[SR_Taisan_NH_CK]/nullif((isnull(SR_Phaitra_NBan_NH,0) + isnull([SR_NMua_Tratruoc_NH],0)  + isnull([SR_Thue],0) + isnull([SR_PhaiTra_NguoiLD],0) + isnull([SR_VayNoTC_NH],0) + isnull([SR_DP_Phaitra_NH],0))*1e6,0) [HSTTNHN],
+		[SR_Loinhuan_SauThue] *2 / nullif([SR_Nguonvon_Tong_CK]+[SR_Nguonvon_Tong_DK],0) [ROA],
+		[SR_Loinhuan_SauThue] *2/ nullif([SR_Von_ChuSohuu_CK]+[SR_Von_ChuSohuu_DK],0) [ROE],
+		[SR_TSCD_CK],
+		[SR_LoinhuanGop] /nullif([SR_Doanhthu_Thuan_BH_CCDV],0) [TSLN_gop],
+		365*[SR_Phaitra_NBan_NH]/nullif(([SR_Gia_VonHangban]+[SR_Tonkho_CK]-[SR_Tonkho_DK]),0) [VQKPTRA]
+		,365*(([SR_Tonkho_CK]+[SR_Tonkho_DK])/2)/nullif([SR_Gia_VonHangban],0) [VQHTK],
+		365*[SR_PhaiThu_NH]/nullif([SR_Doanhthu_Thuan_BH_CCDV],0)   [VQKPTHU]
+from [practice].[dbo].[GSO 2021] [gso]
+left join [practice].[dbo].[Mã ngành VISIC] [mn]
+on gso.[Mã ngành C5] = mn.[Mã ngành C5 VISIC]
+left join [10.1.123.130].[MAPPING].[dbo].[LoaihinhDN_2] [DN1]
+ON gso.[LoaihinhDN] =dn1.[MA_LHDN]
+left join [10.1.123.130].[MAPPING].[dbo].[GSO_ma_tinh] [TINH]
+ON gso.[DNTB_MaTinh] = [TINH].[Mã]
+left join [practice].[dbo].[FB map] [fb]
+on gso.[Mã ngành C5] =fb.[Mã ngành C5]
+where fb.[Tiểu ngành FMCG] = 'F&B'
+
+)
+ 
+select [Năm], [tên dn], [Mã C5], [Loại hình DN], [tỉnh], [lĩnh vực], [Nhóm con], [VQKPTHU]
+from solieu
+where [VQKPTHU] between 14 and 180 and [Nhóm] = 'NPP'
+--select distinct([nhóm con])
+--from npp
+
+--select distinct([Nhóm con]) as pk,
+--			percentile_cont(0.25) within group (order by [VQKPTHU]) over(partition by [Nhóm con]) as [25th],
+--		percentile_cont(0.5) within group (order by [VQKPTHU]) over(partition by [Nhóm con]) as [50th],
+--		percentile_cont(0.75) within group (order by [VQKPTHU]) over(partition by [Nhóm con]) as [75th]
+--from npp
+
+--select distinct([Nhóm con]) as [PK],
+--		percentile_cont(0.25) within group (order by [HSTTN]) over(partition by [Nhóm con]) as [25th],
+--		percentile_cont(0.5) within group (order by [HSTTN]) over(partition by [Nhóm con]) as [50th],
+--		percentile_cont(0.75) within group (order by [HSTTN]) over(partition by [Nhóm con]) as [75th]
+--from npp 
+
+--where [HSTTN]
+--between 0 and 2
