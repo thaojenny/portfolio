@@ -1,3 +1,136 @@
+------------------------------------------CSTC_ F&B----------------------------------------------
+  select [Năm] ,[Tên DN], [Mã C5],[Loại hình DN], [Tỉnh], [Lĩnh vực], [Nhóm con], [HSTTT], 'TTT' as [PL]
+  FROM [practice].[dbo].[Gso_2021]
+  WHERE  [Nhóm con] = N'SX đồ uống không cồn' and [HSTTT] between 0.412698708663978 and 0.998724453061415
+
+  union all
+
+   select [Năm] ,[Tên DN], [Mã C5],[Loại hình DN], [Tỉnh], [Lĩnh vực], [Nhóm con], [HSTTT],'TTT' as [PL]
+  FROM [practice].[dbo].[Gso_2021]
+  WHERE  [Nhóm con] = N'SX thực phẩm' and [HSTTT] between 0.310877786893598 and 0.998049594516971
+
+  union all
+     select [Năm] ,[Tên DN], [Mã C5],[Loại hình DN], [Tỉnh], [Lĩnh vực], [Nhóm con], [HSTTNHN], 'TTNNH'as [PL]
+  FROM [practice].[dbo].[Gso_2021]
+  WHERE  [Nhóm con] = N'SX thực phẩm' and [HSTTNHN] between 0.0242064450626301 and 0.0255706887785319
+
+  UNION ALL
+       select [Năm] ,[Tên DN], [Mã C5],[Loại hình DN], [Tỉnh], [Lĩnh vực], [Nhóm con], [HSTTNHN], 'TTNNH'as [PL]
+  FROM [practice].[dbo].[Gso_2021]
+  WHERE  [Nhóm con] = N'SX đồ uống có cồn' and [HSTTNHN] between 0.0185394791314727 and 0.032723242156323
+
+  UNION ALL
+
+     select [Năm] ,[Tên DN], [Mã C5],[Loại hình DN], [Tỉnh], [Lĩnh vực], [Nhóm con], [HSTTNHN], 'TTNNH'as [PL]
+  FROM [practice].[dbo].[Gso_2021]
+  WHERE  [Nhóm con] = N'SX đồ uống không cồn' and [HSTTNHN] between 0.0200621975675676 and 0.130903103844839
+
+  union all
+
+   select [Năm] ,[Tên DN], [Mã C5],[Loại hình DN], [Tỉnh], [Lĩnh vực], [Nhóm con], [HSTTN], 'TTN' AS [PL]
+  FROM [practice].[dbo].[Gso_2021]
+  WHERE  [Nhóm con] = N'SX đồ uống không cồn' and [HSTTN] between 0.189686410235013 and 1.10325770123931
+
+  union all
+   select [Năm] ,[Tên DN], [Mã C5],[Loại hình DN], [Tỉnh], [Lĩnh vực], [Nhóm con], [HSTTN], 'TTN' AS [PL]
+  FROM [practice].[dbo].[Gso_2021]
+  WHERE  [Nhóm con] = N'SX sữa' and [HSTTN] between 0.226834235802662 and 1.08885411407431
+
+  union all
+     select [Năm] ,[Tên DN], [Mã C5],[Loại hình DN], [Tỉnh], [Lĩnh vực], [Nhóm con], [HSTTN], 'TTN' AS [PL]
+  FROM [practice].[dbo].[Gso_2021]
+  WHERE  [Nhóm con] = N'SX đồ uống có cồn' and [HSTTN] between 0.242516198762884 and 1.23196747144198
+
+  union all
+      select [Năm] ,[Tên DN], [Mã C5],[Loại hình DN], [Tỉnh], [Lĩnh vực], [Nhóm con], [HSTTN], 'TTN' AS [PL]
+  FROM [practice].[dbo].[Gso_2021]
+  WHERE  [Nhóm con] = N'SX thực phẩm' and [HSTTN] between 0.233272126105142 and 1.06533517665245
+
+  union all
+      select [Năm] ,[Tên DN], [Mã C5],[Loại hình DN], [Tỉnh], [Lĩnh vực], [Nhóm con], [He so no], 'HESONO' AS PL
+  FROM [practice].[dbo].[Gso_2021]
+  WHERE  [Nhóm con] = N'SX thực phẩm' and [He so no] between 0.0783050038503393 and 0.831269308729122
+
+    union all
+      select [Năm] ,[Tên DN], [Mã C5],[Loại hình DN], [Tỉnh], [Lĩnh vực], [Nhóm con], [He so no], 'HESONO' AS PL
+  FROM [practice].[dbo].[Gso_2021]
+  WHERE  [Nhóm con] = N'SX đồ uống có cồn' and [He so no] between 0.0756405375758501 and 0.704139312290407
+
+     union all
+      select [Năm] ,[Tên DN], [Mã C5],[Loại hình DN], [Tỉnh], [Lĩnh vực], [Nhóm con], [He so no], 'HESONO' AS PL
+  FROM [practice].[dbo].[Gso_2021]
+  WHERE  [Nhóm con] = N'SX sữa' and [He so no] between 0.0832728968454373 and 0.777499579026454
+
+      union all
+      select [Năm] ,[Tên DN], [Mã C5],[Loại hình DN], [Tỉnh], [Lĩnh vực], [Nhóm con], [He so no], 'HESONO' AS PL
+  FROM [practice].[dbo].[Gso_2021]
+  WHERE  [Nhóm con] = N'SX đồ uống không cồn' and [He so no] between 0.0431521702561458 and 0.613611778784246
+
+     union all
+      select [Năm] ,[Tên DN], [Mã C5],[Loại hình DN], [Tỉnh], [Lĩnh vực], [Nhóm con], [VQKPTHU], 'VQKPTHU' AS [PL]
+  FROM [practice].[dbo].[Gso_2021]
+  WHERE  [Nhóm con] = N'SX đồ uống không cồn' and [VQKPTHU] between 15.4270003905207 and 79.9626083681715
+
+       union all
+      select [Năm] ,[Tên DN], [Mã C5],[Loại hình DN], [Tỉnh], [Lĩnh vực], [Nhóm con], [VQKPTHU], 'VQKPTHU' AS [PL]
+  FROM [practice].[dbo].[Gso_2021]
+  WHERE  [Nhóm con] = N'SX thực phẩm' and [VQKPTHU] between 22.474085481313 and 86.5738234389419
+
+     union all
+      select [Năm] ,[Tên DN], [Mã C5],[Loại hình DN], [Tỉnh], [Lĩnh vực], [Nhóm con], [VQKPTHU], 'VQKPTHU' AS [PL]
+  FROM [practice].[dbo].[Gso_2021]
+  WHERE  [Nhóm con] = N'SX đồ uống có cồn' and [VQKPTHU] between 14.0356260966768 and 90.1597106762721
+
+      union all
+      select [Năm] ,[Tên DN], [Mã C5],[Loại hình DN], [Tỉnh], [Lĩnh vực], [Nhóm con], [VQKPTHU], 'VQKPTHU' AS [PL]
+  FROM [practice].[dbo].[Gso_2021]
+  WHERE  [Nhóm con] = N'SX sữa' and [VQKPTHU] between   18.6239439086312 and 106.81506204991
+
+      union all
+      select [Năm] ,[Tên DN], [Mã C5],[Loại hình DN], [Tỉnh], [Lĩnh vực], [Nhóm con], [VQKPTRA], 'VQKPTRA' AS [PL]
+  FROM [practice].[dbo].[Gso_2021]
+  WHERE  [Nhóm con] = N'SX sữa' and [VQKPTRA] between   21 and 255
+
+     union all
+      select [Năm] ,[Tên DN], [Mã C5],[Loại hình DN], [Tỉnh], [Lĩnh vực], [Nhóm con], [VQKPTRA], 'VQKPTRA' AS [PL]
+  FROM [practice].[dbo].[Gso_2021]
+  WHERE  [Nhóm con] = N'SX thực phẩm' and [VQKPTRA] between   16 and 172
+
+     union all
+      select [Năm] ,[Tên DN], [Mã C5],[Loại hình DN], [Tỉnh], [Lĩnh vực], [Nhóm con], [VQKPTRA], 'VQKPTRA' AS [PL]
+  FROM [practice].[dbo].[Gso_2021]
+  WHERE  [Nhóm con] = N'SX đồ uống không cồn' and [VQKPTRA] between   14 and 164
+
+   union all
+      select [Năm] ,[Tên DN], [Mã C5],[Loại hình DN], [Tỉnh], [Lĩnh vực], [Nhóm con], [VQKPTRA], 'VQKPTRA' AS [PL]
+  FROM [practice].[dbo].[Gso_2021]
+  WHERE  [Nhóm con] = N'SX đồ uống có cồn' and [VQKPTRA] between   12 and 225
+
+     union all
+      select [Năm] ,[Tên DN], [Mã C5],[Loại hình DN], [Tỉnh], [Lĩnh vực], [Nhóm con], [VQHTK], 'VQHTK' AS [PL]
+  FROM [practice].[dbo].[Gso_2021]
+  WHERE  [Nhóm con] = N'SX đồ uống có cồn' and [VQHTK] between   28 and 95
+
+       union all
+      select [Năm] ,[Tên DN], [Mã C5],[Loại hình DN], [Tỉnh], [Lĩnh vực], [Nhóm con], [VQHTK], 'VQHTK' AS [PL]
+  FROM [practice].[dbo].[Gso_2021]
+  WHERE  [Nhóm con] = N'SX đồ uống không cồn' and [VQHTK] between   19 and 103
+
+   union all
+      select [Năm] ,[Tên DN], [Mã C5],[Loại hình DN], [Tỉnh], [Lĩnh vực], [Nhóm con], [VQHTK], 'VQHTK' AS [PL]
+  FROM [practice].[dbo].[Gso_2021]
+  WHERE  [Nhóm con] = N'SX thực phẩm' and [VQHTK] between   23 and 109
+
+    union all
+      select [Năm] ,[Tên DN], [Mã C5],[Loại hình DN], [Tỉnh], [Lĩnh vực], [Nhóm con], [VQHTK], 'VQHTK' AS [PL]
+  FROM [practice].[dbo].[Gso_2021]
+  WHERE  [Nhóm con] = N'SX sữa' and [VQHTK] between   35 and 98
+
+
+
+----------------------------------------------------------------
+
+
 with solieu as
 (
 select '2021' as [Năm],
