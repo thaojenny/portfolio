@@ -1,4 +1,13 @@
 ---------------------------------------CSTC_ F&B (NCC)-----------------------------------------
+
+-------------calculate sum in each group/ grand total in each group------------------------ 
+select distinct([Nhóm]), [Nhóm con], 
+			sum(round([DTT]/1e9,0)) over ( partition by [Nhóm con] order by [DTT] rows between unbounded preceding and unbounded following) as [DTT_Nhóm con],
+			sum(round([DTT]/1e9,0)) over ( partition by [Nhóm] order by [DTT] rows between unbounded preceding and unbounded following) as [DTT_Nhóm],
+			sum(round([DTT]/1e9,0)) over ( ) as [DTT_FB]
+FROM [practice].[dbo].[Gso_2021_F&B]
+
+
 ------------------------------------------CSTC_ F&B----------------------------------------------
 -------------ncc_bao bì----------
   select [Năm] ,[Tên DN], [Mã C5],[Loại hình DN], [Tỉnh], [Lĩnh vực], [Nhóm con], [VQHTK], '' as [Distribution],'VQHTK' as [PL]
