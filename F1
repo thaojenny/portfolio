@@ -1,3 +1,320 @@
+---------------------------------------CSTC_ F&B (NCC)-----------------------------------------
+------------------------------------------CSTC_ F&B----------------------------------------------
+-------------ncc_bao bì----------
+  select [Năm] ,[Tên DN], [Mã C5],[Loại hình DN], [Tỉnh], [Lĩnh vực], [Nhóm con], [VQHTK], '' as [Distribution],'VQHTK' as [PL]
+  FROM [practice].[dbo].[Gso_2021]
+  WHERE  [Nhóm con] = N'Bao bì' and [VQHTK] between 26 and 190 
+
+   union all
+
+    select [Năm] ,[Tên DN], [Mã C5],[Loại hình DN], [Tỉnh], [Lĩnh vực], [Nhóm con], [VQKPTHU], '' as [Distribution],'VQKPTHU' as [PL]
+  FROM [practice].[dbo].[Gso_2021]
+  WHERE  [Nhóm con] = N'Bao bì' and [VQKPTHU] between 44 and 138
+
+     union all
+
+    select [Năm] ,[Tên DN], [Mã C5],[Loại hình DN], [Tỉnh], [Lĩnh vực], [Nhóm con], [VQKPTRA], '' as [Distribution],'VQKPTRA' as [PL]
+  FROM [practice].[dbo].[Gso_2021]
+  WHERE  [Nhóm con] = N'Bao bì' and [VQKPTRA] between 27 and 120
+
+   union all
+
+    select [Năm] ,[Tên DN], [Mã C5],[Loại hình DN], [Tỉnh], [Lĩnh vực], [Nhóm con], [GV/DTT], '' as [Distribution],'GV/DTT' as [PL]
+  FROM [practice].[dbo].[Gso_2021]
+  WHERE  [Nhóm con] = N'Bao bì' and [GV/DTT] between 0.85 and 0.96
+
+   union all
+
+    select [Năm] ,[Tên DN], [Mã C5],[Loại hình DN], [Tỉnh], [Lĩnh vực], [Nhóm con], [HSTTT], '' as [Distribution],'TTT' as [PL]
+  FROM [practice].[dbo].[Gso_2021]
+  WHERE  [Nhóm con] = N'Bao bì' and [HSTTT] between 0.22 and 0.82
+
+   union all
+
+    select [Năm] ,[Tên DN], [Mã C5],[Loại hình DN], [Tỉnh], [Lĩnh vực], [Nhóm con], [He so no], '' as [Distribution],'HESONO' as [PL]
+  FROM [practice].[dbo].[Gso_2021]
+  WHERE  [Nhóm con] = N'Bao bì' and [He so no] between 0.19 and 1.19
+
+   union all
+
+    select [Năm] ,[Tên DN], [Mã C5],[Loại hình DN], [Tỉnh], [Lĩnh vực], [Nhóm con], [HSTTN], '' as [Distribution],'TTN' as [PL]
+  FROM [practice].[dbo].[Gso_2021]
+  WHERE  [Nhóm con] = N'Bao bì' and [HSTTN] between 0.2 and 0.941125234484292
+
+   union all
+
+    select [Năm] ,[Tên DN], [Mã C5],[Loại hình DN], [Tỉnh], [Lĩnh vực], [Nhóm con], [HSTTNHN], '' as [Distribution],'TTNNH' as [PL]
+  FROM [practice].[dbo].[Gso_2021]
+  WHERE  [Nhóm con] = N'Bao bì' and [HSTTNHN] between 0.010775727 and 0.0107757267695858
+ 
+ union all
+  ---------------------BỘT--------------
+    select [Năm] ,[Tên DN], [Mã C5],[Loại hình DN], [Tỉnh], [Lĩnh vực], [Nhóm con], [VQHTK], '' as [Distribution],'VQHTK' as [PL]
+  FROM [practice].[dbo].[Gso_2021]
+  WHERE  [Nhóm con] = N'Bột' and [VQHTK] between 22 and 120 
+
+   union all
+
+    select [Năm] ,[Tên DN], [Mã C5],[Loại hình DN], [Tỉnh], [Lĩnh vực], [Nhóm con], [VQKPTHU], '' as [Distribution],'VQKPTHU' as [PL]
+  FROM [practice].[dbo].[Gso_2021]
+  WHERE  [Nhóm con] = N'Bột' and [VQKPTHU] between 19 and 147
+
+     union all
+
+    select [Năm] ,[Tên DN], [Mã C5],[Loại hình DN], [Tỉnh], [Lĩnh vực], [Nhóm con], [VQKPTRA], '' as [Distribution],'VQKPTRA' as [PL]
+  FROM [practice].[dbo].[Gso_2021]
+  WHERE  [Nhóm con] = N'Bột' and [VQKPTRA] between 6 and 123
+
+   union all
+
+    select [Năm] ,[Tên DN], [Mã C5],[Loại hình DN], [Tỉnh], [Lĩnh vực], [Nhóm con], [GV/DTT], '' as [Distribution],'GV/DTT' as [PL]
+  FROM [practice].[dbo].[Gso_2021]
+  WHERE  [Nhóm con] = N'Bột' and [GV/DTT] between 0.83 and 0.96
+
+   union all
+
+    select [Năm] ,[Tên DN], [Mã C5],[Loại hình DN], [Tỉnh], [Lĩnh vực], [Nhóm con], [HSTTT], '' as [Distribution],'TTT' as [PL]
+  FROM [practice].[dbo].[Gso_2021]
+  WHERE  [Nhóm con] = N'Bột' and [HSTTT] between 0.23 and 0.99
+
+   union all
+
+    select [Năm] ,[Tên DN], [Mã C5],[Loại hình DN], [Tỉnh], [Lĩnh vực], [Nhóm con], [He so no], '' as [Distribution],'HESONO' as [PL]
+  FROM [practice].[dbo].[Gso_2021]
+  WHERE  [Nhóm con] = N'Bột' and [He so no] between 0.1 and 1.07
+
+   union all
+
+    select [Năm] ,[Tên DN], [Mã C5],[Loại hình DN], [Tỉnh], [Lĩnh vực], [Nhóm con], [HSTTN], '' as [Distribution],'TTN' as [PL]
+  FROM [practice].[dbo].[Gso_2021]
+  WHERE  [Nhóm con] = N'Bột' and [HSTTN] between 0.3 and 1.11471469615271
+
+  
+  union all
+  -----------Chất béo------------
+    select [Năm] ,[Tên DN], [Mã C5],[Loại hình DN], [Tỉnh], [Lĩnh vực], [Nhóm con], [VQHTK], '' as [Distribution],'VQHTK' as [PL]
+  FROM [practice].[dbo].[Gso_2021]
+  WHERE  [Nhóm con] = N'Chất béo' and [VQHTK] between 20 and 196 
+
+   union all
+
+    select [Năm] ,[Tên DN], [Mã C5],[Loại hình DN], [Tỉnh], [Lĩnh vực], [Nhóm con], [VQKPTHU], '' as [Distribution],'VQKPTHU' as [PL]
+  FROM [practice].[dbo].[Gso_2021]
+  WHERE  [Nhóm con] = N'Chất béo' and [VQKPTHU] between 23 and 140
+
+     union all
+
+    select [Năm] ,[Tên DN], [Mã C5],[Loại hình DN], [Tỉnh], [Lĩnh vực], [Nhóm con], [VQKPTRA], '' as [Distribution],'VQKPTRA' as [PL]
+  FROM [practice].[dbo].[Gso_2021]
+  WHERE  [Nhóm con] = N'Chất béo' and [VQKPTRA] between 13 and 105
+
+   union all
+
+    select [Năm] ,[Tên DN], [Mã C5],[Loại hình DN], [Tỉnh], [Lĩnh vực], [Nhóm con], [GV/DTT], '' as [Distribution],'GV/DTT' as [PL]
+  FROM [practice].[dbo].[Gso_2021]
+  WHERE  [Nhóm con] = N'Chất béo' and [GV/DTT] between 0.83 and 0.961139093201553
+
+   union all
+
+    select [Năm] ,[Tên DN], [Mã C5],[Loại hình DN], [Tỉnh], [Lĩnh vực], [Nhóm con], [HSTTT], '' as [Distribution],'TTT' as [PL]
+  FROM [practice].[dbo].[Gso_2021]
+  WHERE  [Nhóm con] = N'Chất béo' and [HSTTT] between 0.13 and 0.922762862881517
+
+   union all
+
+    select [Năm] ,[Tên DN], [Mã C5],[Loại hình DN], [Tỉnh], [Lĩnh vực], [Nhóm con], [He so no], '' as [Distribution],'HESONO' as [PL]
+  FROM [practice].[dbo].[Gso_2021]
+  WHERE  [Nhóm con] = N'Chất béo' and [He so no] between 0.18 and 1.19
+
+   union all
+
+    select [Năm] ,[Tên DN], [Mã C5],[Loại hình DN], [Tỉnh], [Lĩnh vực], [Nhóm con], [HSTTN], '' as [Distribution],'TTN' as [PL]
+  FROM [practice].[dbo].[Gso_2021]
+  WHERE  [Nhóm con] = N'Chất béo' and [HSTTN] between 0.27 and 0.9
+
+  union all
+  ----------Dịch vụ hỗ trợ---------------------
+  select [Năm] ,[Tên DN], [Mã C5],[Loại hình DN], [Tỉnh], [Lĩnh vực], [Nhóm con], [VQHTK], '' as [Distribution],'VQHTK' as [PL]
+  FROM [practice].[dbo].[Gso_2021]
+  WHERE  [Nhóm con] = N'Dịch vụ hỗ trợ' and [VQHTK] between 23 and 273 
+
+   union all
+
+    select [Năm] ,[Tên DN], [Mã C5],[Loại hình DN], [Tỉnh], [Lĩnh vực], [Nhóm con], [VQKPTHU], '' as [Distribution],'VQKPTHU' as [PL]
+  FROM [practice].[dbo].[Gso_2021]
+  WHERE  [Nhóm con] = N'Dịch vụ hỗ trợ' and [VQKPTHU] between 27 and 216
+
+     union all
+
+    select [Năm] ,[Tên DN], [Mã C5],[Loại hình DN], [Tỉnh], [Lĩnh vực], [Nhóm con], [VQKPTRA], '' as [Distribution],'VQKPTRA' as [PL]
+  FROM [practice].[dbo].[Gso_2021]
+  WHERE  [Nhóm con] = N'Dịch vụ hỗ trợ' and [VQKPTRA] between 31 and 225
+
+   union all
+
+    select [Năm] ,[Tên DN], [Mã C5],[Loại hình DN], [Tỉnh], [Lĩnh vực], [Nhóm con], [GV/DTT], '' as [Distribution],'GV/DTT' as [PL]
+  FROM [practice].[dbo].[Gso_2021]
+  WHERE  [Nhóm con] = N'Dịch vụ hỗ trợ' and [GV/DTT] between 0.66 and 0.94
+
+   union all
+
+    select [Năm] ,[Tên DN], [Mã C5],[Loại hình DN], [Tỉnh], [Lĩnh vực], [Nhóm con], [HSTTT], '' as [Distribution],'TTT' as [PL]
+  FROM [practice].[dbo].[Gso_2021]
+  WHERE  [Nhóm con] = N'Dịch vụ hỗ trợ' and [HSTTT] between 0.4 and 0.99
+
+   union all
+
+    select [Năm] ,[Tên DN], [Mã C5],[Loại hình DN], [Tỉnh], [Lĩnh vực], [Nhóm con], [He so no], '' as [Distribution],'HESONO' as [PL]
+  FROM [practice].[dbo].[Gso_2021]
+  WHERE  [Nhóm con] = N'Dịch vụ hỗ trợ' and [He so no] between 0.07 and 0.88
+
+   union all
+
+    select [Năm] ,[Tên DN], [Mã C5],[Loại hình DN], [Tỉnh], [Lĩnh vực], [Nhóm con], [HSTTN], '' as [Distribution],'TTN' as [PL]
+  FROM [practice].[dbo].[Gso_2021]
+  WHERE  [Nhóm con] = N'Dịch vụ hỗ trợ' and [HSTTN] between 0.39 and 1.5
+
+   union all
+
+    select [Năm] ,[Tên DN], [Mã C5],[Loại hình DN], [Tỉnh], [Lĩnh vực], [Nhóm con], [HSTTNHN], '' as [Distribution],'TTNNH' as [PL]
+  FROM [practice].[dbo].[Gso_2021]
+  WHERE  [Nhóm con] = N'Dịch vụ hỗ trợ' and [HSTTNHN] between 0.02 and 0.03
+
+ union all
+  --------------Đường-----------------
+      select [Năm] ,[Tên DN], [Mã C5],[Loại hình DN], [Tỉnh], [Lĩnh vực], [Nhóm con], [VQHTK], '' as [Distribution],'VQHTK' as [PL]
+  FROM [practice].[dbo].[Gso_2021]
+  WHERE  [Nhóm con] = N'Đường' and [VQHTK] between 39 and 203
+
+   union all
+
+    select [Năm] ,[Tên DN], [Mã C5],[Loại hình DN], [Tỉnh], [Lĩnh vực], [Nhóm con], [VQKPTHU], '' as [Distribution],'VQKPTHU' as [PL]
+  FROM [practice].[dbo].[Gso_2021]
+  WHERE  [Nhóm con] = N'Đường' and [VQKPTHU] between 28 and 185
+
+     union all
+
+    select [Năm] ,[Tên DN], [Mã C5],[Loại hình DN], [Tỉnh], [Lĩnh vực], [Nhóm con], [VQKPTRA], '' as [Distribution],'VQKPTRA' as [PL]
+  FROM [practice].[dbo].[Gso_2021]
+  WHERE  [Nhóm con] = N'Đường' and [VQKPTRA] between 5 and 50
+
+   union all
+
+    select [Năm] ,[Tên DN], [Mã C5],[Loại hình DN], [Tỉnh], [Lĩnh vực], [Nhóm con], [GV/DTT], '' as [Distribution],'GV/DTT' as [PL]
+  FROM [practice].[dbo].[Gso_2021]
+  WHERE  [Nhóm con] = N'Đường' and [GV/DTT] between 0.74 and 0.96
+
+   union all
+
+    select [Năm] ,[Tên DN], [Mã C5],[Loại hình DN], [Tỉnh], [Lĩnh vực], [Nhóm con], [HSTTT], '' as [Distribution],'TTT' as [PL]
+  FROM [practice].[dbo].[Gso_2021]
+  WHERE  [Nhóm con] = N'Đường' and [HSTTT] between 0.13 and 0.96
+
+   union all
+
+    select [Năm] ,[Tên DN], [Mã C5],[Loại hình DN], [Tỉnh], [Lĩnh vực], [Nhóm con], [He so no], '' as [Distribution],'HESONO' as [PL]
+  FROM [practice].[dbo].[Gso_2021]
+  WHERE  [Nhóm con] = N'Đường' and [He so no] between 0.03 and 0.97
+
+   union all
+
+    select [Năm] ,[Tên DN], [Mã C5],[Loại hình DN], [Tỉnh], [Lĩnh vực], [Nhóm con], [HSTTN], '' as [Distribution],'TTN' as [PL]
+  FROM [practice].[dbo].[Gso_2021]
+  WHERE  [Nhóm con] = N'Đường' and [HSTTN] between 0.16 and 0.93
+
+  union all
+  ----------Nguyên liệu TACN------------------
+select [Năm] ,[Tên DN], [Mã C5],[Loại hình DN], [Tỉnh], [Lĩnh vực], [Nhóm con], [VQHTK], '' as [Distribution],'VQHTK' as [PL]
+  FROM [practice].[dbo].[Gso_2021]
+  WHERE  [Nhóm con] = N'Nguyên liệu TACN' and [VQHTK] between 14 and 196
+
+   union all
+
+    select [Năm] ,[Tên DN], [Mã C5],[Loại hình DN], [Tỉnh], [Lĩnh vực], [Nhóm con], [VQKPTHU], '' as [Distribution],'VQKPTHU' as [PL]
+  FROM [practice].[dbo].[Gso_2021]
+  WHERE  [Nhóm con] = N'Nguyên liệu TACN' and [VQKPTHU] between 19 and 125
+
+     union all
+
+    select [Năm] ,[Tên DN], [Mã C5],[Loại hình DN], [Tỉnh], [Lĩnh vực], [Nhóm con], [VQKPTRA], '' as [Distribution],'VQKPTRA' as [PL]
+  FROM [practice].[dbo].[Gso_2021]
+  WHERE  [Nhóm con] = N'Nguyên liệu TACN' and [VQKPTRA] between 11 and 122
+
+   union all
+
+    select [Năm] ,[Tên DN], [Mã C5],[Loại hình DN], [Tỉnh], [Lĩnh vực], [Nhóm con], [GV/DTT], '' as [Distribution],'GV/DTT' as [PL]
+  FROM [practice].[dbo].[Gso_2021]
+  WHERE  [Nhóm con] = N'Nguyên liệu TACN' and [GV/DTT] between 0.85 and 0.98
+
+   union all
+
+    select [Năm] ,[Tên DN], [Mã C5],[Loại hình DN], [Tỉnh], [Lĩnh vực], [Nhóm con], [HSTTT], '' as [Distribution],'TTT' as [PL]
+  FROM [practice].[dbo].[Gso_2021]
+  WHERE  [Nhóm con] = N'Nguyên liệu TACN' and [HSTTT] between 0.2 and 0.99
+
+   union all
+
+    select [Năm] ,[Tên DN], [Mã C5],[Loại hình DN], [Tỉnh], [Lĩnh vực], [Nhóm con], [He so no], '' as [Distribution],'HESONO' as [PL]
+  FROM [practice].[dbo].[Gso_2021]
+  WHERE  [Nhóm con] = N'Nguyên liệu TACN' and [He so no] between 0.11 and 1.07
+
+   union all
+
+    select [Năm] ,[Tên DN], [Mã C5],[Loại hình DN], [Tỉnh], [Lĩnh vực], [Nhóm con], [HSTTN], '' as [Distribution],'TTN' as [PL]
+  FROM [practice].[dbo].[Gso_2021]
+  WHERE  [Nhóm con] = N'Nguyên liệu TACN' and [HSTTN] between 0.33 and 1.11
+
+   union all
+
+    select [Năm] ,[Tên DN], [Mã C5],[Loại hình DN], [Tỉnh], [Lĩnh vực], [Nhóm con], [HSTTNHN], '' as [Distribution],'TTNNH' as [PL]
+  FROM [practice].[dbo].[Gso_2021]
+  WHERE  [Nhóm con] = N'Nguyên liệu TACN' and [HSTTNHN] between 0.12 and 0.13
+
+ union all
+  ----------Sản xuất nhựa--------------
+
+  select [Năm] ,[Tên DN], [Mã C5],[Loại hình DN], [Tỉnh], [Lĩnh vực], [Nhóm con], [VQHTK], '' as [Distribution],'VQHTK' as [PL]
+  FROM [practice].[dbo].[Gso_2021]
+  WHERE  [Nhóm con] = N'Sản xuất nhựa' and [VQHTK] between 31 and 279
+
+   union all
+
+    select [Năm] ,[Tên DN], [Mã C5],[Loại hình DN], [Tỉnh], [Lĩnh vực], [Nhóm con], [VQKPTHU], '' as [Distribution],'VQKPTHU' as [PL]
+  FROM [practice].[dbo].[Gso_2021]
+  WHERE  [Nhóm con] = N'Sản xuất nhựa' and [VQKPTHU] between 39 and 154
+
+     union all
+
+    select [Năm] ,[Tên DN], [Mã C5],[Loại hình DN], [Tỉnh], [Lĩnh vực], [Nhóm con], [VQKPTRA], '' as [Distribution],'VQKPTRA' as [PL]
+  FROM [practice].[dbo].[Gso_2021]
+  WHERE  [Nhóm con] = N'Sản xuất nhựa' and [VQKPTRA] between 22 and 140
+
+   union all
+
+    select [Năm] ,[Tên DN], [Mã C5],[Loại hình DN], [Tỉnh], [Lĩnh vực], [Nhóm con], [GV/DTT], '' as [Distribution],'GV/DTT' as [PL]
+  FROM [practice].[dbo].[Gso_2021]
+  WHERE  [Nhóm con] = N'Sản xuất nhựa' and [GV/DTT] between 0.79 and 0.95
+
+   union all
+
+    select [Năm] ,[Tên DN], [Mã C5],[Loại hình DN], [Tỉnh], [Lĩnh vực], [Nhóm con], [HSTTT], '' as [Distribution],'TTT' as [PL]
+  FROM [practice].[dbo].[Gso_2021]
+  WHERE  [Nhóm con] = N'Sản xuất nhựa' and [HSTTT] between 0.23 and 0.84
+
+   union all
+
+    select [Năm] ,[Tên DN], [Mã C5],[Loại hình DN], [Tỉnh], [Lĩnh vực], [Nhóm con], [He so no], '' as [Distribution],'HESONO' as [PL]
+  FROM [practice].[dbo].[Gso_2021]
+  WHERE  [Nhóm con] = N'Sản xuất nhựa' and [He so no] between 0.2 and 1.08
+
+   union all
+
+    select [Năm] ,[Tên DN], [Mã C5],[Loại hình DN], [Tỉnh], [Lĩnh vực], [Nhóm con], [HSTTN], '' as [Distribution],'TTN' as [PL]
+  FROM [practice].[dbo].[Gso_2021]
+  WHERE  [Nhóm con] = N'Sản xuất nhựa' and [HSTTN] between 0.23 and 0.96
+
+   
+
 ------------------------------------------CSTC_ F&B----------------------------------------------
   select [Năm] ,[Tên DN], [Mã C5],[Loại hình DN], [Tỉnh], [Lĩnh vực], [Nhóm con], [HSTTT], 'TTT' as [PL]
   FROM [practice].[dbo].[Gso_2021]
