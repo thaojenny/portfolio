@@ -69,3 +69,7 @@ where [Mã ngành C5] in ('73100','73200','82920','10611')
 
 ------------rename a column name----------------------
 EXEC sp_rename 'tablename.columnname_to change', 'columname_target', 'COLUMN';
+
+
+----------count number of columns in a table-------------------------------
+ SELECT count(*) as No_of_Column FROM information_schema.columns where TABLE_NAME ='tablename'
