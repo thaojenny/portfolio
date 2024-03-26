@@ -65,3 +65,7 @@ add [Nhóm con] nvarchar(50)
 insert into [dbo].[FB map] ([Nhóm con])
 values ('Dịch vụ hỗ trợ')
 where [Mã ngành C5] in ('73100','73200','82920','10611')
+
+
+------------rename a column name----------------------
+EXEC sp_rename 'tablename.columnname_to change', 'columname_target', 'COLUMN';
