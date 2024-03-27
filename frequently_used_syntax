@@ -73,3 +73,7 @@ EXEC sp_rename 'tablename.columnname_to change', 'columname_target', 'COLUMN';
 
 ----------count number of columns in a table-------------------------------
  SELECT count(*) as No_of_Column FROM information_schema.columns where TABLE_NAME ='tablename'
+
+
+-------create a column with a defined name-------------------
+N'Tháng ' +substring([Rpt_date],5,2)) [Tháng]
