@@ -227,3 +227,52 @@ group by rpt_date,
 --where [Segment] ='1.KHCN' and rpt_date = '20230131'
 --group by [Year-Month], [Segment]
 
+--------------------------------------------------Số lượng thẻ mở mới----------------------------------------------------------
+Select 
+SLKH.*
+,SLT.[Số lượng thẻ mới]
+,SLTK.[Số lượng TK mới]
+from
+(select eomonth([Ngày tạo CIF],0) Rpt_date
+,convert(nvarchar(8),eomonth([Ngày tạo CIF],0),112) as Rpt_date2
+,b.Phankhuc as Phankhuc
+,COUNT([Mã Khách hàng]) as 'Số lượng KH mới' from BI_DATA..CU_401 a
+left join
+(select * from Mapping..Phankhuc) b
+on a. [Nhóm Khách hàng] = b.[NhomKH]
+where YEAR([Ngày tạo CIF])>='2021'
+group by convert(nvarchar(8),eomonth([Ngày tạo CIF],0),112),eomonth([Ngày tạo CIF],0),b.Phankhuc) SLKH
+
+left join
+
+(select eomonth([Ngày phát hành],0) Rpt_date
+,convert(nvarchar(8),eomonth([Ngày phát hành],0),112) as Rpt_date2
+,'1.KHCN' as [Phankhuc]
+,COUNT([Số thẻ]) as 'Số lượng thẻ mới' from BI_DATA..CARD_101 a
+
+where YEAR([Ngày phát hành])>='2021'
+and [Card Product] like '%credit%'
+group by convert(nvarchar(8),eomonth([Ngày phát hành],0),112),eomonth([Ngày phát hành],0)) SLT
+
+on SLKH.Rpt_date = SLT.Rpt_date
+and SLKH.Rpt_date2 = SLT.Rpt_date2
+and SLKH.Phankhuc = SLT.Phankhuc
+
+left join 
+(Select eomonth([Ngày mở TK],0) Rpt_date
+, convert(nvarchar(20),eomonth([Ngày mở TK],0),112) Rpt_date2
+, b.Phankhuc as Phankhuc
+, COUNT([Số tài khoản]) N'Số lượng TK mới'
+from BI_DATA.[dbo].[AC_101] a
+left join 
+(select * from Mapping..Phankhuc) b
+on a. [Nhóm khách hàng] = b.[NhomKH]
+where YEAR(a.[Ngày mở TK])>='2021'
+and convert(nvarchar(20),eomonth([Ngày mở TK],0),112) = a.Rpt_date
+group by eomonth([Ngày mở TK],0) 
+, convert(nvarchar(20),eomonth([Ngày mở TK],0),112) 
+, b.Phankhuc) SLTK
+
+on SLKH.Rpt_date = SLTK.Rpt_date
+and SLKH.Rpt_date2 = SLTK.Rpt_date2
+and SLKH.Phankhuc = SLTK.Phankhuc
