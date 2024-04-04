@@ -1,0 +1,18 @@
+--------------------slkh--------------------------------
+with abcd as
+( select concat(left([rpt_date],4),'-', substring([rpt_date],5,2)) [Year-Month],
+	case when  s.[TenSP] is not null then s.[Khoi]
+				else p.[PhanKhuc] end [Segment],
+	count(distinct[mã KH]) [SLKH]
+from [10.1.123.130].[BI_DATA].[dbo].[AC_101] a
+left join [10.1.123.130].[MAPPING].[dbo].[PhanKhuc] p
+on a.[Nhóm Khách hàng] = p.[NhomKH]
+left join [10.1.123.130].[MAPPING].[dbo].[SP_dacthu] s
+on a.[tên sản phẩm] = s.[tenSP]
+where rpt_date >= '20220101'
+group by concat(left([rpt_date],4),'-', substring([rpt_date],5,2)) ,
+	case when s.[TenSP] is not null then s.[Khoi]
+				else p.[PhanKhuc] end )
+select *
+from abcd
+where [segment] in ('1.KHCN','2.KHDN','3.KHDNL')
