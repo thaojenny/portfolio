@@ -28,10 +28,11 @@ order by [year-month], [segment]
 
 
 -----------------casa hành vi khách hàng------------------
+with abcd as (
 select ac.[rpt_date], year([ngày tạo cif]) [Năm mở],
-		case when DATEDIFF(year,[ngày tạo cif],'2024-04-04') = 1 then 'KH mở 2023'
-				when  DATEDIFF(year,[ngày tạo cif],'2024-04-04') = 2 then 'KH mở 2022'
-				when  DATEDIFF(year,[ngày tạo cif],'2024-04-04') = 3 then 'KH mở 2021'end [PL KH],
+		case when DATEDIFF(year,[ngày tạo cif],'2024-04-04') = 1 then N'KH mở 2023'
+				when  DATEDIFF(year,[ngày tạo cif],'2024-04-04') = 2 then N'KH mở 2022'
+				when  DATEDIFF(year,[ngày tạo cif],'2024-04-04') = 3 then N'KH mở 2021'end [PL KH],
 				c.[Mã khách hàng],
 				case when l.[Gốc vay còn lại (nợ trong hạn+ nợ quá hạn)] is null then 'Non-Lending'
 					else 'Lending' end [PLKH],
@@ -53,4 +54,9 @@ left join
 on c.[Mã khách hàng] = ac.[Mã KH] 
 
 where [ngày tạo cif] >='2021-01-01' and ac.[segment] in ('1.KHCN','2.KHDN','3.KHDNL')
-
+)
+select rpt_date, [năm mở], [PL KH],[mã khách hàng], [PLKH] , [segment], 
+		sum([Số dư BQ quy đổi])
+from abcd
+group by rpt_date, [năm mở], [PL KH],[mã khách hàng], [PLKH] , [segment]
+order by rpt_date
