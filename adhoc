@@ -16,3 +16,12 @@ group by concat(left([rpt_date],4),'-', substring([rpt_date],5,2)) ,
 select *
 from abcd
 where [segment] in ('1.KHCN','2.KHDN','3.KHDNL')
+-------------------casa-------------------
+select [year-month], 
+		case when [segment] = '2.KHDN' then sum([SDBQ]) end [KHDN],
+		case when [segment] = '3.KHDNL' then sum([SDBQ]) end [KHDNL],
+		case when [segment] = '3.KHDNL' then sum([SDBQ]) end [KHCN]
+FROM [10.1.123.130].[CLKD].[dbo].[Huydong_J]
+where rpt_date>=20220101 and [PLSP] = 'TG_KKH'
+group by [year-month], [segment]
+order by [year-month], [segment]
