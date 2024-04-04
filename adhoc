@@ -25,3 +25,32 @@ FROM [10.1.123.130].[CLKD].[dbo].[Huydong_J]
 where rpt_date>=20220101 and [PLSP] = 'TG_KKH'
 group by [year-month], [segment]
 order by [year-month], [segment]
+
+
+-----------------casa hành vi khách hàng------------------
+select ac.[rpt_date], year([ngày tạo cif]) [Năm mở],
+		case when DATEDIFF(year,[ngày tạo cif],'2024-04-04') = 1 then 'KH mở 2023'
+				when  DATEDIFF(year,[ngày tạo cif],'2024-04-04') = 2 then 'KH mở 2022'
+				when  DATEDIFF(year,[ngày tạo cif],'2024-04-04') = 3 then 'KH mở 2021'end [PL KH],
+				c.[Mã khách hàng],
+				case when l.[Gốc vay còn lại (nợ trong hạn+ nợ quá hạn)] is null then 'Non-Lending'
+					else 'Lending' end [PLKH],
+				ac.[segment], 
+				ac.[Số dư BQ quy đổi]
+FROM [10.1.123.130].[BI_DATA].[dbo].[CU_401] c 
+left join [10.1.123.130].[BI_DATA].[dbo].[LD_100] l
+on c.[Mã khách hàng] = l.[Mã khách hàng]
+left join 
+		(select a.rpt_date,[Mã KH],[Số dư BQ quy đổi],
+				case when  s.[TenSP] is not null then s.[Khoi]
+				else p.[PhanKhuc] end [Segment]
+			from [10.1.123.130].[BI_DATA].[dbo].[AC_101] a
+			left join [10.1.123.130].[MAPPING].[dbo].[PhanKhuc] p
+			on a.[Nhóm Khách hàng] = p.[NhomKH]
+			left join [10.1.123.130].[MAPPING].[dbo].[SP_dacthu] s
+			on a.[tên sản phẩm] = s.[tenSP]
+			) ac
+on c.[Mã khách hàng] = ac.[Mã KH] 
+
+where [ngày tạo cif] >='2021-01-01' and ac.[segment] in ('1.KHCN','2.KHDN','3.KHDNL')
+
