@@ -20,14 +20,26 @@ with table_name as (
                        )
 select...
 
--- create a temporary table 
+-- create a temporary table -------in postgre
 create temporary table table_name (
 					);
 
 -- or the second way
 create temp table table_name as ......;
 
--- import csv file using syntax
+----create temporary table in sql server-------
+select      
+into ##tablename
+from..
+
+--------create view---- to save in view in sql server--------------
+CREATE VIEW view_name AS
+SELECT column1, column2, ...
+FROM table_name
+WHERE condition;
+
+
+----------import csv file using syntax
 create table table_name	 ( product_id int,
 			category varchar (20),
 			animal varchar (20),
