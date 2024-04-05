@@ -26,8 +26,41 @@ where rpt_date>=20220101 and [PLSP] = 'TG_KKH'
 group by [year-month], [segment]
 order by [year-month], [segment]
 
+---------------------------casa hành vi khách hàng-----true----------------------
+select ac.[rpt_date], year([ngày tạo cif]) [Năm mở],
+		case when year([ngày tạo cif]) ='2024' then N'<1'
+				when year([ngày tạo cif]) ='2023'  then N'1'
+				when   year([ngày tạo cif]) ='2022' then N'2' 
+				when year([ngày tạo cif]) ='2021' then '3' else '>3' end [PL KH],
+				c.[Mã khách hàng],
+				c.[chi nhánh],
+				c.[phân loại khách hàng],
+				case when l.[mã khách hàng] is null then 'Non-Lending'
+					else 'Lending' end [PLKH],
+				ac.[segment], 
+				ac.[Số dư BQ quy đổi]
+FROM  (select * from ##acb
+			) ac
+left join (select [mã khách hàng],[ngày tạo cif], [chi nhánh],[phân loại khách hàng] from  [10.1.123.130].[BI_DATA].[dbo].[CU_401]) c
+		
+on c.[Mã khách hàng] = ac.[Mã KH] 
+left join (select distinct([Mã khách hàng]),rpt_date  from [10.1.123.130].[BI_DATA].[dbo].[LD_100]) l
+on (ac.[Mã KH] = l.[Mã khách hàng]  and ac.rpt_date = l.rpt_date)
+where ac.[segment] in ('1.KHCN','2.KHDN','3.KHDNL')
 
------------------casa hành vi khách hàng------------------
+-----> tạo bảng temporary------- 
+select a.rpt_date,[Mã KH],[Số dư BQ quy đổi],
+				case when  s.[TenSP] is not null then s.[Khoi]
+				else p.[PhanKhuc] end [Segment]
+into ##acb
+			from [10.1.123.130].[BI_DATA].[dbo].[AC_101] a
+			left join [10.1.123.130].[MAPPING].[dbo].[PhanKhuc] p
+			on a.[Nhóm Khách hàng] = p.[NhomKH]
+			left join [10.1.123.130].[MAPPING].[dbo].[SP_dacthu] s
+			on a.[tên sản phẩm] = s.[tenSP]
+
+
+-----------------casa hành vi khách hàng-------false-----------
 with abcd as (
 select ac.[rpt_date], year([ngày tạo cif]) [Năm mở],
 		case when DATEDIFF(year,[ngày tạo cif],'2024-04-04') = 1 then N'KH mở 2023'
@@ -35,11 +68,11 @@ select ac.[rpt_date], year([ngày tạo cif]) [Năm mở],
 				when  DATEDIFF(year,[ngày tạo cif],'2024-04-04') = 3 then N'KH mở 2021'end [PL KH],
 				c.[Mã khách hàng],
 				case when l.[Gốc vay còn lại (nợ trong hạn+ nợ quá hạn)] is null then 'Non-Lending'
-					else 'Lending' end [PLKH],
+					else 'Lending' end [PLKH], ------------------> cần nhóm bảng ac vs ld theo 2 điều kiện [mã kh] và [rpt_Date] vì vd t1/22 không phát sinh sẽ tính 'Non lending' nhưng sau đó t12/22 có phát sinh sẽ ghi nhận 'ledning'
 				ac.[segment], 
 				ac.[Số dư BQ quy đổi]
 FROM [10.1.123.130].[BI_DATA].[dbo].[CU_401] c 
-left join [10.1.123.130].[BI_DATA].[dbo].[LD_100] l
+left join [10.1.123.130].[BI_DATA].[dbo].[LD_100] l  ----------------> duplicate values LD [Mã KH] xuất hiện nhiều lần
 on c.[Mã khách hàng] = l.[Mã khách hàng]
 left join 
 		(select a.rpt_date,[Mã KH],[Số dư BQ quy đổi],
@@ -53,7 +86,7 @@ left join
 			) ac
 on c.[Mã khách hàng] = ac.[Mã KH] 
 
-where [ngày tạo cif] >='2021-01-01' and ac.[segment] in ('1.KHCN','2.KHDN','3.KHDNL')
+where [ngày tạo cif] >='2021-01-01' and ac.[segment] in ('1.KHCN','2.KHDN','3.KHDNL')  -------------> nếu hạn chế ngày tạo cif thì sẽ mất KH có số dư CASA trước 2021
 )
 select rpt_date, [năm mở], [PL KH],[mã khách hàng], [PLKH] , [segment], 
 		sum([Số dư BQ quy đổi])
