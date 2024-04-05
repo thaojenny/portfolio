@@ -41,18 +41,7 @@ select a1.[rpt_date], year([ngày tạo cif]) [Năm mở],
 				a1.[segment], 
 				sum(a1.[SDBQ]),
 				count(a1.[Mã KH])
-FROM  ( select a.rpt_date,[Mã KH],
-				case when  s.[TenSP] is not null then s.[Khoi]
-				else p.[PhanKhuc] end [Segment],sum([Số dư BQ quy đổi]) [SDBQ]
-			from [10.1.123.130].[BI_DATA].[dbo].[AC_101] a
-			left join [10.1.123.130].[MAPPING].[dbo].[PhanKhuc] p
-			on a.[Nhóm Khách hàng] = p.[NhomKH]
-			left join [10.1.123.130].[MAPPING].[dbo].[SP_dacthu] s
-			on a.[tên sản phẩm] = s.[tenSP]
-		 where rpt_date >= '20190101' 
-		 group by a.rpt_date,[Mã KH],
-				case when  s.[TenSP] is not null then s.[Khoi]
-				else p.[PhanKhuc] end ) a1
+FROM  ( select * from ##ac) a1
 left join (select [mã khách hàng],[ngày tạo cif], [chi nhánh],[phân loại khách hàng] from  [10.1.123.130].[BI_DATA].[dbo].[CU_401]) c
 		
 on c.[Mã khách hàng] = a1.[Mã KH] 
@@ -73,21 +62,24 @@ group by a1.[rpt_date], year([ngày tạo cif]) ,
 				case when l.[mã khách hàng] is null then 'Non-Lending'
 					else 'Lending' end ,
 				a1.[segment]
-
-
+ 
 -----> tạo bảng temporary------- 
-select a.rpt_date,[Mã KH],
+ select a.rpt_date,[Mã KH],
 				case when  s.[TenSP] is not null then s.[Khoi]
 				else p.[PhanKhuc] end [Segment],sum([Số dư BQ quy đổi]) [SDBQ]
-into ##acbd
+into ##ac
 			from [10.1.123.130].[BI_DATA].[dbo].[AC_101] a
 			left join [10.1.123.130].[MAPPING].[dbo].[PhanKhuc] p
 			on a.[Nhóm Khách hàng] = p.[NhomKH]
 			left join [10.1.123.130].[MAPPING].[dbo].[SP_dacthu] s
 			on a.[tên sản phẩm] = s.[tenSP]
-group by a.rpt_date,[Mã KH],
+		 where rpt_date >= '20190101' 
+		 group by a.rpt_date,[Mã KH],
 				case when  s.[TenSP] is not null then s.[Khoi]
 				else p.[PhanKhuc] end 
+
+
+
 
 -----------------casa hành vi khách hàng-------false-----------
 with abcd as (
