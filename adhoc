@@ -27,26 +27,28 @@ group by [year-month], [segment]
 order by [year-month], [segment]
 
 ---------------------------casa hành vi khách hàng-----true----------------------
-select ac.[rpt_date], year([ngày tạo cif]) [Năm mở],
+select a1.[rpt_date], year([ngày tạo cif]) [Năm mở],
 		case when year([ngày tạo cif]) ='2024' then N'<1'
 				when year([ngày tạo cif]) ='2023'  then N'1'
 				when   year([ngày tạo cif]) ='2022' then N'2' 
-				when year([ngày tạo cif]) ='2021' then '3' else '>3' end [PL KH],
+				when year([ngày tạo cif]) ='2021' then 	'3' 
+				when year([ngày tạo cif]) ='2020' then '4'
+				else '>4' end [PL KH],
 				c.[Mã khách hàng],
 				c.[chi nhánh],
 				c.[phân loại khách hàng],
 				case when l.[mã khách hàng] is null then 'Non-Lending'
 					else 'Lending' end [PLKH],
-				ac.[segment], 
-				ac.[Số dư BQ quy đổi]
-FROM  (select * from ##acb
-			) ac
+				a1.[segment], 
+				a1.[SDBQ]
+FROM  (select * from ##acbd  where rpt_date >= '20190101' ) a1
 left join (select [mã khách hàng],[ngày tạo cif], [chi nhánh],[phân loại khách hàng] from  [10.1.123.130].[BI_DATA].[dbo].[CU_401]) c
 		
-on c.[Mã khách hàng] = ac.[Mã KH] 
-left join (select distinct([Mã khách hàng]),rpt_date  from [10.1.123.130].[BI_DATA].[dbo].[LD_100]) l
-on (ac.[Mã KH] = l.[Mã khách hàng]  and ac.rpt_date = l.rpt_date)
-where ac.[segment] in ('1.KHCN','2.KHDN','3.KHDNL')
+on c.[Mã khách hàng] = a1.[Mã KH] 
+left join (select distinct([Mã khách hàng]),rpt_date  from [10.1.123.130].[BI_DATA].[dbo].[LD_100] where rpt_date >= '20190101') l
+on (a1.[Mã KH] = l.[Mã khách hàng]  and a1.rpt_date = l.rpt_date)
+where a1.[segment] in ('1.KHCN','2.KHDN','3.KHDNL')
+
 
 -----> tạo bảng temporary------- 
 select a.rpt_date,[Mã KH],
