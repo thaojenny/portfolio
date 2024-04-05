@@ -34,20 +34,45 @@ select a1.[rpt_date], year([ngày tạo cif]) [Năm mở],
 				when year([ngày tạo cif]) ='2021' then 	'3' 
 				when year([ngày tạo cif]) ='2020' then '4'
 				else '>4' end [PL KH],
-				c.[Mã khách hàng],
-				c.[chi nhánh],
+				dv.[Vùng],
 				c.[phân loại khách hàng],
 				case when l.[mã khách hàng] is null then 'Non-Lending'
 					else 'Lending' end [PLKH],
 				a1.[segment], 
-				a1.[SDBQ]
-FROM  (select * from ##acbd  where rpt_date >= '20190101' ) a1
+				sum(a1.[SDBQ]),
+				count(a1.[Mã KH])
+FROM  ( select a.rpt_date,[Mã KH],
+				case when  s.[TenSP] is not null then s.[Khoi]
+				else p.[PhanKhuc] end [Segment],sum([Số dư BQ quy đổi]) [SDBQ]
+			from [10.1.123.130].[BI_DATA].[dbo].[AC_101] a
+			left join [10.1.123.130].[MAPPING].[dbo].[PhanKhuc] p
+			on a.[Nhóm Khách hàng] = p.[NhomKH]
+			left join [10.1.123.130].[MAPPING].[dbo].[SP_dacthu] s
+			on a.[tên sản phẩm] = s.[tenSP]
+		 where rpt_date >= '20190101' 
+		 group by a.rpt_date,[Mã KH],
+				case when  s.[TenSP] is not null then s.[Khoi]
+				else p.[PhanKhuc] end ) a1
 left join (select [mã khách hàng],[ngày tạo cif], [chi nhánh],[phân loại khách hàng] from  [10.1.123.130].[BI_DATA].[dbo].[CU_401]) c
 		
 on c.[Mã khách hàng] = a1.[Mã KH] 
 left join (select distinct([Mã khách hàng]),rpt_date  from [10.1.123.130].[BI_DATA].[dbo].[LD_100] where rpt_date >= '20190101') l
 on (a1.[Mã KH] = l.[Mã khách hàng]  and a1.rpt_date = l.rpt_date)
+left join [10.1.123.130].[MAPPING].[dbo].[DS_DVKD] dv
+on c.[chi nhánh] = dv.[Ma_DVKD]
 where a1.[segment] in ('1.KHCN','2.KHDN','3.KHDNL')
+group by a1.[rpt_date], year([ngày tạo cif]) ,
+		case when year([ngày tạo cif]) ='2024' then N'<1'
+				when year([ngày tạo cif]) ='2023'  then N'1'
+				when   year([ngày tạo cif]) ='2022' then N'2' 
+				when year([ngày tạo cif]) ='2021' then 	'3' 
+				when year([ngày tạo cif]) ='2020' then '4'
+				else '>4' end ,
+				dv.[Vùng],
+				c.[phân loại khách hàng],
+				case when l.[mã khách hàng] is null then 'Non-Lending'
+					else 'Lending' end ,
+				a1.[segment]
 
 
 -----> tạo bảng temporary------- 
