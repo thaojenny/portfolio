@@ -49,16 +49,18 @@ on (ac.[Mã KH] = l.[Mã khách hàng]  and ac.rpt_date = l.rpt_date)
 where ac.[segment] in ('1.KHCN','2.KHDN','3.KHDNL')
 
 -----> tạo bảng temporary------- 
-select a.rpt_date,[Mã KH],[Số dư BQ quy đổi],
+select a.rpt_date,[Mã KH],
 				case when  s.[TenSP] is not null then s.[Khoi]
-				else p.[PhanKhuc] end [Segment]
-into ##acb
+				else p.[PhanKhuc] end [Segment],sum([Số dư BQ quy đổi]) [SDBQ]
+into ##acbd
 			from [10.1.123.130].[BI_DATA].[dbo].[AC_101] a
 			left join [10.1.123.130].[MAPPING].[dbo].[PhanKhuc] p
 			on a.[Nhóm Khách hàng] = p.[NhomKH]
 			left join [10.1.123.130].[MAPPING].[dbo].[SP_dacthu] s
 			on a.[tên sản phẩm] = s.[tenSP]
-
+group by a.rpt_date,[Mã KH],
+				case when  s.[TenSP] is not null then s.[Khoi]
+				else p.[PhanKhuc] end 
 
 -----------------casa hành vi khách hàng-------false-----------
 with abcd as (
