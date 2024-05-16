@@ -1,0 +1,129 @@
+--------------tuổi KH----gold&silver-----------
+select a.[date], a.[số cif], a.[PLKH_tần suất], b.[date mở tk]
+  from 
+   (select [date], [số cif],
+	     case when [tần suất gd] between 1 and 3 then N'KH Silver' 
+		 when [tần suất gd] between 4 and 9 then N'KH Gold'
+		 when [tần suất gd] >= 10 then N'KH Diamond'  else 'KH Bronze' end [PLKH_tần suất]
+			FROM [CLKD].[dbo].[NHS]) a
+
+	left join 
+	(select [mã khách hàng],format([ngày tạo cif],'yyyy-mm-dd') [date mở tk]
+		FROM [BI_DATA].[dbo].[CU_401]) b
+	on a.[số cif] = b.[mã khách hàng]
+	where a.[PLKH_tần suất] in ('KH Silver', 'KH Gold')
+
+
+
+------------Nhóm KH có qh với PVCB số lượng nam nữ----------
+
+  select 
+  case when 2024- year([Ngày tạo CIF]) <= 1 then N'<=1 năm'
+		when 2024- year([Ngày tạo CIF]) =2 then N'2 năm'
+		else N'trên 3 năm' end [Năm QH vs PVCB],
+
+  case when DATEDIFF(year,c1.[ngày sinh],'2024-04-24') <= 22 then N'Nhóm KH dưới 22 tuổi'
+		when DATEDIFF(year,c1.[ngày sinh],'2024-04-24') between 23 and 45 then N'KH 23-45'
+		else N'>45' end [Độ tuổi KH], 
+
+case when [Giới tính] =N'Nữ' then count(*) end [SL nữ],
+case when [Giới tính] =N'Nam' then count(*) end [SL nam]
+
+from (select * FROM [BI_DATA].[dbo].[CU_401] where [Ngày tạo CIF]>= '2021-01-01') c1
+
+left join [MAPPING].[dbo].[PhanKhuc] p
+on c1.[Nhóm khách hàng] = p.[NhomKH]
+where p.[PhanKhuc] ='1.KHCN'
+group by 
+	case when 2024- year([Ngày tạo CIF]) <= 1 then N'<=1 năm'
+		when 2024- year([Ngày tạo CIF]) =2 then N'2 năm'
+		else N'trên 3 năm' end ,
+
+  case when DATEDIFF(year,c1.[ngày sinh],'2024-04-24') <= 22 then N'Nhóm KH dưới 22 tuổi'
+		when DATEDIFF(year,c1.[ngày sinh],'2024-04-24') between 23 and 45 then N'KH 23-45'
+		else N'>45' end , [Giới tính]
+
+order by case when 2024- year([Ngày tạo CIF]) <= 1 then N'<=1 năm'
+		when 2024- year([Ngày tạo CIF]) =2 then N'2 năm'
+		else N'trên 3 năm' end 
+
+
+
+--------------số dư bq & slkh theo độ tuổi và nhóm năm qh với pvcb-------------
+select a.[rpt_date],
+  case when 2024- year(c.[Ngày tạo CIF]) <= 1 then N'<=1 năm'
+		when 2024- year(c.[Ngày tạo CIF]) =2 then N'2 năm'
+		else N'trên 3 năm' end [Năm QH vs PVCB],
+
+	case when DATEDIFF(year,c.[ngày sinh],'2024-04-24') <= 22 then N'Nhóm KH dưới 22 tuổi'
+		when DATEDIFF(year,c.[ngày sinh],'2024-04-24') between 23 and 45 then N'KH 23-45'
+		else N'>45' end [Độ tuổi KH],
+	COUNT(distinct c.[Mã Khách hàng]) [SLKH],
+	sum(a.[Số dư BQ quy đổi]) [SDBQ]
+
+from (select * from [BI_DATA].[dbo].[CU_401] where [Ngày tạo CIF] >= '2021-01-01') c
+left join [MAPPING].[dbo].[PhanKhuc] p
+on c.[Nhóm khách hàng] = p.[NhomKH]
+left join [BI_DATA].[dbo].[AC_101] a
+on c.[Mã Khách hàng] = a.[Mã KH]
+where p.PhanKhuc ='1.KHCN'
+group by a.[rpt_date], case when 2024- year(c.[Ngày tạo CIF]) <= 1 then N'<=1 năm'
+		when 2024- year(c.[Ngày tạo CIF]) =2 then N'2 năm'
+		else N'trên 3 năm' end,
+		case when DATEDIFF(year,c.[ngày sinh],'2024-04-24') <= 22 then N'Nhóm KH dưới 22 tuổi'
+		when DATEDIFF(year,c.[ngày sinh],'2024-04-24') between 23 and 45 then N'KH 23-45'
+		else N'>45' end 
+order by a.[rpt_date], case when 2024- year(c.[Ngày tạo CIF]) <= 1 then N'<=1 năm'
+		when 2024- year(c.[Ngày tạo CIF]) =2 then N'2 năm'
+		else N'trên 3 năm' end
+
+
+
+------------------slkh & sdbq KH theo năm QH vs PVCB và giới tính-----------------
+select 
+  case when 2024- year(c.[Ngày tạo CIF]) <= 1 then N'<=1 năm'
+		when 2024- year(c.[Ngày tạo CIF]) =2 then N'2 năm'
+		else N'trên 3 năm' end [Năm QH vs PVCB],
+
+case when [Giới tính] =N'Nữ' then N'Nữ' else 'Nam' end [Giới tính],
+
+	COUNT(distinct c.[Mã Khách hàng]) [SLKH],
+	sum(a.[Số dư BQ quy đổi]) [SDBQ]
+
+from (select * from [BI_DATA].[dbo].[CU_401] where [Ngày tạo CIF] >= '2021-01-01') c
+left join [MAPPING].[dbo].[PhanKhuc] p
+on c.[Nhóm khách hàng] = p.[NhomKH]
+left join [BI_DATA].[dbo].[AC_101] a
+on c.[Mã Khách hàng] = a.[Mã KH]
+where p.PhanKhuc ='1.KHCN'
+group by case when 2024- year(c.[Ngày tạo CIF]) <= 1 then N'<=1 năm'
+		when 2024- year(c.[Ngày tạo CIF]) =2 then N'2 năm'
+		else N'trên 3 năm' end,
+		case when [Giới tính] =N'Nữ' then N'Nữ' else 'Nam' end
+order by case when 2024- year(c.[Ngày tạo CIF]) <= 1 then N'<=1 năm'
+		when 2024- year(c.[Ngày tạo CIF]) =2 then N'2 năm'
+		else N'trên 3 năm' end
+
+
+
+------------------------chi tiết tín dụng --- theo dõi casa khcn-----------------
+select c.[mã khách hàng], 
+		case when 2024- year(c.[Ngày tạo CIF]) <= 1 then N'<=1 năm'
+		when 2024- year(c.[Ngày tạo CIF]) =2 then N'2 năm'
+		else N'trên 3 năm' end [Năm QH vs PVCB],
+		case when DATEDIFF(year,c.[ngày sinh],'2024-04-24') <= 22 then N'Nhóm KH dưới 22 tuổi'
+		when DATEDIFF(year,c.[ngày sinh],'2024-04-24') between 23 and 45 then N'KH 23-45'
+		else N'>45' end [Độ tuổi KH],
+		l.[số hợp đồng tín dụng], l.[gốc vay giải ngân],l.[kỳ hạn hợp đồng],l.[Phân theo kỳ hạn (NH,TD,DH)],l.[Sub product.Tên sản phẩm]
+
+from 
+	(select [mã khách hàng], [ngày tạo cif],[ngày sinh], [chi nhánh] 
+	from  [BI_DATA].[dbo].[CU_401] a
+	left join [MAPPING].[dbo].[DS_DVKD] b
+	on a.[chi nhánh] = b.[Ma_DVKD]
+	left join [MAPPING].[dbo].[PhanKhuc] p
+	on a.[Nhóm khách hàng] = p.[NhomKH]
+	where [Ngày tạo CIF] >= '2021-01-01' and b.[Vùng] in (N'Vùng 2',N'Vùng 5', N'Vùng 6') and p.[PhanKhuc] = '1.KHCN') c
+left join ( select [mã khách hàng],[số hợp đồng tín dụng],[gốc vay giải ngân],[kỳ hạn hợp đồng],[Phân theo kỳ hạn (NH,TD,DH)],[Sub product.Tên sản phẩm]  from [BI_DATA].[dbo].[LD_100]) l
+on c.[mã khách hàng] = l.[mã khách hàng]
+where l.[gốc vay giải ngân] > 1000000
