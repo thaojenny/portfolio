@@ -89,3 +89,15 @@ EXEC sp_rename 'tablename.columnname_to change', 'columname_target', 'COLUMN';
 
 -------create a column with a defined name-------------------
 N'Tháng ' +substring([Rpt_date],5,2)) [Tháng]
+
+
+------------Đổi từ nvarchar sang date-------------
+alter table [CLKD].[dbo].[NHS_Transaction]
+alter column [ngày giao dịch] datetime
+
+c2: upload table lên rồi 
+insert into transaction_table
+
+select convert(datetime,[ngày giao dịch],101),……
+from table vừa upload
+
