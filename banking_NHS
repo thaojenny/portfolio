@@ -1,0 +1,58 @@
+
+-------------------------------Chart 2: Topup & Purchase (KH mở mới) theo từng tháng
+Chart 5: Topup & Purchase theo từng tháng và theo Phân loại KH (Silver, Bronze, Gold, Silver)
+Chart 7 + 8: Phân phối tiền giữ lại theo PLKH có mức tiền giữ lại cao -----------------------------------
+
+select distinct a.[date], a.[số cif],[PLKH_tần suất], sum(isnull([top up],0)) [Topup], sum(isnull([purchase],0)) [Purchase]
+
+	 from ( select [date], [số cif],
+	     case when [tần suất gd] between 1 and 3 then N'KH Silver (1-3 lần/tháng)' 
+		 when [tần suất gd] between 4 and 9 then N'KH Gold (4-9 lần/tháng)'
+		 when [tần suất gd] >= 10 then N'KH Diamond (>=10 lần/tháng)' 
+else N'KH Bronze (0 lần/tháng)' end [PLKH_tần suất]
+			FROM [CLKD].[dbo].[NHS]) a
+
+  left join 
+  ( select convert(nvarchar(6),concat(format(month([Ngày giao dịch]),'00'), YEAR([ngày giao dịch]))) [date], [cif],
+			case when [Loại giao dịch] ='topup' then [Số Tiền] end [top up],
+			case when [Loại giao dịch] = 'purchase' then [Số Tiền] end [purchase]
+    FROM [CLKD].[dbo].[NHS_Transaction]
+ 
+  ) b
+  on a.[số cif] = b. [cif] and a.[date] = b.[date]
+  group by a.[date], a.[số cif],[PLKH_tần suất]
+  order by a.[date]
+
+
+------------------------------chart 3: Lũy kế CASA & Ticket size theo từng tháng toàn DM
+Chart 6: Lũy kế CASA theo nhóm KH mở T1/2/3/4 --------------------------------
+  select distinct rpt_date, [segment], sum([sdbq]) [Số dư BQ]
+from 
+(select rpt_date ,[Mã KH], sum([số dư BQ quy đổi]) [SDBQ]
+ FROM [BI_DATA].[dbo].[AC_101]
+ where rpt_date >= 20240101
+ group by rpt_date ,[Mã KH]) a
+ left join 
+(select [Số CIF], [ngày tạo],
+		concat('KH T',MONTH([Ngày tạo]),'/', year([Ngày tạo])) [segment]
+	FROM [CLKD].[dbo].[NHS_Customer]
+	) c
+ on a.[mã kh] = c.[số cif] 
+ where c.[segment] is not null and c.[Ngày tạo] < a.Rpt_date
+ group by rpt_date, [segment]
+ order by rpt_date, [segment]
+
+
+
+-----------------------Chart 1: Tổng số lượng KH & số dư BQ của KH mở mới theo từng tháng
+Chart 4: Phân loại KH sử dụng--------------------------
+SELECT [date]
+      ,[Số CIF]
+	  ,case when [Tần suất gd] between 1 and 3 then N'KH Silver (1-3 lần/tháng)' 
+		 when [Tần suất gd] between 4 and 9 then N'KH Gold (4-9 lần/tháng)'
+		 when [Tần suất gd] >= 10 then N'KH Diamond (>=10 lần/tháng)' 
+else N'KH Bronze (0 lần/tháng)' end [PLKH_tần suất]
+      ,[Tần suất gd]
+      ,isnull([SDBQ],0) [Số dư BQ]
+      ,isnull([SDCK],0) [Số dư CK]
+  FROM [CLKD].[dbo].[NHS]
