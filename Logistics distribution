@@ -1,3 +1,184 @@
+--------------------------------------CONSO DISTRIBUTION OF LOGISTICS FINANCIAL INDEX-------------------------------
+with cang as
+(select 
+	N'Cảng' as [Segment],[masothue],[tenDN],
+	[Doanhthu_Thuan_BH_CCDV] [DTT],
+(isnull(SR_Phaitra_NBan_NH,0) + isnull([SR_NMua_Tratruoc_NH],0)  + isnull([SR_Thue],0) + isnull([SR_PhaiTra_NguoiLD],0) + isnull([SR_VayNoTC_NH],0) + isnull([SR_DP_Phaitra_NH],0))*1e6 [No ngan han],
+[SR_NoPhaitra_CK]/nullif([SR_Von_ChuSohuu_CK],0) [He so no],
+(isnull(SR_Tien,0) + isnull(SR_DautuTC_NH,0) + isnull(SR_PhaiThu_NH,0)- isnull([SR_Tonkho_CK],0))*1e6/nullif((isnull(SR_Phaitra_NBan_NH,0) + isnull([SR_NMua_Tratruoc_NH],0)  + isnull([SR_Thue],0) + isnull([SR_PhaiTra_NguoiLD],0) + isnull([SR_VayNoTC_NH],0) + isnull([SR_DP_Phaitra_NH],0))*1e6,0) [HSTTN],
+[SR_Von_ChuSohuu_CK]/nullif([SR_Nguonvon_Tong_CK],0) [HSTTT],
+		[SR_Taisan_NH_CK]/nullif((isnull(SR_Phaitra_NBan_NH,0) + isnull([SR_NMua_Tratruoc_NH],0)  + isnull([SR_Thue],0) + isnull([SR_PhaiTra_NguoiLD],0) + isnull([SR_VayNoTC_NH],0) + isnull([SR_DP_Phaitra_NH],0))*1e6,0) [HSTTNHN],
+		[SR_Loinhuan_SauThue] *2 / nullif([SR_Nguonvon_Tong_CK]+[SR_Nguonvon_Tong_DK],0) [ROA],
+		[SR_Loinhuan_SauThue] *2/ nullif([SR_Von_ChuSohuu_CK]+[SR_Von_ChuSohuu_DK],0) [ROE],
+		365*[SR_Phaitra_NBan_NH]/nullif(([SR_Gia_VonHangban]+[SR_Tonkho_CK]-[SR_Tonkho_DK]),0) [VQKPTRA],
+		365*(([SR_Tonkho_CK]+[SR_Tonkho_DK])/2)/nullif([SR_Gia_VonHangban],0) [VQHTK],
+		365*[SR_PhaiThu_NH]/nullif([SR_Doanhthu_Thuan_BH_CCDV],0)   [VQKPTHU]
+from [CLKD].[dbo].[DATA_GSO_2021]
+where [MaNganhC4] in ('5222','5222','5224','5224','5224') 
+),
+	DV_hotro as
+
+( select 
+	N'DV hỗ trợ' as [Segment],[masothue],[tenDN],
+	[Doanhthu_Thuan_BH_CCDV] [DTT],
+(isnull(SR_Phaitra_NBan_NH,0) + isnull([SR_NMua_Tratruoc_NH],0)  + isnull([SR_Thue],0) + isnull([SR_PhaiTra_NguoiLD],0) + isnull([SR_VayNoTC_NH],0) + isnull([SR_DP_Phaitra_NH],0))*1e6 [No ngan han],
+[SR_NoPhaitra_CK]/nullif([SR_Von_ChuSohuu_CK],0) [He so no],
+(isnull(SR_Tien,0) + isnull(SR_DautuTC_NH,0) + isnull(SR_PhaiThu_NH,0)- isnull([SR_Tonkho_CK],0))*1e6/nullif((isnull(SR_Phaitra_NBan_NH,0) + isnull([SR_NMua_Tratruoc_NH],0)  + isnull([SR_Thue],0) + isnull([SR_PhaiTra_NguoiLD],0) + isnull([SR_VayNoTC_NH],0) + isnull([SR_DP_Phaitra_NH],0))*1e6,0) [HSTTN],
+[SR_Von_ChuSohuu_CK]/nullif([SR_Nguonvon_Tong_CK],0) [HSTTT],
+		[SR_Taisan_NH_CK]/nullif((isnull(SR_Phaitra_NBan_NH,0) + isnull([SR_NMua_Tratruoc_NH],0)  + isnull([SR_Thue],0) + isnull([SR_PhaiTra_NguoiLD],0) + isnull([SR_VayNoTC_NH],0) + isnull([SR_DP_Phaitra_NH],0))*1e6,0) [HSTTNHN],
+		[SR_Loinhuan_SauThue] *2 / nullif([SR_Nguonvon_Tong_CK]+[SR_Nguonvon_Tong_DK],0) [ROA],
+		[SR_Loinhuan_SauThue] *2/ nullif([SR_Von_ChuSohuu_CK]+[SR_Von_ChuSohuu_DK],0) [ROE],
+		365*[SR_Phaitra_NBan_NH]/nullif(([SR_Gia_VonHangban]+[SR_Tonkho_CK]-[SR_Tonkho_DK]),0) [VQKPTRA],
+		365*(([SR_Tonkho_CK]+[SR_Tonkho_DK])/2)/nullif([SR_Gia_VonHangban],0) [VQHTK],
+		365*[SR_PhaiThu_NH]/nullif([SR_Doanhthu_Thuan_BH_CCDV],0)   [VQKPTHU]
+from [CLKD].[dbo].[DATA_GSO_2021]
+where [MaNganhC4] in  ('5223','5223','5223','5225','5225','5225')
+), 
+kho as
+( select 
+	N'Kho bãi' as [Segment],[masothue],[tenDN],
+	[Doanhthu_Thuan_BH_CCDV] [DTT],
+(isnull(SR_Phaitra_NBan_NH,0) + isnull([SR_NMua_Tratruoc_NH],0)  + isnull([SR_Thue],0) + isnull([SR_PhaiTra_NguoiLD],0) + isnull([SR_VayNoTC_NH],0) + isnull([SR_DP_Phaitra_NH],0))*1e6 [No ngan han],
+[SR_NoPhaitra_CK]/nullif([SR_Von_ChuSohuu_CK],0) [He so no],
+(isnull(SR_Tien,0) + isnull(SR_DautuTC_NH,0) + isnull(SR_PhaiThu_NH,0)- isnull([SR_Tonkho_CK],0))*1e6/nullif((isnull(SR_Phaitra_NBan_NH,0) + isnull([SR_NMua_Tratruoc_NH],0)  + isnull([SR_Thue],0) + isnull([SR_PhaiTra_NguoiLD],0) + isnull([SR_VayNoTC_NH],0) + isnull([SR_DP_Phaitra_NH],0))*1e6,0) [HSTTN],
+[SR_Von_ChuSohuu_CK]/nullif([SR_Nguonvon_Tong_CK],0) [HSTTT],
+		[SR_Taisan_NH_CK]/nullif((isnull(SR_Phaitra_NBan_NH,0) + isnull([SR_NMua_Tratruoc_NH],0)  + isnull([SR_Thue],0) + isnull([SR_PhaiTra_NguoiLD],0) + isnull([SR_VayNoTC_NH],0) + isnull([SR_DP_Phaitra_NH],0))*1e6,0) [HSTTNHN],
+		[SR_Loinhuan_SauThue] *2 / nullif([SR_Nguonvon_Tong_CK]+[SR_Nguonvon_Tong_DK],0) [ROA],
+		[SR_Loinhuan_SauThue] *2/ nullif([SR_Von_ChuSohuu_CK]+[SR_Von_ChuSohuu_DK],0) [ROE],
+		365*[SR_Phaitra_NBan_NH]/nullif(([SR_Gia_VonHangban]+[SR_Tonkho_CK]-[SR_Tonkho_DK]),0) [VQKPTRA],
+		365*(([SR_Tonkho_CK]+[SR_Tonkho_DK])/2)/nullif([SR_Gia_VonHangban],0) [VQHTK],
+		365*[SR_PhaiThu_NH]/nullif([SR_Doanhthu_Thuan_BH_CCDV],0)   [VQKPTHU]
+from [CLKD].[dbo].[DATA_GSO_2021]
+where [MaNganhC4]  in ('5210','5210','5210','5224','5224','5224')
+), 
+vantai as 
+(select 
+	N'Vận tải' as [Segment],[masothue],[tenDN],
+	[Doanhthu_Thuan_BH_CCDV] [DTT],
+(isnull(SR_Phaitra_NBan_NH,0) + isnull([SR_NMua_Tratruoc_NH],0)  + isnull([SR_Thue],0) + isnull([SR_PhaiTra_NguoiLD],0) + isnull([SR_VayNoTC_NH],0) + isnull([SR_DP_Phaitra_NH],0))*1e6 [No ngan han],
+[SR_NoPhaitra_CK]/nullif([SR_Von_ChuSohuu_CK],0) [He so no],
+(isnull(SR_Tien,0) + isnull(SR_DautuTC_NH,0) + isnull(SR_PhaiThu_NH,0)- isnull([SR_Tonkho_CK],0))*1e6/nullif((isnull(SR_Phaitra_NBan_NH,0) + isnull([SR_NMua_Tratruoc_NH],0)  + isnull([SR_Thue],0) + isnull([SR_PhaiTra_NguoiLD],0) + isnull([SR_VayNoTC_NH],0) + isnull([SR_DP_Phaitra_NH],0))*1e6,0) [HSTTN],
+[SR_Von_ChuSohuu_CK]/nullif([SR_Nguonvon_Tong_CK],0) [HSTTT],
+		[SR_Taisan_NH_CK]/nullif((isnull(SR_Phaitra_NBan_NH,0) + isnull([SR_NMua_Tratruoc_NH],0)  + isnull([SR_Thue],0) + isnull([SR_PhaiTra_NguoiLD],0) + isnull([SR_VayNoTC_NH],0) + isnull([SR_DP_Phaitra_NH],0))*1e6,0) [HSTTNHN],
+		[SR_Loinhuan_SauThue] *2 / nullif([SR_Nguonvon_Tong_CK]+[SR_Nguonvon_Tong_DK],0) [ROA],
+		[SR_Loinhuan_SauThue] *2/ nullif([SR_Von_ChuSohuu_CK]+[SR_Von_ChuSohuu_DK],0) [ROE],
+		365*[SR_Phaitra_NBan_NH]/nullif(([SR_Gia_VonHangban]+[SR_Tonkho_CK]-[SR_Tonkho_DK]),0) [VQKPTRA],
+		365*(([SR_Tonkho_CK]+[SR_Tonkho_DK])/2)/nullif([SR_Gia_VonHangban],0) [VQHTK],
+		365*[SR_PhaiThu_NH]/nullif([SR_Doanhthu_Thuan_BH_CCDV],0)   [VQKPTHU]
+from [CLKD].[dbo].[DATA_GSO_2021]
+where [MaNganhC4] in  ('4911','4912','4921','4922','4929','4940','5221','5310','5320')
+),
+ conso as
+ (select *
+ from cang 
+ union 
+ select * from DV_hotro
+ union 
+ select * from kho
+ union
+ select * from  vantai)
+
+
+ SELECT [SEGMENT], N'Hệ số nợ' as [Group_hệ số], [masothue],[tenDN],
+		case when [segment] = N'Cảng' and [He so no] between PERCENTILE_CONT(0.2) within group (order by [he so no]) over (partition by [segment]) and
+		PERCENTILE_CONT(0.8) within group (order by [he so no]) over (partition by [segment]) then [He so no]
+			when [segment] = N'DV hỗ trợ' and [He so no] between PERCENTILE_CONT(0.2) within group (order by [he so no]) over (partition by [segment]) and
+		PERCENTILE_CONT(0.8) within group (order by [he so no]) over (partition by [segment]) then [He so no]
+		when [segment] = N'Kho bãi' and [He so no] between PERCENTILE_CONT(0.2) within group (order by [he so no]) over (partition by [segment]) and
+		PERCENTILE_CONT(0.8) within group (order by [he so no]) over (partition by [segment]) then [He so no]
+		when [segment] = N'vận tải' and [He so no] between PERCENTILE_CONT(0.2) within group (order by [he so no]) over (partition by [segment]) and
+		PERCENTILE_CONT(0.8) within group (order by [he so no]) over (partition by [segment]) then [He so no] end [HS]
+from conso
+union 
+SELECT [SEGMENT], N'Thanh toán nhanh' as [Group_hệ số],[masothue],[tenDN],
+		case when [segment] = N'Cảng' and [HSTTN] between PERCENTILE_CONT(0.2) within group (order by [HSTTN]) over (partition by [segment]) and
+		PERCENTILE_CONT(0.8) within group (order by [HSTTN]) over (partition by [segment]) then [HSTTN]
+			when [segment] = N'DV hỗ trợ' and [HSTTN] between PERCENTILE_CONT(0.2) within group (order by [HSTTN]) over (partition by [segment]) and
+		PERCENTILE_CONT(0.8) within group (order by [HSTTN]) over (partition by [segment]) then [HSTTN]
+		when [segment] = N'Kho bãi' and [HSTTN] between PERCENTILE_CONT(0.2) within group (order by [HSTTN]) over (partition by [segment]) and
+		PERCENTILE_CONT(0.8) within group (order by [HSTTN]) over (partition by [segment]) then [HSTTN]
+		when [segment] = N'vận tải' and [HSTTN] between PERCENTILE_CONT(0.2) within group (order by [HSTTN]) over (partition by [segment]) and
+		PERCENTILE_CONT(0.8) within group (order by [HSTTN]) over (partition by [segment]) then [HSTTN] end [HS]
+from conso
+union 
+SELECT [SEGMENT], N'Tự thanh toán' as [Group_hệ số],[masothue],[tenDN],
+		case when [segment] = N'Cảng' and [HSTTT] between PERCENTILE_CONT(0.2) within group (order by [HSTTT]) over (partition by [segment]) and
+		PERCENTILE_CONT(0.8) within group (order by [HSTTT]) over (partition by [segment]) then [HSTTT]
+			when [segment] = N'DV hỗ trợ' and [HSTTT] between PERCENTILE_CONT(0.2) within group (order by [HSTTT]) over (partition by [segment]) and
+		PERCENTILE_CONT(0.8) within group (order by [HSTTT]) over (partition by [segment]) then [HSTTT]
+		when [segment] = N'Kho bãi' and [HSTTT] between PERCENTILE_CONT(0.2) within group (order by [HSTTT]) over (partition by [segment]) and
+		PERCENTILE_CONT(0.8) within group (order by [HSTTT]) over (partition by [segment]) then [HSTTT]
+		when [segment] = N'vận tải' and [HSTTT] between PERCENTILE_CONT(0.2) within group (order by [HSTTT]) over (partition by [segment]) and
+		PERCENTILE_CONT(0.8) within group (order by [HSTTT]) over (partition by [segment]) then [HSTTT] end [HS]
+from conso
+
+union 
+SELECT [SEGMENT], N'TT Nợ ngắn hạn' as [Group_hệ số],[masothue],[tenDN],
+		case when [segment] = N'Cảng' and [HSTTNHN] between PERCENTILE_CONT(0.2) within group (order by [HSTTNHN]) over (partition by [segment]) and
+		PERCENTILE_CONT(0.8) within group (order by [HSTTNHN]) over (partition by [segment]) then [HSTTNHN]
+			when [segment] = N'DV hỗ trợ' and [HSTTNHN] between PERCENTILE_CONT(0.2) within group (order by [HSTTNHN]) over (partition by [segment]) and
+		PERCENTILE_CONT(0.8) within group (order by [HSTTNHN]) over (partition by [segment]) then [HSTTNHN]
+		when [segment] = N'Kho bãi' and [HSTTNHN] between PERCENTILE_CONT(0.2) within group (order by [HSTTNHN]) over (partition by [segment]) and
+		PERCENTILE_CONT(0.8) within group (order by [HSTTNHN]) over (partition by [segment]) then [HSTTNHN]
+		when [segment] = N'vận tải' and [HSTTNHN] between PERCENTILE_CONT(0.2) within group (order by [HSTTNHN]) over (partition by [segment]) and
+		PERCENTILE_CONT(0.8) within group (order by [HSTTNHN]) over (partition by [segment]) then [HSTTNHN] end [HS]
+from conso
+union 
+SELECT [SEGMENT], N'ROA' as [Group_hệ số],[masothue],[tenDN],
+		case when [segment] = N'Cảng' and [ROA] between PERCENTILE_CONT(0.2) within group (order by [ROA]) over (partition by [segment]) and
+		PERCENTILE_CONT(0.8) within group (order by [ROA]) over (partition by [segment]) then [ROA]
+			when [segment] = N'DV hỗ trợ' and [ROA] between PERCENTILE_CONT(0.2) within group (order by [ROA]) over (partition by [segment]) and
+		PERCENTILE_CONT(0.8) within group (order by [ROA]) over (partition by [segment]) then [ROA]
+		when [segment] = N'Kho bãi' and [ROA] between PERCENTILE_CONT(0.2) within group (order by [ROA]) over (partition by [segment]) and
+		PERCENTILE_CONT(0.8) within group (order by [ROA]) over (partition by [segment]) then [ROA]
+		when [segment] = N'vận tải' and [ROA] between PERCENTILE_CONT(0.2) within group (order by [ROA]) over (partition by [segment]) and
+		PERCENTILE_CONT(0.8) within group (order by [ROA]) over (partition by [segment]) then [ROA] end [HS]
+from conso
+
+union 
+SELECT [SEGMENT], N'ROE' as [Group_hệ số],[masothue],[tenDN],
+		case when [segment] = N'Cảng' and [ROE] between PERCENTILE_CONT(0.2) within group (order by [ROE]) over (partition by [segment]) and
+		PERCENTILE_CONT(0.8) within group (order by [ROE]) over (partition by [segment]) then [ROE]
+			when [segment] = N'DV hỗ trợ' and [ROE] between PERCENTILE_CONT(0.2) within group (order by [ROE]) over (partition by [segment]) and
+		PERCENTILE_CONT(0.8) within group (order by [ROE]) over (partition by [segment]) then [ROE]
+		when [segment] = N'Kho bãi' and [ROE] between PERCENTILE_CONT(0.2) within group (order by [ROE]) over (partition by [segment]) and
+		PERCENTILE_CONT(0.8) within group (order by [ROE]) over (partition by [segment]) then [ROE]
+		when [segment] = N'vận tải' and [ROE] between PERCENTILE_CONT(0.2) within group (order by [ROE]) over (partition by [segment]) and
+		PERCENTILE_CONT(0.8) within group (order by [ROE]) over (partition by [segment]) then [ROE] end [HS]
+from conso
+union 
+SELECT [SEGMENT], N'VQ KPTRA' as [Group_hệ số],[masothue],[tenDN],
+		case when [segment] = N'Cảng' and [VQKPTRA] between PERCENTILE_CONT(0.2) within group (order by [VQKPTRA]) over (partition by [segment]) and
+		PERCENTILE_CONT(0.8) within group (order by [VQKPTRA]) over (partition by [segment]) then [VQKPTRA]
+			when [segment] = N'DV hỗ trợ' and [VQKPTRA] between PERCENTILE_CONT(0.2) within group (order by [VQKPTRA]) over (partition by [segment]) and
+		PERCENTILE_CONT(0.8) within group (order by [VQKPTRA]) over (partition by [segment]) then [VQKPTRA]
+		when [segment] = N'Kho bãi' and [VQKPTRA] between PERCENTILE_CONT(0.2) within group (order by [VQKPTRA]) over (partition by [segment]) and
+		PERCENTILE_CONT(0.8) within group (order by [VQKPTRA]) over (partition by [segment]) then [VQKPTRA]
+		when [segment] = N'vận tải' and [VQKPTRA] between PERCENTILE_CONT(0.2) within group (order by [VQKPTRA]) over (partition by [segment]) and
+		PERCENTILE_CONT(0.8) within group (order by [VQKPTRA]) over (partition by [segment]) then [VQKPTRA] end [HS]
+from conso
+union 
+SELECT [SEGMENT], N'VQ KPTHU' as [Group_hệ số],[masothue],[tenDN],
+		case when [segment] = N'Cảng' and [VQKPTHU] between PERCENTILE_CONT(0.2) within group (order by [VQKPTHU]) over (partition by [segment]) and
+		PERCENTILE_CONT(0.8) within group (order by [VQKPTHU]) over (partition by [segment]) then [VQKPTHU]
+			when [segment] = N'DV hỗ trợ' and [VQKPTHU] between PERCENTILE_CONT(0.2) within group (order by [VQKPTHU]) over (partition by [segment]) and
+		PERCENTILE_CONT(0.8) within group (order by [VQKPTHU]) over (partition by [segment]) then [VQKPTHU]
+		when [segment] = N'Kho bãi' and [VQKPTHU] between PERCENTILE_CONT(0.2) within group (order by [VQKPTHU]) over (partition by [segment]) and
+		PERCENTILE_CONT(0.8) within group (order by [VQKPTHU]) over (partition by [segment]) then [VQKPTHU]
+		when [segment] = N'vận tải' and [VQKPTHU] between PERCENTILE_CONT(0.2) within group (order by [VQKPTHU]) over (partition by [segment]) and
+		PERCENTILE_CONT(0.8) within group (order by [VQKPTHU]) over (partition by [segment]) then [VQKPTHU] end [HS]
+from conso
+union 
+SELECT [SEGMENT], N'HTK' as [Group_hệ số],[masothue],[tenDN],
+		case when [segment] = N'Cảng' and [VQHTK] between PERCENTILE_CONT(0.2) within group (order by [VQHTK]) over (partition by [segment]) and
+		PERCENTILE_CONT(0.8) within group (order by [VQHTK]) over (partition by [segment]) then [VQHTK]
+			when [segment] = N'DV hỗ trợ' and [VQHTK] between PERCENTILE_CONT(0.2) within group (order by [VQHTK]) over (partition by [segment]) and
+		PERCENTILE_CONT(0.8) within group (order by [VQHTK]) over (partition by [segment]) then [VQHTK]
+		when [segment] = N'Kho bãi' and [VQHTK] between PERCENTILE_CONT(0.2) within group (order by [VQHTK]) over (partition by [segment]) and
+		PERCENTILE_CONT(0.8) within group (order by [VQHTK]) over (partition by [segment]) then [VQHTK]
+		when [segment] = N'vận tải' and [VQHTK] between PERCENTILE_CONT(0.2) within group (order by [VQHTK]) over (partition by [segment]) and
+		PERCENTILE_CONT(0.8) within group (order by [VQHTK]) over (partition by [segment]) then [VQHTK] end [HS]
+from conso
 
 
 -----------------------------FIND OUT PERCENTILE 0.2 AND 0.8 OF EACH SEGMENT------------------------------------------
