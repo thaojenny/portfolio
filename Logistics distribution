@@ -1,0 +1,102 @@
+
+
+-----------------------------FIND OUT PERCENTILE 0.2 AND 0.8 OF EACH SEGMENT------------------------------------------
+with cang as
+(select 
+	N'Cảng' as [Segment],
+	[Doanhthu_Thuan_BH_CCDV] [DTT],
+(isnull(SR_Phaitra_NBan_NH,0) + isnull([SR_NMua_Tratruoc_NH],0)  + isnull([SR_Thue],0) + isnull([SR_PhaiTra_NguoiLD],0) + isnull([SR_VayNoTC_NH],0) + isnull([SR_DP_Phaitra_NH],0))*1e6 [No ngan han],
+[SR_NoPhaitra_CK]/nullif([SR_Von_ChuSohuu_CK],0) [He so no],
+(isnull(SR_Tien,0) + isnull(SR_DautuTC_NH,0) + isnull(SR_PhaiThu_NH,0)- isnull([SR_Tonkho_CK],0))*1e6/nullif((isnull(SR_Phaitra_NBan_NH,0) + isnull([SR_NMua_Tratruoc_NH],0)  + isnull([SR_Thue],0) + isnull([SR_PhaiTra_NguoiLD],0) + isnull([SR_VayNoTC_NH],0) + isnull([SR_DP_Phaitra_NH],0))*1e6,0) [HSTTN],
+[SR_Von_ChuSohuu_CK]/nullif([SR_Nguonvon_Tong_CK],0) [HSTTT],
+		[SR_Taisan_NH_CK]/nullif((isnull(SR_Phaitra_NBan_NH,0) + isnull([SR_NMua_Tratruoc_NH],0)  + isnull([SR_Thue],0) + isnull([SR_PhaiTra_NguoiLD],0) + isnull([SR_VayNoTC_NH],0) + isnull([SR_DP_Phaitra_NH],0))*1e6,0) [HSTTNHN],
+		[SR_Loinhuan_SauThue] *2 / nullif([SR_Nguonvon_Tong_CK]+[SR_Nguonvon_Tong_DK],0) [ROA],
+		[SR_Loinhuan_SauThue] *2/ nullif([SR_Von_ChuSohuu_CK]+[SR_Von_ChuSohuu_DK],0) [ROE],
+		365*[SR_Phaitra_NBan_NH]/nullif(([SR_Gia_VonHangban]+[SR_Tonkho_CK]-[SR_Tonkho_DK]),0) [VQKPTRA],
+		365*(([SR_Tonkho_CK]+[SR_Tonkho_DK])/2)/nullif([SR_Gia_VonHangban],0) [VQHTK],
+		365*[SR_PhaiThu_NH]/nullif([SR_Doanhthu_Thuan_BH_CCDV],0)   [VQKPTHU]
+from [CLKD].[dbo].[DATA_GSO_2021]
+where [MaNganhC4] in ('5222','5222','5224','5224','5224') 
+),
+	DV_hotro as
+
+( select 
+	N'DV hỗ trợ' as [Segment],
+	[Doanhthu_Thuan_BH_CCDV] [DTT],
+(isnull(SR_Phaitra_NBan_NH,0) + isnull([SR_NMua_Tratruoc_NH],0)  + isnull([SR_Thue],0) + isnull([SR_PhaiTra_NguoiLD],0) + isnull([SR_VayNoTC_NH],0) + isnull([SR_DP_Phaitra_NH],0))*1e6 [No ngan han],
+[SR_NoPhaitra_CK]/nullif([SR_Von_ChuSohuu_CK],0) [He so no],
+(isnull(SR_Tien,0) + isnull(SR_DautuTC_NH,0) + isnull(SR_PhaiThu_NH,0)- isnull([SR_Tonkho_CK],0))*1e6/nullif((isnull(SR_Phaitra_NBan_NH,0) + isnull([SR_NMua_Tratruoc_NH],0)  + isnull([SR_Thue],0) + isnull([SR_PhaiTra_NguoiLD],0) + isnull([SR_VayNoTC_NH],0) + isnull([SR_DP_Phaitra_NH],0))*1e6,0) [HSTTN],
+[SR_Von_ChuSohuu_CK]/nullif([SR_Nguonvon_Tong_CK],0) [HSTTT],
+		[SR_Taisan_NH_CK]/nullif((isnull(SR_Phaitra_NBan_NH,0) + isnull([SR_NMua_Tratruoc_NH],0)  + isnull([SR_Thue],0) + isnull([SR_PhaiTra_NguoiLD],0) + isnull([SR_VayNoTC_NH],0) + isnull([SR_DP_Phaitra_NH],0))*1e6,0) [HSTTNHN],
+		[SR_Loinhuan_SauThue] *2 / nullif([SR_Nguonvon_Tong_CK]+[SR_Nguonvon_Tong_DK],0) [ROA],
+		[SR_Loinhuan_SauThue] *2/ nullif([SR_Von_ChuSohuu_CK]+[SR_Von_ChuSohuu_DK],0) [ROE],
+		365*[SR_Phaitra_NBan_NH]/nullif(([SR_Gia_VonHangban]+[SR_Tonkho_CK]-[SR_Tonkho_DK]),0) [VQKPTRA],
+		365*(([SR_Tonkho_CK]+[SR_Tonkho_DK])/2)/nullif([SR_Gia_VonHangban],0) [VQHTK],
+		365*[SR_PhaiThu_NH]/nullif([SR_Doanhthu_Thuan_BH_CCDV],0)   [VQKPTHU]
+from [CLKD].[dbo].[DATA_GSO_2021]
+where [MaNganhC4] in  ('5223','5223','5223','5225','5225','5225')
+), 
+kho as
+( select 
+	N'Kho bãi' as [Segment],
+	[Doanhthu_Thuan_BH_CCDV] [DTT],
+(isnull(SR_Phaitra_NBan_NH,0) + isnull([SR_NMua_Tratruoc_NH],0)  + isnull([SR_Thue],0) + isnull([SR_PhaiTra_NguoiLD],0) + isnull([SR_VayNoTC_NH],0) + isnull([SR_DP_Phaitra_NH],0))*1e6 [No ngan han],
+[SR_NoPhaitra_CK]/nullif([SR_Von_ChuSohuu_CK],0) [He so no],
+(isnull(SR_Tien,0) + isnull(SR_DautuTC_NH,0) + isnull(SR_PhaiThu_NH,0)- isnull([SR_Tonkho_CK],0))*1e6/nullif((isnull(SR_Phaitra_NBan_NH,0) + isnull([SR_NMua_Tratruoc_NH],0)  + isnull([SR_Thue],0) + isnull([SR_PhaiTra_NguoiLD],0) + isnull([SR_VayNoTC_NH],0) + isnull([SR_DP_Phaitra_NH],0))*1e6,0) [HSTTN],
+[SR_Von_ChuSohuu_CK]/nullif([SR_Nguonvon_Tong_CK],0) [HSTTT],
+		[SR_Taisan_NH_CK]/nullif((isnull(SR_Phaitra_NBan_NH,0) + isnull([SR_NMua_Tratruoc_NH],0)  + isnull([SR_Thue],0) + isnull([SR_PhaiTra_NguoiLD],0) + isnull([SR_VayNoTC_NH],0) + isnull([SR_DP_Phaitra_NH],0))*1e6,0) [HSTTNHN],
+		[SR_Loinhuan_SauThue] *2 / nullif([SR_Nguonvon_Tong_CK]+[SR_Nguonvon_Tong_DK],0) [ROA],
+		[SR_Loinhuan_SauThue] *2/ nullif([SR_Von_ChuSohuu_CK]+[SR_Von_ChuSohuu_DK],0) [ROE],
+		365*[SR_Phaitra_NBan_NH]/nullif(([SR_Gia_VonHangban]+[SR_Tonkho_CK]-[SR_Tonkho_DK]),0) [VQKPTRA],
+		365*(([SR_Tonkho_CK]+[SR_Tonkho_DK])/2)/nullif([SR_Gia_VonHangban],0) [VQHTK],
+		365*[SR_PhaiThu_NH]/nullif([SR_Doanhthu_Thuan_BH_CCDV],0)   [VQKPTHU]
+from [CLKD].[dbo].[DATA_GSO_2021]
+where [MaNganhC4]  in ('5210','5210','5210','5224','5224','5224')
+), 
+vantai as 
+(select 
+	N'Vận tải' as [Segment],
+	[Doanhthu_Thuan_BH_CCDV] [DTT],
+(isnull(SR_Phaitra_NBan_NH,0) + isnull([SR_NMua_Tratruoc_NH],0)  + isnull([SR_Thue],0) + isnull([SR_PhaiTra_NguoiLD],0) + isnull([SR_VayNoTC_NH],0) + isnull([SR_DP_Phaitra_NH],0))*1e6 [No ngan han],
+[SR_NoPhaitra_CK]/nullif([SR_Von_ChuSohuu_CK],0) [He so no],
+(isnull(SR_Tien,0) + isnull(SR_DautuTC_NH,0) + isnull(SR_PhaiThu_NH,0)- isnull([SR_Tonkho_CK],0))*1e6/nullif((isnull(SR_Phaitra_NBan_NH,0) + isnull([SR_NMua_Tratruoc_NH],0)  + isnull([SR_Thue],0) + isnull([SR_PhaiTra_NguoiLD],0) + isnull([SR_VayNoTC_NH],0) + isnull([SR_DP_Phaitra_NH],0))*1e6,0) [HSTTN],
+[SR_Von_ChuSohuu_CK]/nullif([SR_Nguonvon_Tong_CK],0) [HSTTT],
+		[SR_Taisan_NH_CK]/nullif((isnull(SR_Phaitra_NBan_NH,0) + isnull([SR_NMua_Tratruoc_NH],0)  + isnull([SR_Thue],0) + isnull([SR_PhaiTra_NguoiLD],0) + isnull([SR_VayNoTC_NH],0) + isnull([SR_DP_Phaitra_NH],0))*1e6,0) [HSTTNHN],
+		[SR_Loinhuan_SauThue] *2 / nullif([SR_Nguonvon_Tong_CK]+[SR_Nguonvon_Tong_DK],0) [ROA],
+		[SR_Loinhuan_SauThue] *2/ nullif([SR_Von_ChuSohuu_CK]+[SR_Von_ChuSohuu_DK],0) [ROE],
+		365*[SR_Phaitra_NBan_NH]/nullif(([SR_Gia_VonHangban]+[SR_Tonkho_CK]-[SR_Tonkho_DK]),0) [VQKPTRA],
+		365*(([SR_Tonkho_CK]+[SR_Tonkho_DK])/2)/nullif([SR_Gia_VonHangban],0) [VQHTK],
+		365*[SR_PhaiThu_NH]/nullif([SR_Doanhthu_Thuan_BH_CCDV],0)   [VQKPTHU]
+from [CLKD].[dbo].[DATA_GSO_2021]
+where [MaNganhC4] in  ('4911','4912','4921','4922','4929','4940','5221','5310','5320')
+),
+ conso as
+ (select *
+ from cang 
+ union 
+ select * from DV_hotro
+ union 
+ select * from kho
+ union
+ select * from  vantai)
+
+ select distinct [segment], 
+		PERCENTILE_CONT(0.2) within group (order by [he so no]) over (partition by [segment]) [hsn_20],
+		PERCENTILE_CONT(0.8) within group (order by [he so no]) over (partition by [segment]) [hsn_80],
+		PERCENTILE_CONT(0.2) within group (order by [HSTTN]) over (partition by [segment]) [TTN_20],
+		PERCENTILE_CONT(0.8) within group (order by [HSTTN]) over (partition by [segment]) [TTN_80],
+		PERCENTILE_CONT(0.2) within group (order by [HSTTT]) over (partition by [segment]) [TTT_20],
+		PERCENTILE_CONT(0.8) within group (order by [HSTTT]) over (partition by [segment]) [TTT_80],
+		PERCENTILE_CONT(0.2) within group (order by [HSTTNHN]) over (partition by [segment]) [TTNNH_20],
+		PERCENTILE_CONT(0.8) within group (order by [HSTTNHN]) over (partition by [segment]) [TTNNH_80],
+		PERCENTILE_CONT(0.2) within group (order by [ROA]) over (partition by [segment]) [ROA_20],
+		PERCENTILE_CONT(0.8) within group (order by [ROA]) over (partition by [segment]) [ROA_80],
+		PERCENTILE_CONT(0.2) within group (order by [ROE]) over (partition by [segment]) [ROE_20],
+		PERCENTILE_CONT(0.8) within group (order by [ROE]) over (partition by [segment]) [ROE_80],
+		PERCENTILE_CONT(0.2) within group (order by [VQKPTRA]) over (partition by [segment]) [VQKPTRA_20],
+		PERCENTILE_CONT(0.8) within group (order by [VQKPTRA]) over (partition by [segment]) [VQKPTRA_80],
+		PERCENTILE_CONT(0.2) within group (order by [VQHTK]) over (partition by [segment]) [VQHTK_20],
+		PERCENTILE_CONT(0.8) within group (order by [VQHTK]) over (partition by [segment]) [VQHTK_80],
+		PERCENTILE_CONT(0.2) within group (order by [VQKPTHU]) over (partition by [segment]) [VQKPTHU_20],
+		PERCENTILE_CONT(0.8) within group (order by [VQKPTHU]) over (partition by [segment]) [VQKPTHU_80]
+FROM conso
