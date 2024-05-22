@@ -1,3 +1,17 @@
+-----------SDBQ từng năm từng CIF------------------
+select [mã khách hàng],
+		([20230131]*31 + [20230228]*28 +[20230331]*31 +[20230430]*30 + [20230531]*31 + [20230630]*30 +[20230731]*31+[20230831]*31+[20230930]*30+[20231031]*31+[20231130]*30+
+[20231231]*31)/365 [SDBQ 1Y đầu]
+from [practice].[dbo].[pivot_casa khcn]
+where [segment] = N'QH 1 năm'
+
+select [mã khách hàng],
+		case when left(rpt_date,4) ='2023' then avg([SD]) end [ SDBQ năm đầu],
+		case when left(rpt_date,4) ='2024' then avg([SD]) end [ SDBQ năm thứ 2]
+from [practice].[dbo].[casa_KHCN]
+where [segment] = N'QH 1 năm' and rpt_date >= '20230101'
+group by [mã khách hàng], rpt_date
+
 -----------create a table with detailed information of customer in below table---------------
  create view info_khcn_casa as (
   select cs.[mã khách hàng], 
