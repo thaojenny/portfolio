@@ -1,3 +1,20 @@
+-----------create a table with detailed information of customer in below table---------------
+ create view info_khcn_casa as (
+  select cs.[mã khách hàng], 
+		case when l.[giá trị hợp đồng cam kết] >100000 then 'Lending'
+				else 'Non-lending' end [TD/PTD],
+				l.[kỳ hạn hợp đồng], l.[Phân theo kỳ hạn (NH,TD,DH)] [PK kỳ hạn],
+				c.[giới tính],
+			case when DATEDIFF(year,c.[ngày sinh],GETDATE()) <= 22 then N'Dưới 22 tuổi'
+					when DATEDIFF(year,c.[ngày sinh],GETDATE()) between 23 and 45 then N'Từ 23 - 45 tuổi'
+					else N'Trên 46 tuổi' end [Độ tuổi]
+ FROM [practice].[dbo].[pivot_casa khcn] cs
+ left join (select * from [10.1.123.130].[BI_DATA].[dbo].[LD_100] where year([ngày hiệu lực]) >= 2021) l
+ on cs.[mã khách hàng] = l.[mã khách hàng]
+ left join [10.1.123.130].[BI_DATA].[dbo].[CU_401] c
+ on cs.[mã khách hàng] = c.[mã khách hàng]
+
+ )
 ----------create a pivot table from below view-- -------------
 SELECT [mã khách hàng]
       ,[ngày tạo cif]
