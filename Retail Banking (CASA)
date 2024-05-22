@@ -1,3 +1,24 @@
+select c.[mã khách hàng], a.[Rpt_date], c.[ngày tạo cif], 
+		case when DATEDIFF(month, c.[ngày tạo cif], getdate()) <= 12 then N'QH 1 năm'
+			when DATEDIFF(month, c.[ngày tạo cif], getdate()) between 13 and 24 then N'QH 2 năm'
+			else N'QH trên 3 năm' end [Segment],
+			sum(a.[sdbq]) [SD]
+from (
+		select * 
+		from [10.1.123.130].[BI_DATA].[dbo].[CU_401] c1
+		left join [10.1.123.130].[MAPPING].[dbo].[PhanKhuc] p
+		on c1.[Nhóm khách hàng] = p.[NhomKH]
+		where p.PhanKhuc = '1.KHCN' and [ngày tạo cif] between '2020-01-01' and '2024-04-30') c
+left join (select rpt_date, [mã kh], sum([số dư bq quy đổi]) [sdbq] from [10.1.123.130].[BI_DATA].[dbo].[AC_101] group by rpt_date, [mã kh])  a
+on c.[Mã Khách hàng] = a.[Mã KH]
+where a.rpt_date is not null
+group by  [mã khách hàng], a.[Rpt_date], [ngày tạo cif]
+having sum(a.[sdbq]) > 0 and sum(a.[sdbq]) is not null
+order by a.Rpt_date 
+
+
+
+
 --------------tuổi KH----gold&silver-----------
 select a.[date], a.[số cif], a.[PLKH_tần suất], b.[date mở tk]
   from 
