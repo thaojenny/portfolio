@@ -1,3 +1,5 @@
+----------create view---all CIF with years open account and SDBQ------------------
+create view casa as (
 select c.[mã khách hàng], a.[Rpt_date], c.[ngày tạo cif], 
 		case when DATEDIFF(month, c.[ngày tạo cif], getdate()) <= 12 then N'QH 1 năm'
 			when DATEDIFF(month, c.[ngày tạo cif], getdate()) between 13 and 24 then N'QH 2 năm'
@@ -14,8 +16,8 @@ on c.[Mã Khách hàng] = a.[Mã KH]
 where a.rpt_date is not null
 group by  [mã khách hàng], a.[Rpt_date], [ngày tạo cif]
 having sum(a.[sdbq]) > 0 and sum(a.[sdbq]) is not null
-order by a.Rpt_date 
 
+)
 
 
 
