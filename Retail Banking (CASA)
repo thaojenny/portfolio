@@ -1,6 +1,5 @@
 ---------------another way to make a pivot table of below table (casa khcn)-----------------
 
-
 DECLARE @cols AS NVARCHAR(max),
     @query  AS NVARCHAR(max);
 
