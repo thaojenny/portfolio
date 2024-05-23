@@ -112,7 +112,7 @@ SET @cols = STUFF((SELECT distinct ',' + QUOTENAME(c.Rpt_date) -------turn colum
         ,1,1,'')
 select @cols
     
-set @query = 'SELECT [mã khách hàng],[segment],'+ N'[ngày tạo CIF],' + @cols + ' from 
+set @query = 'SELECT [mã khách hàng],[segment],'+ N'[ngày tạo CIF],' + @cols + ' from   -----------gõ tiếng việt
             (
                select * from [practice].[dbo].[casa_KHCN]
            ) x
