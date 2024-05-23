@@ -1,3 +1,29 @@
+---------------another way to make a pivot table of below table (casa khcn)-----------------
+
+
+DECLARE @cols AS NVARCHAR(max),
+    @query  AS NVARCHAR(max);
+
+SET @cols = STUFF((SELECT distinct ',' + QUOTENAME(c.Rpt_date) -------turn column into row-----
+            FROM [practice].[dbo].[casa_KHCN] c
+            FOR XML PATH(''), TYPE
+            ).value('.', 'NVARCHAR(MAX)') 
+        ,1,1,'')
+select @cols
+    
+set @query = 'SELECT [mã khách hàng],[segment],'+ N'[ngày tạo CIF],' + @cols + ' from 
+            (
+               select * from [practice].[dbo].[casa_KHCN]
+           ) x
+            pivot 
+            (
+                 sum(SD)
+                for [rpt_date] in (' + @cols + ') --------for row---------
+            ) p '
+
+
+execute(@query)
+
 -----------SDBQ từng năm từng CIF------------------
 with abc as (
 
