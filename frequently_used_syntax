@@ -102,7 +102,7 @@ select convert(datetime,[ngày giao dịch],101),……
 from table vừa upload
 
 ----------------dynamic pivot-------------
-DECLARE @cols AS NVARCHAR(max),
+DECLARE @cols AS NVARCHAR(max), ------------max: nvarchar max ký tự---------
     @query  AS NVARCHAR(max);
 
 SET @cols = STUFF((SELECT distinct ',' + QUOTENAME(c.Rpt_date) -------turn column into row-----
