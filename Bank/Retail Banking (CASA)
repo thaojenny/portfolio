@@ -1,3 +1,22 @@
+------------calculate avg(sdbq) of each customer in each yeartorpt----------------
+create view pvt_casaKHCN_yearly as (
+
+
+SELECT [mã khách hàng]
+      ,[ngày tạo cif]
+      ,[Segment]
+	  ,[2018],[2019],[2020],[2021],[2022],[2023],[2024]
+from		(select [mã khách hàng], [ngày tạo cif], [segment],year([daterpt]) [yeartorpt],sum([SD])/12 [SDBQ]
+			from [practice].[dbo].[casa_KHCN] 
+			group by [mã khách hàng], [ngày tạo cif], [segment],year([daterpt])
+			) abc
+
+pivot ( max([SDBQ])  for [yeartorpt] in ([2018],[2019],[2020],[2021],[2022],[2023],[2024])
+) as pv1
+)
+
+
+
 ----------------------------check avg SDBQ of each customer----------------------- 
 select [mã khách hàng], [ngày tạo cif], [segment],year([daterpt]) [yeartorpt],
 		case when DATEDIFF(year,[ngày tạo cif], [daterpt]) <1 then N'SDBQ Năm mở'
