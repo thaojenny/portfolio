@@ -1,3 +1,25 @@
+---------------categorize return/active/left------------------------------------
+ , case when [segment] = N'QH 1 năm' and ([2023] < 50000 and [2024] < 50000) then 'Left'
+			when [segment] = N'QH 2 năm' and (([2023] < 50000 and [2024] < 50000) or ([2022] <50000 and [2023] < 50000 and [2024] < 50000)) then 'Left'
+			when [segment] = N'QH 2 năm' and ([2022] <50000 or [2023] <50000) and [2024] >= 50000 then 'Return'
+			when [segment] = N'QH 2 năm' and [2022] <50000 and [2023] >= 50000 and [2024] >= 50000 then 'Return'
+			when [segment] = N'QH 3 năm' and [2022] <50000 and [2023] < 50000 and [2024] < 50000 then 'Left'
+			when [segment] = N'QH 3 năm' and [2022] >=50000 and [2023] < 50000 and [2024] < 50000 then 'Left'
+			when [segment] = N'QH 3 năm' and [2022] >=50000 and [2023] < 50000 and [2024] >= 50000 then 'Return'
+			when [segment] = N'QH 3 năm' and [2022] <50000 and [2023] < 50000 and [2024] >= 50000 then 'Return'
+			when [segment] = N'QH 3 năm' and [2022] <50000 and [2023] >= 50000 and [2024] >= 50000 then 'Return'
+			when [segment] in ( N'QH 4 năm', N'QH 5 năm') and [2021] < 50000 and [2022] < 50000 and [2023] < 50000 and [2024] < 50000 then 'Left'
+			when [segment] in ( N'QH 4 năm', N'QH 5 năm') and [2022] < 50000 and [2023] < 50000 and [2024] < 50000 then 'Left'
+			when [segment] in ( N'QH 4 năm', N'QH 5 năm') and ([2020] < 50000 or [2021] <50000 or [2022] < 50000 or [2023] <50000) and [2024] >=50000 then 'Return'
+			when [segment] in ( N'QH 4 năm', N'QH 5 năm') and ([2020] < 50000 or [2021] <50000 or [2022] < 50000 ) and ([2023] >= 50000 or [2024] >=50000)  then 'Return'
+			when [segment] in ( N'QH 4 năm', N'QH 5 năm') and ([2020] < 50000 or [2021] <50000 or [2022] < 50000 ) and [2023] >= 50000 and [2024] >=50000 then 'Return'
+			when [segment] not in (N'QH 1 năm',N'QH 2 năm',N'QH 3 năm',N'QH 4 năm',N'QH 5 năm') and [2018] <50000 and [2019] <50000 and [2020]<50000 and [2021] <50000 and [2022] <50000 and [2023] < 50000 and [2024] < 50000 then 'Left'
+			when [segment] not in (N'QH 1 năm',N'QH 2 năm',N'QH 3 năm',N'QH 4 năm',N'QH 5 năm') and [2022] <50000 and [2023] < 50000 and [2024] < 50000 then 'Left'
+			when [segment] not in (N'QH 1 năm',N'QH 2 năm',N'QH 3 năm',N'QH 4 năm',N'QH 5 năm') and ([2018] <50000 or [2019] <50000 or [2020]<50000 or [2021] <50000 or [2022] <50000 or [2023] < 50000) and [2024] >= 50000 then 'Return'
+			when [segment] not in (N'QH 1 năm',N'QH 2 năm',N'QH 3 năm',N'QH 4 năm',N'QH 5 năm') and ([2018] <50000 or [2019] <50000 or [2020]<50000 or [2021] <50000 or [2022] <50000 ) and [2023] >= 50000 and [2024] >= 50000 then 'Return'
+			when [segment] not in (N'QH 1 năm',N'QH 2 năm',N'QH 3 năm',N'QH 4 năm',N'QH 5 năm') and ([2018] <50000 or [2019] <50000 or [2020]<50000 or [2021] <50000 or [2022] <50000 ) and ([2023] >= 50000 or [2024] >= 50000) then 'Return'
+			else 'Active' end [Type]
+
 --------------------------------count slkh left and active----------------------------------
 with abc as 
 (SELECT [mã khách hàng]
