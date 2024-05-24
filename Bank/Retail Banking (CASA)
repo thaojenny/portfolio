@@ -1,3 +1,13 @@
+----------------------------check avg SDBQ of each customer----------------------- 
+select [mã khách hàng], [ngày tạo cif], [segment],year([daterpt]) [yeartorpt],
+		case when DATEDIFF(year,[ngày tạo cif], [daterpt]) <1 then N'SDBQ Năm mở'
+			else N'SDBQ N+' + convert(nvarchar(4),DATEDIFF(year,[ngày tạo cif], [daterpt])) end [Type_SD]
+		, sum([SD])/12 [SDBQ_Yearly]
+from [practice].[dbo].[casa_KHCN]
+group by [mã khách hàng], year([daterpt]), [ngày tạo cif], [segment],DATEDIFF(year,[ngày tạo cif], [daterpt])
+
+
+
 ---------------another way to make a pivot table of below table (casa khcn)-----------------
 
 DECLARE @cols AS NVARCHAR(max),
