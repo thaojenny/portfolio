@@ -1,3 +1,41 @@
+--------------------------------count slkh left and active----------------------------------
+with abc as 
+(SELECT [mã khách hàng]
+      ,[ngày tạo cif]
+      ,[Segment]
+	  ,[2018]
+      ,[2019]
+      ,[2020]
+      ,[2021]
+      ,[2022]
+      ,[2023]
+      ,[2024]
+	  , case 
+			when [segment] = N'QH 2 năm' and [2023] <50000 and [2024] < 50000 then 'Left'
+			when [segment] = N'QH 3 năm' and [2022] <50000 and [2023] < 50000 and [2024] < 50000 then 'Left'
+			when [segment] =  N'QH 4 năm' and [2021] < 50000 and [2022] < 50000 and [2023] < 50000 and [2024] < 50000 then 'Left'
+			when [segment] = N'QH 5 năm' and [2020] <50000 and [2021] < 50000 and [2022] < 50000 and [2023] < 50000 and [2024] < 50000 then 'Left'
+			when [segment] = N'QH 6 năm' and [2019]<50000 and [2020] <50000 and [2021] < 50000 and [2022] < 50000 and [2023] < 50000 and [2024] < 50000 then 'Left'
+			when [segment] not in( N'QH 2 năm',N'QH 6 năm',N'QH 3 năm',N'QH 4 năm',N'QH 5 năm',N'QH 1 năm') and [2018]<50000 and [2019]<50000 and [2020] <50000 and [2021] < 50000 and [2022] < 50000 and [2023] < 50000 and [2024] < 50000 then 'Left'
+			else 'Active' end [Type]
+  FROM [practice].[dbo].[pvt_casaKHCN_yearly]
+  )
+
+  select case when [segment] = N'QH 1 năm' then N'QH 1 năm'
+				when [segment] = N'QH 2 năm' then N'QH 2 năm'
+				when [segment] = N'QH 3 năm' then N'QH 3 năm'
+				when [segment] in( N'QH 4 năm', N'QH 5 năm') then N'QH dưới 5 năm'
+				else N'QH >5 năm' end [seg]
+  ,[type] 
+ ,count(*)
+  from abc
+  group by case when [segment] = N'QH 1 năm' then N'QH 1 năm'
+				when [segment] = N'QH 2 năm' then N'QH 2 năm'
+				when [segment] = N'QH 3 năm' then N'QH 3 năm'
+				when [segment] in( N'QH 4 năm', N'QH 5 năm') then N'QH 2 năm'
+				else N'QH >5 năm' end,[type] 
+
+
 ------------calculate avg(sdbq) of each customer in each yeartorpt----------------
 create view pvt_casaKHCN_yearly as (
 
