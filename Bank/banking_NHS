@@ -1,4 +1,31 @@
+----------------------------check KH mở mới trong từng Rptdate --> tần suất----------------------slide 3
 
+select  c.[datecif]
+			,a.[Rpt_date]
+			, c.[Số CIF], sum([SLGD]) [Tần suất gd], 
+			sum([BQ])  [SDBQ], 
+			 sum([ck])  [SDCK]
+  from  
+		(select [số cif],  EOMONTH([Ngày tạo],0) [datecif] 
+		from [CLKD].[dbo].[NHS_Customer]) c 
+  left join  
+		(select count([ngày giao dịch]) [SLGD], [cif], EOMONTH([Ngày giao dịch],0) [date] 
+		from [CLKD].[dbo].[NHS_Transaction]
+		group by [cif], EOMONTH([Ngày giao dịch],0)) t 
+ on (c.[Số CIF] = t.[CIF] and c.[datecif] = t.[date])
+
+   left join 
+		(select [rpt_date], [mã kh], sum([số dư bq quy đổi]) [BQ], sum([số dư cuối quy đổi]) [ck]    
+		from [BI_DATA].[dbo].[AC_101]
+		where rpt_date >= '20240101'
+		group by [Rpt_date], [mã kh]) a
+
+   on (c.[Số CIF] =a.[Mã KH] and c.[datecif] = a.[Rpt_date])
+   
+   where c.[datecif] >= '2024-01-01' and a.[rpt_date] is not null
+   group by c.[datecif]
+			,a.[Rpt_date]
+			, c.[Số CIF]
 -------------------------------Chart 2: Topup & Purchase (KH mở mới) theo từng tháng
 Chart 5: Topup & Purchase theo từng tháng và theo Phân loại KH (Silver, Bronze, Gold, Silver)
 Chart 7 + 8: Phân phối tiền giữ lại theo PLKH có mức tiền giữ lại cao -----------------------------------
