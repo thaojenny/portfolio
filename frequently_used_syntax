@@ -131,3 +131,13 @@ truncate table_name
 -----------delete---remove some rows----------
 delete table_name
 where ...
+
+
+--------------unpivot a table--------------
+select [mã khách hàng], [ngày tạo cif],[segment],[yeartorpt], [SDBQ]  --------yeartorept: column name 2018,2019->2024; SDBQ: values in those columns-----
+from (select [mã khách hàng], [ngày tạo cif],[segment], [2018], [2019],[2020],[2021],[2022],[2023],[2024]
+		  FROM [practice].[dbo].[pvt_casaKHCN_yearly]) p
+unpivot
+		([SDBQ] for [yeartorpt] in 
+				([2018], [2019],[2020],[2021],[2022],[2023],[2024])
+	) as unpvt;
