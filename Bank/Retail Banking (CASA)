@@ -1,3 +1,13 @@
+-------------------------unpivot table casa yearly-----------
+select [mã khách hàng], [ngày tạo cif],[segment],[yeartorpt], [SDBQ] 
+from (select [mã khách hàng], [ngày tạo cif],[segment], [2018], [2019],[2020],[2021],[2022],[2023],[2024]
+		  FROM [practice].[dbo].[pvt_casaKHCN_yearly]) p
+unpivot
+		([SDBQ] for [yeartorpt] in 
+				([2018], [2019],[2020],[2021],[2022],[2023],[2024])
+	) as unpvt;
+
+
 ---------------categorize return/active/left------------------------------------
  , case when [segment] = N'QH 1 năm' and ([2023] < 50000 and [2024] < 50000) then 'Left'
 			when [segment] = N'QH 2 năm' and (([2023] < 50000 and [2024] < 50000) or ([2022] <50000 and [2023] < 50000 and [2024] < 50000)) then 'Left'
