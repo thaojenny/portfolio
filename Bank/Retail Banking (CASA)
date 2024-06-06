@@ -7,6 +7,16 @@ unpivot
 				([2018], [2019],[2020],[2021],[2022],[2023],[2024])
 	) as unpvt;
 
+		-------or in another way do not need to unpivot-------------
+SELECT [mã khách hàng]
+      ,year([ngày tạo cif]) [cifyear]
+      ,[Segment]
+	  ,a.[yeartorpt]
+	  ,a.[SDBQ]
+from		(select [mã khách hàng], [ngày tạo cif], [segment], year([daterpt]) [yeartorpt],sum([SD])/12 [SDBQ]
+			from [10.1.122.10]. [practice].[dbo].[casa_KHCN] 
+			group by [mã khách hàng], [ngày tạo cif], [segment], year([daterpt]) ) a
+
 
 ---------------categorize return/active/left------------------------------------
  , case when [segment] = N'QH 1 năm' and ([2023] < 50000 and [2024] < 50000) then 'Left'
