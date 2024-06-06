@@ -1,3 +1,6 @@
+------------check KH return/leave---------------
+
+
 -------------------------unpivot table casa yearly-----------
 select [mã khách hàng], [ngày tạo cif],[segment],[yeartorpt], [SDBQ] 
 from (select [mã khách hàng], [ngày tạo cif],[segment], [2018], [2019],[2020],[2021],[2022],[2023],[2024]
