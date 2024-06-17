@@ -1,0 +1,22 @@
+
+-----------------Kênh gửi tiền ----Số dư & Ticket size----------------
+select rpt_date,		
+		case when [ext channel] in ('IB','MB') then N'Online'
+		else N'Tại quầy' end [Kênh gửi tiền],
+		sum([SD]) [Số dư tiền gửi],
+		sum([SL]) [SLKH]
+  FROM 		
+  		
+  (select Rpt_date, [ext channel], sum([Số dư] * [tỷ giá]) [SD] , count(distinct [mã khách hàng]) [SL]		
+	from [10.1.123.130].[BI_DATA].[dbo].[DP_100] d	
+	 left join (select * from [10.1.123.130].[MAPPING].[dbo].[PhanKhuc] where [PhanKhuc] = '1.KHCN') p	
+	 on d.[Nhóm khách hàng] = p.[NhomKH]	
+	left join (select * from [10.1.123.130].[MAPPING].[dbo].[SP_dacthu] where [LoaiSp] ='FD') s	
+	on d.[Tên sản Phẩm] = s.TenSP	
+	where rpt_date >= 20230101 and [TK cầm cố SLH] ='N' and p.[NhomKH] is not null and s.[LoaiSp] is null	
+	group by Rpt_date, [ext channel]	
+	) b	
+	 group by rpt_date,	
+		case when [ext channel] in ('IB','MB') then N'Online'
+		else N'Tại quầy' end
+order by rpt_date		
