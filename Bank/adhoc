@@ -1,3 +1,30 @@
+----------------LSCV BQ KH cầm cố STK USD----------------
+select l.rpt_date, l.[mã khách hàng], avg([LS]) [LSBQ]
+from 
+			(select rpt_date, [mã khách hàng], [số HĐ],
+			avg([lãi suất]) [LS]
+			from LD_104 l1
+			left join (select * from [MAPPING].[dbo].[SP_dacthu] where LoaiSP = 'lending') d
+			on l1.[Tên SP] = d.[TenSP]
+			where [số HĐ] is not null and [lãi suất] is not null and d.[khoi] = '7.CC STK'
+			group by rpt_date, [mã khách hàng], [số HĐ]) l
+
+
+left join (
+				select rpt_date, [Mã khách hàng], SUM([Số dư]*[Tỷ giá]) [SD quy đổi]
+					from dp_100
+					where [Loại tiền] = 'USD'
+							and [Cầm cố STK] = 'Y'
+							and Rpt_date >= '20211231'
+					group by rpt_date, [Mã khách hàng]) p
+on (l.[rpt_date] = p.[rpt_date] and l.[mã khách hàng] = p.[Mã khách hàng])
+left join (select [Mã Khách hàng],[Loại Khách hàng] from CU_401 where [Loại Khách hàng] <> N'Nhân viên nội bộ') c
+on l.[Mã khách hàng] = c.[Mã Khách hàng]
+where p.[Mã khách hàng] is not null and c.[Loại Khách hàng] is not null
+group by l.rpt_date, l.[mã khách hàng]
+
+
+
 --------------------slkh--------------------------------
 with abcd as
 ( select concat(left([rpt_date],4),'-', substring([rpt_date],5,2)) [Year-Month],
