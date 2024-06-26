@@ -1,3 +1,76 @@
+------------------Khoản vay từng năm-----------------
+
+
+select left([rpt_date],4) [YearRpt],[Mã KH], 
+			case when AVG([SD]) <500000 then '<500k'
+				when AVG([SD]) > 1e6 then '>1M'
+				else '500k-1M' end [Casa Type],
+				sum(d.[amt vay]) [Dư nợ],
+				cu.[PLKH], 
+				d.[mục đích vay]
+from (
+		SELECT distinct rpt_date, [mã kh], sum([số dư BQ quy đổi]) [SD]
+		FROM [BI_DATA].[dbo].[AC_101]
+		where Rpt_date >= '20230101' and [Mã KH] in 
+													(select  [Mã Khách hàng]
+														FROM [BI_DATA].[dbo].[CU_401] c 
+														left join [MAPPING].[dbo].[PhanKhuc] p
+														on c.[Nhóm Khách hàng] = p.[NhomKH]
+														where p.[PhanKhuc] = '1.KHCN')
+		group by rpt_date, [mã kh]
+		) ac
+left join (
+				select year([ngày giải ngân]) [year_rpt], [mã khách hàng], 
+						sum([Số dư BQ qui đổi]) [amt vay], 
+						[Sub_Product] [Mục đích vay]
+					 FROM [BI_DATA].[dbo].[LD_104] l1
+					 left join (select * from [MAPPING].[dbo].[SP_dacthu] where [LoaiSp]= 'Lending') dt
+					 on l1.[Tên SP] = dt.TenSP
+					 left join (select distinct [Core_Name],[Sub_Product]
+										from [MAPPING].[dbo].[Sanpham_KHCN] 
+										where [Sub_Product] in ( N'CV Nhà đất',N'CV Ô tô',N'CV Tiêu dùng có TSĐB',N'CV tín chấp')
+										)sp
+						on l1.[Tên SP] = sp.Core_Name
+					 where year([ngày giải ngân]) >= 2023 and dt.LoaiSp is null and [Mã chi nhánh GD] <> 'VN0010001'
+					 group by year([ngày giải ngân]), [mã khách hàng],[Sub_Product]
+					 ) d
+on (ac.[Mã KH] = d.[Mã khách hàng] and left(ac.[rpt_date],4) = d.[year_rpt])
+left join (
+			select [mã khách hàng], 
+				case when [Phân loại Khách hàng] like N'%thông thường%' then N'KH thường'
+					when [Phân loại Khách hàng] like N'%ưu tiên%' or [Phân loại Khách hàng] like N'%cao cấp%' 
+				or [Phân loại Khách hàng] like N'%gold%' or [Phân loại Khách hàng] like N'%Platinum%'
+				or [Phân loại Khách hàng] like N'%Diamond%'or [Phân loại Khách hàng] like N'%Private%'
+				or [Phân loại Khách hàng] like N'%ưu đãi%'	then N'KH ưu tiên' end [PLKH]
+			FROM [BI_DATA].[dbo].[CU_401]
+				) cu
+on ac.[Mã KH] = cu.[Mã Khách hàng]
+where d.[mục đích vay] is not null 
+group by left([rpt_date],4) ,[Mã KH], 
+			cu.PLKH, d.[mục đích vay]
+order by left([rpt_date],4)
+
+
+select year([ngày giải ngân]) [year_rpt], [mã khách hàng], 
+						sum([Số dư BQ qui đổi]) [amt vay], 
+						[Sub_Product] [Mục đích vay]
+					 FROM [BI_DATA].[dbo].[LD_104] l1
+					 left join (select * from [MAPPING].[dbo].[SP_dacthu] where [LoaiSp]= 'Lending') dt
+					 on l1.[Tên SP] = dt.TenSP
+					 left join (select distinct [Core_Name],[Sub_Product]
+										from [MAPPING].[dbo].[Sanpham_KHCN] 
+										where [Sub_Product] in ( N'CV Nhà đất',N'CV Ô tô',N'CV Tiêu dùng có TSĐB',N'CV tín chấp')
+										)sp
+						on l1.[Tên SP] = sp.Core_Name
+					 where year([ngày giải ngân]) >= 2023 and dt.LoaiSp is null and [Mã chi nhánh GD] <> 'VN0010001'
+					 group by year([ngày giải ngân]), [mã khách hàng],[Sub_Product]
+
+
+
+
+
+
+
 ----------------------------------------Data KH 2023 & 5T/2024------------------------------------
 
 select left([rpt_date],4) [YearRpt],[Mã KH], 
