@@ -38,7 +38,8 @@ left join (                                           ---------phân loại KH �
 					when [Phân loại Khách hàng] like N'%ưu tiên%' or [Phân loại Khách hàng] like N'%cao cấp%' 
 				or [Phân loại Khách hàng] like N'%gold%' or [Phân loại Khách hàng] like N'%Platinum%'
 				or [Phân loại Khách hàng] like N'%Diamond%'or [Phân loại Khách hàng] like N'%Private%'
-				or [Phân loại Khách hàng] like N'%ưu đãi%'	then N'KH ưu tiên' end [PLKH]
+				or [Phân loại Khách hàng] like N'%ưu đãi%'	then N'KH ưu tiên' 
+				else N'Khác' end [PLKH]
 			FROM [BI_DATA].[dbo].[CU_401]
 				) cu
 on ac.[Mã KH] = cu.[Mã Khách hàng]
