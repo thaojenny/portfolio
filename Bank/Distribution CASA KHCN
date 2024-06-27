@@ -1,0 +1,79 @@
+--------------------distribution----------------------
+
+  with abc as (
+  select left(rpt_date,4) [Rpt_year], [mã kh], AVG([SD]) [SDBQ năm]
+  from (
+		  select rpt_date, [mã kh], SUM([số dư BQ quy đổi]) [SD]
+		  FROM [BI_DATA].[dbo].[AC_101]
+		  where [Mã KH] in 
+								(select [mã khách hàng]
+									from CU_401 c
+									left join [MAPPING].[dbo].[PhanKhuc] p
+									on c.[Nhóm Khách hàng] = p.[NhomKH]
+									where p.PhanKhuc ='1.KHCN')
+				and Rpt_date between '20230101' and '20231231'
+			group by rpt_date, [mã kh]
+		)a1
+group by left(rpt_date,4), [mã kh]
+having  AVG([SD]) > 50000
+)
+select [SDBQ năm],
+		PERCENTILE_DISC(0.25) within group (order by rpt_year) over (partition by rpt_year),
+			PERCENTILE_DISC(0.5) within group (order by rpt_year) over (partition by rpt_year),
+			PERCENTILE_DISC(0.75) within group (order by rpt_year) over (partition by rpt_year)
+
+from abc
+
+
+
+--------------------
+
+
+with abc as 
+(
+  select Rpt_date, 
+		[mã kh],
+		[period],
+		case when sum([SDBQ])  < 5e8 then N'<500tr'
+			when sum([SDBQ])  > 1e9 then N'>1 tỷ'
+			else N'500tr - 1 tỷ' end [Type Deposit],
+		sum([SDBQ]) [SDBQ gửi]
+  FROM 
+		(select Rpt_date, [mã kh], 
+			case when [kỳ hạn] like '%M' then convert(int,left([kỳ hạn],3))
+					when [kỳ hạn] like '%W' then convert(int,left([kỳ hạn],1))/4 end [period],
+		sum([số dư BQ quy đổi]) [SDBQ] 
+		from [BI_DATA].[dbo].[DP_104] d1
+		 left join (select * 
+				FROM [MAPPING].[dbo].[SP_dacthu]
+				where [LoaiSp] = 'FD') s
+		 on d1.[Tên Sản phẩm] = s.[TenSP]
+		 where s.[LoaiSp] is null 
+		group by Rpt_date, [mã kh], 
+			case when [kỳ hạn] like '%M' then convert(int,left([kỳ hạn],3))
+					when [kỳ hạn] like '%W' then convert(int,left([kỳ hạn],1))/4 end
+					) d
+ 
+  where		[period] between 1 and 12
+				and left(Rpt_date,4) ='2023'  
+				and [mã kh] in					
+						(select [mã khách hàng]
+									from CU_401 c
+									left join [MAPPING].[dbo].[PhanKhuc] p
+									on c.[Nhóm Khách hàng] = p.[NhomKH]
+									where p.PhanKhuc ='1.KHCN') 
+			
+group by Rpt_date , [mã kh],
+		[period]
+)
+
+select rpt_date, [period], 
+		[type deposit] ,
+		count(distinct [mã kh]) [SLKH],
+		sum([SDBQ gửi]) [amt deposit]
+from abc 
+group by rpt_date, [period], 
+		[type deposit]
+
+
+-------------------
