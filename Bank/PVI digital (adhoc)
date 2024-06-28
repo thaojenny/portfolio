@@ -1,3 +1,31 @@
+--------------------data slkh active----------------------
+
+  with abc as (
+	
+	select EOMONTH([ngày tạo cif]) [Rpt_date], 
+				d.[Mã Khách hàng], 
+				case when [Phân loại Khách hàng] like N'%thông thường%' then N'KH thường'
+					when [Phân loại Khách hàng] like N'%ưu tiên%' or [Phân loại Khách hàng] like N'%cao cấp%' 
+				or [Phân loại Khách hàng] like N'%gold%' or [Phân loại Khách hàng] like N'%Platinum%'
+				or [Phân loại Khách hàng] like N'%Diamond%'or [Phân loại Khách hàng] like N'%Private%'
+				or [Phân loại Khách hàng] like N'%ưu đãi%'	then N'KH ưu tiên' 
+					else N'Khác' end [PLKH],
+				b.[Trạng thái tài khoản]
+    FROM [BI_DATA].[dbo].[CU_401] d
+	left join ( select distinct EOMONTH([đến ngày]) [rpt_date], [Mã khách hàng], [Trạng thái tài khoản]
+					from AC_100
+					group by EOMONTH([đến ngày]),[Mã khách hàng], [Trạng thái tài khoản] ) b
+	on (EOMONTH(d.[ngày tạo cif]) = b.rpt_date and d.[Mã Khách hàng] = b.[Mã khách hàng])
+	
+	where year([Ngày tạo CIF]) >= 2022
+	)
+	select rpt_date,
+			[PLKH],
+			count(distinct [mã khách hàng]) [SLKH active]
+	from abc
+	where PLKH in (N'KH ưu tiên',N'KH thường') and [trạng thái tài khoản] ='active'
+	group by rpt_date,
+			[PLKH]
 ---------------------data tiền gửi -----------------------
 with abc as 
 (
