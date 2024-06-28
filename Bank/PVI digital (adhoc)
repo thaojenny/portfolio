@@ -1,3 +1,38 @@
+------------------Tiền gửi, Vay, NII, thu nhập dv------------------
+select c1.[Mã Khách hàng], sum([deposit]) [AMT gửi], sum([lending]) [AMT vay]
+
+from
+(select [mã khách hàng]
+from CU_401 c
+left join [MAPPING].[dbo].[PhanKhuc] p
+on c.[Nhóm Khách hàng] = p.NhomKH
+where YEAR([ngày tạo cif]) =2023 and p.[PhanKhuc] = '1.KHCN') c1
+
+left join (
+				select distinct [mã khách hàng], sum([số dư]) [deposit]
+				 FROM [BI_DATA].[dbo].[DP_101] d
+				 left join (select * from [MAPPING].[dbo].[SP_dacthu] where [LoaiSp] = 'FD') s
+					on d.[Tên Sản phẩm] = s.[TenSP]
+				 where year([ngày gửi]) =2023 and s.LoaiSp is null
+				 group by [mã khách hàng]
+				) dp
+on c1.[Mã Khách hàng] = dp.[Mã khách hàng]
+left join (
+			select [mã khách hàng], sum([gốc vay giải ngân]) [lending]
+			from [LD_100] l
+			left join (select * from [MAPPING].[dbo].[SP_dacthu] where [LoaiSp] = 'Lending') s
+			on l.[Sub product.Tên sản phẩm] = s.[TenSP]
+			where left(rpt_date,4) ='2023' and [mã chi nhánh] <> 'VN0010001' and s.LoaiSp is null
+			group by [mã khách hàng]
+			) ld
+on c1.[mã khách hàng] = ld.[mã khách hàng]
+--thiếu phần NII--- table FTP---
+
+
+
+group by c1.[Mã Khách hàng]
+
+
 --------------------KH phát sinh giao dịch 2023----------------------
 select [PLKH], count(*)
   from (
