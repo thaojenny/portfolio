@@ -1,3 +1,46 @@
+--------------------KH phát sinh giao dịch 2023----------------------
+select [PLKH], count(*)
+  from (
+			  select [Mã Khách hàng],
+					case when [Phân loại Khách hàng] like N'%thông thường%' then N'KH thường'
+					when [Phân loại Khách hàng] like N'%ưu tiên%' or [Phân loại Khách hàng] like N'%cao cấp%' 
+				or [Phân loại Khách hàng] like N'%gold%' or [Phân loại Khách hàng] like N'%Platinum%'
+				or [Phân loại Khách hàng] like N'%Diamond%'or [Phân loại Khách hàng] like N'%Private%'
+				or [Phân loại Khách hàng] like N'%ưu đãi%'	then N'KH ưu tiên' 
+					else N'Khác' end [PLKH]
+			  from CU_401  c
+			  left join (
+						  select [Mã KH], AVG([amt SD]) [SDBQ]
+						from 
+						(select [mã kh], sum([số dư BQ quy đổi]) [amt SD]
+							from AC_101
+							where Rpt_date between '20230101' and '20231231'
+							group by [mã kh]
+							) a1
+					group by [mã kh]
+					having AVG([amt SD]) > 50000
+						) a
+				on ( c.[Mã Khách hàng] = a.[Mã KH])
+				
+			  where year([Ngày tạo CIF]) = 2023 and a.[Mã KH] is not null and 
+					[Mã Khách hàng] in
+			   (
+							select distinct [mã khách hàng] 
+							from [BI_DATA].[dbo].[AC_106]
+							where year([Ngày giao dịch cuối]) = 2023 and ([IB] = 'YES' or [MB] = 'YES')
+							) 
+			
+			) b
+where [PLKH] in (N'KH thường',N'KH ưu tiên' )
+group by  [PLKH]
+
+			
+
+
+
+
+
+
 --------------------data slkh active----------------------
 
   with abc as (
