@@ -1,6 +1,5 @@
---------------------distribution----------------------
-
-  with abc as (
+----------------- calculate mean, mod, percentile------------------
+ with abc as (
   select left(rpt_date,4) [Rpt_year], [mã kh], AVG([SD]) [SDBQ năm]
   from (
 		  select rpt_date, [mã kh], SUM([số dư BQ quy đổi]) [SD]
@@ -17,12 +16,30 @@
 group by left(rpt_date,4), [mã kh]
 having  AVG([SD]) > 50000
 )
-select [SDBQ năm],
-		PERCENTILE_DISC(0.25) within group (order by rpt_year) over (partition by rpt_year),
-			PERCENTILE_DISC(0.5) within group (order by rpt_year) over (partition by rpt_year),
-			PERCENTILE_DISC(0.75) within group (order by rpt_year) over (partition by rpt_year)
+select distinct rpt_year, 
+		PERCENTILE_DISC(0.25) within group (order by [SDBQ năm]) over (partition by rpt_year) [25th],
+			PERCENTILE_DISC(0.5) within group (order by [SDBQ năm]) over (partition by rpt_year) [50th],
+			PERCENTILE_DISC(0.75) within group (order by [SDBQ năm]) over (partition by rpt_year) [75th],
+		
+(
+ (SELECT MAX([SDBQ năm]) FROM
+   (SELECT TOP 50 PERCENT [SDBQ năm] FROM abc ORDER BY [SDBQ năm]) AS BottomHalf)
+ +
+ (SELECT MIN([SDBQ năm]) FROM
+   (SELECT TOP 50 PERCENT [SDBQ năm] FROM abc ORDER BY [SDBQ năm] DESC) AS TopHalf)
+) / 2 AS Median ,
+(select top 1 [SDBQ năm]
+		from (select distinct [SDBQ năm], count(*) [SL]
+					from abc 
+					group by  [SDBQ năm]
+					)a 
+	order by [SL] desc) as [Mode]
 
 from abc
+
+
+
+
 
 
 
