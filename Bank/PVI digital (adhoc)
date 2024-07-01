@@ -1,4 +1,4 @@
-------------------Tiền gửi, Vay, NII, thu nhập dv------------------
+------------------Tiền gửi, Vay, NII, thu nhập dv trong năm 2023------------------
 select c1.[Mã Khách hàng], sum([deposit]) [AMT gửi], sum([lending]) [AMT vay]
 
 from
