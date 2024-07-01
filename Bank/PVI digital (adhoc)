@@ -1,12 +1,16 @@
 ------------------Tiền gửi, Vay, NII, thu nhập dv trong năm 2023------------------
-select c1.[Mã Khách hàng], sum([deposit]) [AMT gửi], sum([lending]) [AMT vay]
+------------------Tiền gửi, Vay, NII, thu nhập dv------------------
+select c1.[Mã Khách hàng], sum([deposit]) [AMT gửi], 
+			sum( ftp_dp.[Thu lãi]) [Thu lãi Deposit], sum( ftp_dp.[chi lãi]) [Chi lãi Deposit], sum( ftp_dp.[Thu lãi])-sum( ftp_dp.[chi lãi]) [NII Huy động],
+			sum([lending]) [AMT vay], 
+
 
 from
 (select [mã khách hàng]
 from CU_401 c
 left join [MAPPING].[dbo].[PhanKhuc] p
 on c.[Nhóm Khách hàng] = p.NhomKH
-where YEAR([ngày tạo cif]) =2023 and p.[PhanKhuc] = '1.KHCN') c1
+where YEAR([ngày tạo cif]) =2023 and p.[PhanKhuc] = '1.KHCN' and [loại khách hàng] <> N'Nhân viên nội bộ') c1
 
 left join (
 				select distinct [mã khách hàng], sum([số dư]) [deposit]
@@ -26,11 +30,26 @@ left join (
 			group by [mã khách hàng]
 			) ld
 on c1.[mã khách hàng] = ld.[mã khách hàng]
---thiếu phần NII--- table FTP---
 
-
-
+left join
+(select [mã khách hàng],
+sum([Chi phí thực tế]* isnull([DTNB quy đổi]/nullif([DTNB quy đổi],0),1)) [Chi lãi]
+,sum([DTNB quy đổi]) [Thu lãi]
+ FROM [BI_DATA].[dbo].[FTP_FD] a
+ left join 
+(SELECT * FROM MAPPING..SP_dacthu WHERE LoaiSp = 'FD') b
+on a.[tên sản phẩm] = b.[TenSP]
+ where  [Tên khối khách hàng] = N'Khối KHCN' and [Loại khách hàng] <> N'5000 - Tổ chức tín dụng' and a.[Trạng thái cầm cố] = 'N'
+ and [Kỳ hạn (KKH/CKH)] = 'CKH' and b.LoaiSp is null and year([từ ngày]) =2023
+ group by [mã khách hàng]
+ ) ftp_dp
+ on c1.[mã khách hàng] = ftp_dp.[mã khách hàng]
+left join 
+		(
+		   ) ftp_ld
 group by c1.[Mã Khách hàng]
+having sum([deposit]) is not null and sum( ftp_dp.[Thu lãi]) is not null
+		and sum([lending]) is not null and  sum( ftp_dp.[chi lãi]) is not null
 
 
 --------------------KH phát sinh giao dịch 2023----------------------
