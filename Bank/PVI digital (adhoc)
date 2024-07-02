@@ -2,22 +2,19 @@
 select EOMONTH([từ ngày],0) rpt_date_2,
 			sum([CPNB quy đổi]/1e9)  [Chi lãi]
 			,sum([DTTT]* isnull([CPNB quy đổi]/nullif([CPNB nguyên tệ],0),1)/1e9) [Thu lãi]
-
-
 from ftp_LD a
  LEFT JOIN
 (SELECT * from MAPPING..[SP_dacthu] WHERE Loaisp ='Lending' ) d
 ON a.[Tên Sản phẩm] = d.[TenSP]
-
-
-
-where d.[LoaiSP] is null and [Tên khối khách hàng] = N'Khối KHCN'
-		and (a.[Tên khối khách hàng] like '%KHDN%'
-			AND a.[Tên sản phẩm]  in (N'Cho vay KHCN mua, xây, sửa nhà',N'Cho vay KHCN mua ô tô',
-			N'Cho vay tài trợ vốn SXKD đối với CN,HKD')) and a.[Tên Sản phẩm] not in ( N'%thấu chi%' , N'%Thau chi%')
-
-			and [mã khách hàng] not in (select * from FROM [MAPPING].[dbo].[DS_XLN])
-
+where d.[LoaiSP] is null  
+and [mã đơn vị] <>'VN0010001' 
+and a.[Tên Sản phẩm] not like N'%thấu chi%'
+and a.[Tên Sản phẩm] not like N'%Thau chi%'
+and year([từ ngày]) =2023 
+and ([Tên khối khách hàng] = N'Khối KHCN' 
+or (a.[Tên khối khách hàng] like '%KHDN%'
+AND a.[Tên sản phẩm]  in (N'Cho vay KHCN mua, xây, sửa nhà',N'Cho vay KHCN mua ô tô',
+N'Cho vay tài trợ vốn SXKD đối với CN,HKD')) ) 
 group by EOMONTH([từ ngày],0)		
 
 
