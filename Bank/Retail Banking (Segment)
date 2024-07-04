@@ -1,3 +1,78 @@
+----------------------------------------------SLKH----------------------------------------------------
+-----------kh vay & gửi-------------
+with abc as (
+select [Mã khách hàng] from
+
+( select distinct [Mã khách hàng], sum([số dư]) [amt gửi]			
+			from [BI_DATA].[dbo].[DP_101] d1
+			left join (select * from [MAPPING].[dbo].[SP_dacthu] where [LoaiSp] = 'FD') sp
+			on d1.[Tên sản phẩm] = sp.TenSP
+			where [Ngày đến hạn]>= GETDATE() and sp.LoaiSp is null and [Mã khách hàng] in 
+																								(select  [Mã Khách hàng]
+																									from [BI_DATA].[dbo].[CU_401] c	
+																										left join [MAPPING].[dbo].[PhanKhuc] p
+																										on c.[Nhóm Khách hàng] = p.[NhomKH]
+																										where p.[PhanKhuc] = '1.KHCN')
+			group by EOMONTH([ngày gửi]),[Mã khách hàng]
+			having sum([số dư]) > 1e6
+			) b
+intersect
+select [Mã khách hàng]
+from 
+(
+
+select distinct [Mã khách hàng], sum([Số dư BQ qui đổi]) [amt vay]
+			from [BI_DATA].[dbo].[LD_104] l1
+left join (select * from [MAPPING].[dbo].[SP_dacthu] where [LoaiSp] = 'Lending') sp
+on l1.[Tên SP] = sp.TenSP
+where [Ngày đáo hạn] >= GETDATE() and sp.LoaiSp is null   and [Mã khách hàng] in 
+																						(select  [Mã Khách hàng]
+																									from [BI_DATA].[dbo].[CU_401] c	
+																										left join [MAPPING].[dbo].[PhanKhuc] p
+																										on c.[Nhóm Khách hàng] = p.[NhomKH]
+																										where p.[PhanKhuc] = '1.KHCN')
+	group by [Mã khách hàng]
+) a
+)
+select count(*) [SLKH vay & gửi]
+from abc
+
+--------------slkh vay----------------
+with abc as (
+
+select distinct [Mã khách hàng], sum([Số dư BQ qui đổi]) [amt vay]
+			from [BI_DATA].[dbo].[LD_104] l1
+left join (select * from [MAPPING].[dbo].[SP_dacthu] where [LoaiSp] = 'Lending') sp
+on l1.[Tên SP] = sp.TenSP
+where [Ngày đáo hạn] >= GETDATE() and sp.LoaiSp is null   and [Mã khách hàng] in 
+																						(select  [Mã Khách hàng]
+																									from [BI_DATA].[dbo].[CU_401] c	
+																										left join [MAPPING].[dbo].[PhanKhuc] p
+																										on c.[Nhóm Khách hàng] = p.[NhomKH]
+																										where p.[PhanKhuc] = '1.KHCN')
+	group by [Mã khách hàng]
+)
+																							
+select count(*) [SLKH vay]
+from abc 
+----------------slkh gửi---------------------
+with abc as
+( select distinct [Mã khách hàng], sum([số dư]) [amt gửi]			
+			from [BI_DATA].[dbo].[DP_101] d1
+			left join (select * from [MAPPING].[dbo].[SP_dacthu] where [LoaiSp] = 'FD') sp
+			on d1.[Tên sản phẩm] = sp.TenSP
+			where [Ngày đến hạn]>= GETDATE() and sp.LoaiSp is null and [Mã khách hàng] in 
+																								(select  [Mã Khách hàng]
+																									from [BI_DATA].[dbo].[CU_401] c	
+																										left join [MAPPING].[dbo].[PhanKhuc] p
+																										on c.[Nhóm Khách hàng] = p.[NhomKH]
+																										where p.[PhanKhuc] = '1.KHCN')
+			group by EOMONTH([ngày gửi]),[Mã khách hàng]
+			having sum([số dư]) > 1e6
+			) 
+select count(*) [SLKH gửi tiền]
+from abc 
+
 
 -----------------Kênh gửi tiền ----Số dư & Ticket size----------------
 select rpt_date,		
