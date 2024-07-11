@@ -141,3 +141,9 @@ unpivot
 		([SDBQ] for [yeartorpt] in 
 				([2018], [2019],[2020],[2021],[2022],[2023],[2024])
 	) as unpvt;
+
+
+----------------insert more data from another table------------------
+INSERT INTO table2
+SELECT * FROM table1
+WHERE condition;
