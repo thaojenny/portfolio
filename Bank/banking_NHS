@@ -1,42 +1,4 @@
 
--------------------------dbo NHS _ view CLKD------------------------
-select distinct t.[date], t.[cif], DigiBank_date,
-			case when sum([SLGD]) between 1 and 3 then N'KH Silver (1-3 lần/tháng)' 
-				 when sum([SLGD]) between 4 and 9 then N'KH Gold (4-9 lần/tháng)'
-				 when sum([SLGD]) >= 10 then N'KH Diamond (>=10 lần/tháng)' 
-				else N'KH Bronze (0 lần/tháng)' end [PLKH_tần suất],
-
-			sum([SLGD]) [Tần suất gd],
-			sum([BQ]) [SDBQ],
-			sum([ck]) [SDCK]
-from 
-		(select [date], [cif], isnull([date mở Digi],N'KH mở 2023') [DigiBank_date], sum([gd]) [SLGD]
-				from (
-						select  EOMONTH([ngày giao dịch]) [date], [cif],
-						case when [Loại giao dịch] = 'topup' then count([ngày giao dịch])
-						else count([ngày giao dịch])/2 end [gd]
-
-						from [CLKD].[dbo].[NHS_Transaction]
-						group by EOMONTH([ngày giao dịch]), [cif],[Loại giao dịch]
-												) b
-				left join (
-							select [số cif],  
-									N'KH mở T'+ convert(nvarchar(5),month([Ngày tạo])) +'/'+ convert(nvarchar(5),year([Ngày tạo])) [date mở Digi]
-							from [CLKD].[dbo].[NHS_Customer]
-						) c 
-				on b.CIF = c.[Số CIF]
-					group by  [date], [cif], [date mở Digi]
-				) t 
- left join 
-		(	select EOMONTH([date_out]) [date], [mã kh], sum([số dư bq quy đổi]) [BQ], sum([số dư cuối quy đổi]) [ck]    
-			from [BI_DATA].[dbo].[AC_101]
-			where rpt_date >= '20240101'
-			group by  EOMONTH([date_out]), [mã kh]
-		) a
-on (t.CIF = a.[Mã KH] and t.[date] = a.[date])
-
-group by t.[date], t.[cif],DigiBank_date
-
 
 ----------------------------check KH mở mới trong từng Rptdate --> tần suất----------------------slide 3
 
@@ -158,5 +120,44 @@ left join ( select [rpt_date], [mã khách hàng], sum([giá trị hợp đồng
 )			
 select count(distinct [cif])			
 from abc 			
-where [tiền gửi] ='Y' or [vay] = 'Y' or [SLGD] is not null or [SLGD] <> 0			
+where [tiền gửi] ='Y' or [vay] = 'Y' or [SLGD] is not null or [SLGD] <> 0		
+
+
+-------------------------dbo NHS _ view CLKD---SLKH bao gồm mở từ trong năm 2023---------------------
+select distinct t.[date], t.[cif], DigiBank_date,
+			case when sum([SLGD]) between 1 and 3 then N'KH Silver (1-3 lần/tháng)' 
+				 when sum([SLGD]) between 4 and 9 then N'KH Gold (4-9 lần/tháng)'
+				 when sum([SLGD]) >= 10 then N'KH Diamond (>=10 lần/tháng)' 
+				else N'KH Bronze (0 lần/tháng)' end [PLKH_tần suất],
+
+			sum([SLGD]) [Tần suất gd],
+			sum([BQ]) [SDBQ],
+			sum([ck]) [SDCK]
+from 
+		(select [date], [cif], isnull([date mở Digi],N'KH mở 2023') [DigiBank_date], sum([gd]) [SLGD]
+				from (
+						select  EOMONTH([ngày giao dịch]) [date], [cif],
+						case when [Loại giao dịch] = 'topup' then count([ngày giao dịch])
+						else count([ngày giao dịch])/2 end [gd]
+
+						from [CLKD].[dbo].[NHS_Transaction]
+						group by EOMONTH([ngày giao dịch]), [cif],[Loại giao dịch]
+												) b
+				left join (
+							select [số cif],  
+									N'KH mở T'+ convert(nvarchar(5),month([Ngày tạo])) +'/'+ convert(nvarchar(5),year([Ngày tạo])) [date mở Digi]
+							from [CLKD].[dbo].[NHS_Customer]
+						) c 
+				on b.CIF = c.[Số CIF]
+					group by  [date], [cif], [date mở Digi]
+				) t 
+ left join 
+		(	select EOMONTH([date_out]) [date], [mã kh], sum([số dư bq quy đổi]) [BQ], sum([số dư cuối quy đổi]) [ck]    
+			from [BI_DATA].[dbo].[AC_101]
+			where rpt_date >= '20240101'
+			group by  EOMONTH([date_out]), [mã kh]
+		) a
+on (t.CIF = a.[Mã KH] and t.[date] = a.[date])
+
+group by t.[date], t.[cif],DigiBank_date
 
