@@ -123,3 +123,40 @@ else N'KH Bronze (0 lần/tháng)' end [PLKH_tần suất]
       ,isnull([SDBQ],0) [Số dư BQ]
       ,isnull([SDCK],0) [Số dư CK]
   FROM [CLKD].[dbo].[NHS]
+
+
+-------------------------------------------------------------------------
+with abc as (			
+  			
+  select t.[daterpt], t.[cif], c.[ngày tạo],			
+		case when d.[mã khách hàng] is not null then 'Y' else 'N' end [Tiền gửi],	
+		case when l.[Mã khách hàng] is not null then 'Y' else 'N' end [Vay],	
+		sum([sl]) [SLGD]	
+  from ( 			
+		select EOMONTH([ngày giao dịch]) [daterpt], [cif], count([ref number]) [sl] 	
+		from [10.1.123.130].[CLKD].[dbo].[NHS_Transaction]	
+		group by  EOMONTH([ngày giao dịch]), [cif]) t 	
+  left join 			
+			(select [số cif], [ngày tạo]
+			
+			from [10.1.123.130].[CLKD].[dbo].[NHS_Customer]) c
+	on t.[cif] = c.[số cif]		
+ left join (select EOMONTH([ngày gửi]) [ngày gửi], [Mã khách hàng], sum([số dư]) [AB]			
+			from [10.1.123.130].[BI_DATA].[dbo].[DP_101] 
+			where [ngày gửi] >= '2023-12-01'
+			group by EOMONTH([ngày gửi]), [mã khách hàng]) d
+	on c.[số cif] = d.[Mã khách hàng]		
+left join ( select [rpt_date], [mã khách hàng], sum([giá trị hợp đồng cam kết]) [AC]			
+			from [practice].[dbo].[LD_100]
+			where Rpt_date >= '20231201'
+			group by [rpt_date], [mã khách hàng]) l
+	on c.[số cif] = l.[Mã khách hàng]		
+			
+  group by t.[daterpt], t.[cif], c.[ngày tạo],			
+		case when d.[mã khách hàng] is not null then 'Y' else 'N' end,	
+		case when l.[Mã khách hàng] is not null then 'Y' else 'N' end	
+)			
+select count(distinct [cif])			
+from abc 			
+where [tiền gửi] ='Y' or [vay] = 'Y' or [SLGD] is not null or [SLGD] <> 0			
+
