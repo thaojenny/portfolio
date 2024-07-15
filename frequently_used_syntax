@@ -147,3 +147,9 @@ unpivot
 INSERT INTO table2
 SELECT * FROM table1
 WHERE condition;
+
+-------------------find difference between two list----------with condition of comparing columns must be float.int type----------------
+select count(*) 
+from tableA a, tableB b 
+where a.column1 = b.column1 
+and a.column2 = b.column2 -----------for example, table with two columns
