@@ -101,6 +101,72 @@ select min(Q1) [Q1], max(Q3) [Q3]
 from abc
 
 
+
+-------target: check quality of CASA each year------------
+
+-------create temporary table with retail customers of each year---------------------
+select left(rpt_date, 4) [Year], [mã kh], avg([số dư BQ quy đổi]) [SDBQ năm]
+into ##ac1
+from [BI_DATA].[dbo].[AC_101] a
+left join [MAPPING].[dbo].[PhanKhuc] p
+on a.[Nhóm Khách hàng] = p.NhomKH
+left join [MAPPING].[dbo].[SP_dacthu] s
+on s.TenSP = a.[Tên Sản phẩm]
+where p.PhanKhuc ='1.KHCN' and s.LoaiSp is null and [số dư BQ quy đổi] > 0
+group by left(rpt_date, 4), [mã kh]
+
+
+----
+select left(rpt_date, 4) [Year], [mã kh], avg([số dư BQ quy đổi]) [SDBQ năm]
+into ##ac2
+from [BI_DATA].[dbo].[AC_101] a
+left join [MAPPING].[dbo].[PhanKhuc] p
+on a.[Nhóm Khách hàng] = p.NhomKH
+left join [MAPPING].[dbo].[SP_dacthu] s
+on s.TenSP = a.[Tên Sản phẩm]
+where p.PhanKhuc ='1.KHCN' and s.LoaiSp is null 
+group by left(rpt_date, 4), [mã kh]
+
+-------------count number of customer in each year -----------
+----purpose: number of customers improve quality of casa?------------
+select [year], count([mã kh]) [SLKH 1]
+from ##ac1
+group by [year]
+--
+select [year], count([mã kh]) [SLKH 2]
+from ##ac2
+group by [year]
+
+
+------------------------ calculate min/max/median/avg/mode to reject outliers------------------
+  --------------------mean > median > mode ---->    -----------------------
+  select 
+		min([SDBQ năm]) [min], max([SDBQ năm]) [max], AVG([sdbq năm]) [avg], 
+		 
+				((SELECT MAX([sdbq năm])
+				FROM (
+						 SELECT TOP 50 PERCENT [sdbq năm]
+						 FROM ##ac2
+						 ORDER BY [sdbq năm]) AS BottomHalf) +
+						(SELECT MIN([sdbq năm])
+						FROM (
+						 SELECT TOP 50 PERCENT [sdbq năm]
+						 FROM ##ac2
+						 ORDER BY [sdbq năm] DESC) AS TopHalf)
+						 )/ 2 AS Median,
+		(select top 1 [SDBQ năm]
+			from (select [SDBQ năm], count(*) [sl]
+					from ##ac2
+					group by [SDBQ năm]
+					 ) b
+			order by [sl] desc
+					) [mode]
+
+from ##ac2
+where [year] = '2024'
+ 
+
+
 -----------------after many trials with lower and upper boundary---> CASA on average ~ 3-400k/person----------
 -----lower boundary ~ 0 (negative numbers due to paying debts, upper boundary ~ 6 million vnd, and population is 1.82 million customers---
 
