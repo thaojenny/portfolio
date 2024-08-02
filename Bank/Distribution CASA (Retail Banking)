@@ -1,0 +1,106 @@
+-----the database is calculated within retail customers, average of [Số dư BQ quy đổi] from 2018 to 2nd of August 2024----------
+--result: Avg amount of [SDBQ] = 227k, 96% of customers have CASA below 2 million----
+
+-----------------------create a temporary table with cif customer and avg of casa---------------------
+  select [mã kh], AVG([số dư BQ quy đổi]) [SDBQ]
+  into ##ac101
+  FROM [BI_DATA].[dbo].[AC_101] a
+  left join [MAPPING].[dbo].[PhanKhuc] p
+  on a.[Nhóm Khách hàng] = p.NhomKH
+  left join [MAPPING].[dbo].[SP_dacthu] s
+  on s.TenSP = a.[Tên Sản phẩm]
+  where p.PhanKhuc ='1.KHCN' and s.LoaiSp is null
+  group by [Mã KH]
+
+  ------------------------ calculate min/max/median/avg/mode to reject outliers------------------
+  --------------------mean > median > mode ----> right skewed-----------------------
+  select 
+		min([SDBQ]) [min], max([SDBQ]) [max], AVG([sdbq]) [avg], 
+		 
+				((SELECT MAX([sdbq])
+				FROM (
+						 SELECT TOP 50 PERCENT [sdbq]
+						 FROM ##ac101
+						 ORDER BY [sdbq]) AS BottomHalf) +
+						(SELECT MIN([sdbq])
+						FROM (
+						 SELECT TOP 50 PERCENT [sdbq]
+						 FROM ##ac101
+						 ORDER BY [sdbq] DESC) AS TopHalf)
+						 )/ 2 AS Median,
+		(select top 1 [SDBQ]
+			from (select [SDBQ], count(*) [sl]
+					from ##ac101
+					group by [SDBQ]
+					 ) b
+			order by [sl] desc
+					) [mode]
+
+from ##ac101
+  -----------------check customers who have negative amount of CASA-------------------------
+  select  [mã kh]
+  from ##ac101
+  where [SDBQ] <0
+  -----
+
+  select *
+from AC_101
+where [Mã KH] in 
+			( select  [mã kh]
+  from ##ac101
+  where [SDBQ] <0  )
+  -----
+
+    select count( [mã kh])
+  from ##ac101
+  where [SDBQ] <0
+
+  -----------calculate min/max/median/avg/mode with conditions of rejecting all negative [số dư BQ quy đổi]----------
+
+  select 
+		min([SDBQ]) [min], max([SDBQ]) [max], AVG([sdbq]) [avg], 
+		 
+				((SELECT MAX([sdbq])
+				FROM (
+						 SELECT TOP 50 PERCENT [sdbq]
+						 from (select * from ##ac101 where [SDBQ] between  0 and 6e6) a0
+						 ORDER BY [sdbq]) AS BottomHalf) +
+						(SELECT MIN([sdbq])
+						FROM (
+						 SELECT TOP 50 PERCENT [sdbq]
+						 from (select * from ##ac101 where [SDBQ] between  0 and 6e6) a1
+						 ORDER BY [sdbq] DESC) AS TopHalf)
+						 )/ 2 AS Median,
+		(select top 1 [SDBQ]
+			from (select [SDBQ], count(*) [sl]
+					from (select * from ##ac101 where [SDBQ] between  0 and 6e6) a2
+					group by [SDBQ]
+					 ) b
+			order by [sl] desc
+					) [mode],
+		STDEV([sdbq]) [std]
+
+from (select * from ##ac101 where  [SDBQ] between 0 and 6e6) a3
+
+----------------calculate standard deviation -------------
+select [mã kh],[SDBQ]
+from  ##ac101
+where [SDBQ] between  0 and 6e6
+group by [Mã KH],[SDBQ]
+
+--------------calculate Q1 & Q3 percentile to reject outliers----------------
+with abc as (
+select PERCENTILE_CONT(0.25) within group (order by avg([SDBQ])) over (partition by [mã kh]) [Q1],
+		PERCENTILE_CONT(0.75) within group (order by avg([SDBQ])) over (partition by [mã kh]) [Q3]
+from ##ac101
+
+group by [mã kh]
+
+)
+select min(Q1) [Q1], max(Q3) [Q3]
+from abc
+
+
+-----------------after many trials with lower and upper boundary---> CASA on average ~ 3-400k/person----------
+-----lower boundary ~ 0 (negative numbers due to paying debts, upper boundary ~ 6 million vnd, and population is 1.82 million customers---
+
