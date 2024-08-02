@@ -1,4 +1,4 @@
------the database is calculated within retail customers, average of [Số dư BQ quy đổi] from 2018 to 2nd of August 2024, tested with 1.82 million customers----------
+ -----the database is calculated within retail customers, average of [Số dư BQ quy đổi] from 2018 to 2nd of August 2024, tested with 1.82 million customers----------
 --result: Avg amount of [SDBQ] = 227k, 96% of customers have CASA below 2 million vnd----
 
 -----------------------create a temporary table with cif customer and avg of casa---------------------
