@@ -340,3 +340,83 @@ from
 left join ( select [mã khách hàng],[số hợp đồng tín dụng],[gốc vay giải ngân],[kỳ hạn hợp đồng],[Phân theo kỳ hạn (NH,TD,DH)],[Sub product.Tên sản phẩm]  from [BI_DATA].[dbo].[LD_100]) l
 on c.[mã khách hàng] = l.[mã khách hàng]
 where l.[gốc vay giải ngân] > 1000000
+
+-----------------------create a temporary table with cif customer and avg of casa---------------------
+  select [mã kh], AVG([số dư BQ quy đổi]) [SDBQ]
+  into ##ac101
+  FROM [BI_DATA].[dbo].[AC_101] a
+  left join [MAPPING].[dbo].[PhanKhuc] p
+  on a.[Nhóm Khách hàng] = p.NhomKH
+  left join [MAPPING].[dbo].[SP_dacthu] s
+  on s.TenSP = a.[Tên Sản phẩm]
+  where p.PhanKhuc ='1.KHCN' and s.LoaiSp is null
+  group by [Mã KH]
+
+  ------------------------ calculate min/max/median/avg/mode to reject outliers------------------
+  --------------------mean > median > mode ----> right skewed-----------------------
+  select 
+		min([SDBQ]) [min], max([SDBQ]) [max], AVG([sdbq]) [avg], 
+		 
+				((SELECT MAX([sdbq])
+				FROM (
+						 SELECT TOP 50 PERCENT [sdbq]
+						 FROM ##ac101
+						 ORDER BY [sdbq]) AS BottomHalf) +
+						(SELECT MIN([sdbq])
+						FROM (
+						 SELECT TOP 50 PERCENT [sdbq]
+						 FROM ##ac101
+						 ORDER BY [sdbq] DESC) AS TopHalf)
+						 )/ 2 AS Median,
+		(select top 1 [SDBQ]
+			from (select [SDBQ], count(*) [sl]
+					from ##ac101
+					group by [SDBQ]
+					 ) b
+			order by [sl] desc
+					) [mode]
+
+from ##ac101
+  -----------------check customers who have negative amount of CASA-------------------------
+  select  [mã kh]
+  from ##ac101
+  where [SDBQ] <0
+  -----
+
+  select *
+from AC_101
+where [Mã KH] in 
+			( select  [mã kh]
+  from ##ac101
+  where [SDBQ] <0  )
+  -----
+
+    select count( [mã kh])
+  from ##ac101
+  where [SDBQ] <0
+
+  -----------calculate min/max/median/avg/mode with conditions of rejecting all negative [số dư BQ quy đổi]----------
+
+  select 
+		min([SDBQ]) [min], max([SDBQ]) [max], AVG([sdbq]) [avg], 
+		 
+				((SELECT MAX([sdbq])
+				FROM (
+						 SELECT TOP 50 PERCENT [sdbq]
+						 from (select * from ##ac101 where [SDBQ] > 5e4) a0
+						 ORDER BY [sdbq]) AS BottomHalf) +
+						(SELECT MIN([sdbq])
+						FROM (
+						 SELECT TOP 50 PERCENT [sdbq]
+						 from (select * from ##ac101 where [SDBQ] > 5e4) a1
+						 ORDER BY [sdbq] DESC) AS TopHalf)
+						 )/ 2 AS Median,
+		(select top 1 [SDBQ]
+			from (select [SDBQ], count(*) [sl]
+					from (select * from ##ac101 where [SDBQ] > 5e4) a2
+					group by [SDBQ]
+					 ) b
+			order by [sl] desc
+					) [mode]
+
+from (select * from ##ac101 where [SDBQ] > 5e4) a3
