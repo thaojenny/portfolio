@@ -143,29 +143,100 @@ group by [year]
 
 ------------------------ calculate min/max/median/avg/mode to reject outliers------------------
   --------------------mean > median > mode ---->    -----------------------
-  select 
+  select [year],
 		min([SDBQ năm]) [min], max([SDBQ năm]) [max], AVG([sdbq năm]) [avg], 
 		 
 				((SELECT MAX([sdbq năm])
 				FROM (
 						 SELECT TOP 50 PERCENT [sdbq năm]
-						 FROM ##ac2
+						 FROM ##ac2 where [SDBQ năm] > 0
 						 ORDER BY [sdbq năm]) AS BottomHalf) +
 						(SELECT MIN([sdbq năm])
 						FROM (
 						 SELECT TOP 50 PERCENT [sdbq năm]
-						 FROM ##ac2
+						 FROM ##ac2 where [SDBQ năm] > 0
 						 ORDER BY [sdbq năm] DESC) AS TopHalf)
 						 )/ 2 AS Median,
 		(select top 1 [SDBQ năm]
 			from (select [SDBQ năm], count(*) [sl]
-					from ##ac2
+					from ##ac2 where [SDBQ năm] > 0
+					group by [SDBQ năm]
+					 ) b
+			order by [sl] desc
+					) [mode],
+			STDEV([sdbq năm]) [STDEV]
+			
+
+from ##ac2
+where [SDBQ năm] > 0
+group by [year]
+order by [year]
+----------------
+select [year],
+		min([SDBQ năm]) [min], max([SDBQ năm]) [max], AVG([sdbq năm]) [avg], 
+		 
+				((SELECT MAX([sdbq năm])
+				FROM (
+						 SELECT TOP 50 PERCENT [sdbq năm]
+						 FROM ##ac1
+						 ORDER BY [sdbq năm]) AS BottomHalf) +
+						(SELECT MIN([sdbq năm])
+						FROM (
+						 SELECT TOP 50 PERCENT [sdbq năm]
+						 FROM ##ac1
+						 ORDER BY [sdbq năm] DESC) AS TopHalf)
+						 )/ 2 AS Median,
+		(select top 1 [SDBQ năm]
+			from (select [SDBQ năm], count(*) [sl]
+					from ##ac1
 					group by [SDBQ năm]
 					 ) b
 			order by [sl] desc
 					) [mode]
 
-from ##ac2
-where [year] = '2024'
- 
+from ##ac1
 
+
+------------------
+select [year],
+		min([SDBQ năm]) [min], max([SDBQ năm]) [max], AVG([sdbq năm]) [avg], 
+		 
+				((SELECT MAX([sdbq năm])
+				FROM (
+						 SELECT TOP 50 PERCENT [sdbq năm]
+						 FROM ##ac2 where [SDBQ năm] >  50000
+						 ORDER BY [sdbq năm]) AS BottomHalf) +
+						(SELECT MIN([sdbq năm])
+						FROM (
+						 SELECT TOP 50 PERCENT [sdbq năm]
+						 FROM ##ac2 where [SDBQ năm] >  50000
+						 ORDER BY [sdbq năm] DESC) AS TopHalf)
+						 )/ 2 AS Median,
+		(select top 1 [SDBQ năm]
+			from (select [SDBQ năm], count(*) [sl]
+					from ##ac2 where [SDBQ năm] >  50000
+					group by [SDBQ năm]
+					 ) b
+			order by [sl] desc
+					) [mode],
+			STDEV([sdbq năm]) [STDEV]
+			
+
+from ##ac2
+where [SDBQ năm] > 50000
+group by [year]
+order by [year]
+------calculate normal distribution --------------------
+select [year], [mã kh], [SDBQ năm], 
+		case when [year] = '2018' then exp(-0.5*power(([sdbq năm] -5026783.49151846)/102829496.136361,2)) 
+		when [year] = '2019' then exp(-0.5*power(([sdbq năm] -4877924.61330402)/91112492.1373106,2)) 
+		when [year] = '2020' then exp(-0.5*power(([sdbq năm] -5284178.17870904)/96998486.6339186,2)) 
+		when [year] = '2021' then exp(-0.5*power(([sdbq năm] -6618786.33983612)/174400407.99952,2)) 
+		when [year] = '2022' then exp(-0.5*power(([sdbq năm] -5358717.65392396)/151568462.609787,2)) 
+		when [year] = '2023' then exp(-0.5*power(([sdbq năm] -2344556.23563703)/116010060.682254,2)) 
+		else exp(-0.5*power(([sdbq năm] -2481730.72370316)/79833773.9196152,2)) end [Normal Distribution]
+from ##ac2
+where [sdbq năm] between -3e8 and 3e8
+order by year, [SDBQ năm]
+
+--------
