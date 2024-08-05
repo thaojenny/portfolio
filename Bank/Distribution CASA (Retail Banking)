@@ -101,6 +101,9 @@ select min(Q1) [Q1], max(Q3) [Q3]
 from abc
 
 
+-----------------after many trials with lower and upper boundary---> CASA on average ~ 3-400k/person----------
+-----lower boundary ~ 0 (negative numbers due to paying debts, upper boundary ~ 6 million vnd, and population is 1.82 million customers---
+
 
 -------target: check quality of CASA each year------------
 
@@ -165,8 +168,4 @@ group by [year]
 from ##ac2
 where [year] = '2024'
  
-
-
------------------after many trials with lower and upper boundary---> CASA on average ~ 3-400k/person----------
------lower boundary ~ 0 (negative numbers due to paying debts, upper boundary ~ 6 million vnd, and population is 1.82 million customers---
 
