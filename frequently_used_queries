@@ -153,3 +153,15 @@ select count(*)
 from tableA a, tableB b 
 where a.column1 = b.column1 
 and a.column2 = b.column2 -----------for example, table with two columns
+
+---------------mathematics formula------
+ABS(x): Trị tuyệt đối của x
+SQRT(x): Căn bậc hai của x
+SQUARE(x): bình phương của x
+POWER(y,x): y mũ x
+LOG(x): Logarit tự nhiên của x
+EXP(x): Hàm mũ cơ số e của x
+SIGN(x): Lấy dấu của số x ( -1:x<0, 0: x=0, +1: x>0)
+ROUND (x,n): Làm tròn tới n số lẻ
+CEILING(x): Số nguyên nhỏ nhất nhưng lớn hơn x
+FLOOR(x): Số nguyên lớn nhất nhưng nhỏ hơn x
