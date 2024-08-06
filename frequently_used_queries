@@ -14,6 +14,9 @@ values (1,'A',8),
 -- delete table
 DROP TABLE IF EXISTS table_name
 
+------delete a column from a table----
+ALTER TABLE [dbo].[cu_401]
+DROP COLUMN Rptdate
 
 -- create a table CTE 
 with table_name as ( 
