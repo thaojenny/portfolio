@@ -1,3 +1,295 @@
+
+---------------------------------------------------Monthly report-------------------------------------------------------------------
+----1.SLKH-----
+----1.1.Tổng SL thẻ & SL KH mở thẻ đến nay (lũy kế đến nay)------
+
+select  distinct [loại thẻ],[trạng thái thẻ], count(distinct [cif khách hàng]) [slkh],  count([số tài khoản]) [số tk]
+ FROM [BI_DATA].[dbo].[CARD_101]
+ where [CIF Khách hàng] in
+							(select [mã khách hàng]
+							 from [BI_DATA].[dbo].CU_401 c
+							 left join MAPPING.dbo.PhanKhuc p
+							 on c.[Nhóm Khách hàng] = p.NhomKH
+							 where p.PhanKhuc ='1.KHCN' )
+
+ group by [loại thẻ],[trạng thái thẻ]
+
+----1.2.SL thẻ mở mới mỗi tháng------
+
+ select eomonth([ngày phát hành]) rpt_date, [loại thẻ],[trạng thái thẻ], count(distinct [cif khách hàng]) [slkh],  count([số tài khoản]) [số tk]
+ FROM [BI_DATA].[dbo].[CARD_101]
+ where year([ngày phát hành]) >= 2021 and [CIF Khách hàng] in
+							(select [mã khách hàng]
+							 from [BI_DATA].[dbo].CU_401 c
+							 left join MAPPING.dbo.PhanKhuc p
+							 on c.[Nhóm Khách hàng] = p.NhomKH
+							 where p.PhanKhuc ='1.KHCN' )
+
+ group by eomonth([ngày phát hành]),[loại thẻ],[trạng thái thẻ]
+
+----2.Product holding-----
+----2.1. Product holding chung tiền gửi CKH---------
+with abc as(
+select distinct [rpt_date],[Mã khách hàng], convert(float,count( [Mã sản phẩm]) over (partition by [mã khách hàng],[Rpt_date])) [SLSP]
+from
+(
+select year([ngày gửi]) [Rpt_date] ,[mã khách hàng],  [mã sản phẩm]
+from [BI_DATA].[dbo].[DP_101]  d
+left join (select * from [MAPPING].[dbo].[SP_dacthu] where [LoaiSp] ='FD') s
+  on d.[Tên sản phẩm] = s.TenSP
+where  s.LoaiSp is null and [mã khách hàng] in 
+									(select [mã khách hàng]
+										from [BI_DATA].[dbo].[CU_401] c
+										left join [MAPPING].dbo.[PhanKhuc] p1
+										on p1.NhomKH = c.[Nhóm Khách hàng]
+										where p1.PhanKhuc ='1.KHCN')
+
+
+) b
+)
+select rpt_date, round(avg([slsp]),2)  [Product holding]
+from abc
+group by Rpt_date
+order by Rpt_date
+
+-----2.2.SLKH distinct trong năm gửi tiền, tính đến T-1-------
+select year([ngày gửi]) [rpt_year], count(distinct [mã khách hàng]) [slkh]
+from [BI_DATA].[dbo].[DP_101] d
+left join (select * from [MAPPING].[dbo].[SP_dacthu] where [LoaiSp] ='FD') s
+  on d.[Tên sản phẩm] = s.TenSP
+where  s.LoaiSp is null and [mã khách hàng] in 
+									(select [mã khách hàng]
+										from [BI_DATA].[dbo].[CU_401] c
+										left join [MAPPING].dbo.[PhanKhuc] p1
+										on p1.NhomKH = c.[Nhóm Khách hàng]
+										where p1.PhanKhuc ='1.KHCN')
+group by  year([ngày gửi])
+order by  year([ngày gửi])
+
+-----2.3.SL sổ mở trong năm -----------
+select year([ngày gửi]) [Rpt_date] , sp.[sub_product] ,count([mã sản phẩm]) [slsp]
+from [BI_DATA].[dbo].[DP_101]  d
+left join (select * from [MAPPING].[dbo].[SP_dacthu] where [LoaiSp] ='FD') s
+  on d.[Tên sản phẩm] = s.TenSP
+left join (select distinct [Core_Name], [Sub_Product] from [MAPPING].[dbo].[Sanpham_KHCN] where [Product] = 'CKH') sp
+  on d.[Tên sản phẩm] = sp.Core_Name
+where  s.LoaiSp is null and [mã khách hàng] in 
+									(select [mã khách hàng]
+										from [BI_DATA].[dbo].[CU_401] c
+										left join [MAPPING].dbo.[PhanKhuc] p1
+										on p1.NhomKH = c.[Nhóm Khách hàng]
+										where p1.PhanKhuc ='1.KHCN')
+group by year([ngày gửi])  , sp.[sub_product]
+order by year([ngày gửi])
+
+------------3.MBNT/CTQT----------------
+------3.1. MBNT-----------
+ select [Loại giao dịch (mua, bán)],  concat(year([Ngày ký hợp đồng]),'-', MONTH([ngày ký hợp đồng])) [date], SUM([Khối lượng quy đổi USD]) [KL]	
+    FROM [BI_DATA].[dbo].[FX_100] f	
+	left join [MAPPING].[dbo].[PhanKhuc] p
+on f.[Nhóm khách hàng] = p.NhomKH	
+where p.[PhanKhuc] = '1.KHCN' and year([Ngày ký hợp đồng]) >= 2023	
+group by [Loại giao dịch (mua, bán)], concat(year([Ngày ký hợp đồng]),'-', MONTH([ngày ký hợp đồng]))
+	
+	
+------3.2. CTQT-----------
+select [Mã nhóm sản phẩm], EOMONTH([Ngày mở]) [date],sum([Số tiền (Quy đổi USD)]) [KL]				
+  FROM [BI_DATA].[dbo].[TF_301] t				
+  left join (select [mã khách hàng] 				
+				from [BI_DATA].[dbo].[CU_401] c
+				left join [MAPPING].[dbo].[PhanKhuc] p
+				on c.[Nhóm Khách hàng] = p.NhomKH
+				where p.PhanKhuc = '1.KHCN') cp
+on cp.[Mã Khách hàng] = t.[Mã KH]				
+where [Loại nguồn] = 'FT' and YEAR([Ngày mở]) >= 2023 and cp.[Mã Khách hàng] is not null				
+group by [Mã nhóm sản phẩm], EOMONTH([Ngày mở]) 				
+
+------------4. Tiền gửi CKH---------------
+-----4.1.Kênh gửi tiền: SLKH & SL sổ----------
+select rpt_date,
+		case when [ext channel] in ('IB','MB') then N'Online'
+		else N'Tại quầy' end [Kênh gửi tiền],
+		count([Số Tài khoản])  [SL sổ], 
+		count(distinct [mã khách hàng]) [SL KH]
+  FROM [10.1.123.130].[BI_DATA].[dbo].[DP_100] d
+  left join (select * from [10.1.123.130].[MAPPING].[dbo].[PhanKhuc] where [PhanKhuc] = '1.KHCN') p
+  on d.[Nhóm khách hàng] = p.[NhomKH]
+  left join (select * from [10.1.123.130].[MAPPING].[dbo].[SP_dacthu] where [LoaiSp] ='FD') s
+  on d.[Tên sản Phẩm] = s.TenSP
+  where rpt_date >= 20230101 and [TK cầm cố SLH] ='N' and p.[NhomKH] is not null and s.[LoaiSp] is null
+  group by rpt_date,
+		case when [ext channel] in ('IB','MB') then N'Online'
+		else N'Tại quầy' end
+order by rpt_date
+--------4.2.Kênh gửi tiền: Số dư tiền gửi & SLKH---------
+select rpt_date,		
+		case when [ext channel] in ('IB','MB') then N'Online'
+		else N'Tại quầy' end [Kênh gửi tiền],
+		sum([SD]) [Số dư tiền gửi],
+		sum([SL]) [SLKH]
+  FROM 		
+  		
+  (select Rpt_date, [ext channel], sum([Số dư] * [tỷ giá]) [SD] , count(distinct [mã khách hàng]) [SL]		
+	from [10.1.123.130].[BI_DATA].[dbo].[DP_100] d	
+	 left join (select * from [10.1.123.130].[MAPPING].[dbo].[PhanKhuc] where [PhanKhuc] = '1.KHCN') p	
+	 on d.[Nhóm khách hàng] = p.[NhomKH]	
+	left join (select * from [10.1.123.130].[MAPPING].[dbo].[SP_dacthu] where [LoaiSp] ='FD') s	
+	on d.[Tên sản Phẩm] = s.TenSP	
+	where rpt_date >= 20230101 and [TK cầm cố SLH] ='N' and p.[NhomKH] is not null and s.[LoaiSp] is null	
+	group by Rpt_date, [ext channel]	
+	) b	
+	 group by rpt_date,	
+		case when [ext channel] in ('IB','MB') then N'Online'
+		else N'Tại quầy' end
+order by rpt_date		
+-------4.3. Chia phân khúc tiền gửi CKH-------------
+select rpt_date,
+		case when [SD] <= 2*1e8 then N'Dưới 200 tr'
+				when [SD] > 2*1e8 and  [SD] <= 5*1e8 then N'Dưới 500 tr'
+				when  [SD] > 5*1e8 and  [SD] <= 1e9 then N'Dưới 1 tỷ'
+				when  [SD] > 1e9 and  [SD] <= 5*1e9 then N'Dưới 5 tỷ'
+				when  [SD] > 5*1e9 and  [SD] <= 10*1e9 then N'Dưới 10 tỷ'
+				else N'Trên 10 tỷ'end [Seg 1] ,
+		case when [SD] <= 5*1e9 then N'Dưới 5 tỷ'
+			else N'Trên 5 tỷ' end [Seg 2],
+		count(distinct [mã kh]) [SL KH],
+		sum([SD]) [Số dư]
+	from (
+	select Rpt_date, [Mã KH], sum([Số dư BQ quy đổi]) [SD]
+		 from [10.1.123.130].[BI_DATA].[dbo].[DP_104] d
+		 left join (select * from [10.1.123.130].[MAPPING].[dbo].[PhanKhuc] where [PhanKhuc] = '1.KHCN') p
+		 on d.[Nhóm khách hàng] = p.[NhomKH]
+		 left join (select * from [10.1.123.130].[MAPPING].[dbo].[SP_dacthu] where [LoaiSp] ='FD') s
+		 on d.[Tên sản Phẩm] = s.TenSP
+		 where rpt_date >= 20230101 and [Cầm cố STK SLH] ='N' and p.[NhomKH] is not null and s.[LoaiSp] is null
+		 group by Rpt_date, [Mã KH]
+		 ) b
+  group by rpt_date, 
+		case when [SD] <= 2*1e8 then N'Dưới 200 tr'
+				when [SD] > 2*1e8 and  [SD] <= 5*1e8 then N'Dưới 500 tr'
+				when  [SD] > 5*1e8 and  [SD] <= 1e9 then N'Dưới 1 tỷ'
+				when  [SD] > 1e9 and  [SD] <= 5*1e9 then N'Dưới 5 tỷ'
+				when  [SD] > 5*1e9 and  [SD] <= 10*1e9 then N'Dưới 10 tỷ'
+				else N'Trên 10 tỷ'end  ,
+		case when [SD] <= 5*1e9 then N'Dưới 5 tỷ'
+			else N'Trên 5 tỷ' end 
+order by rpt_date
+--------4.4. Kỳ hạn gửi---------
+--------4.4.1. Kỳ hạn chi tiết (tháng)---------
+select rpt_date, [kỳ hạn],
+		
+			sum([Số dư BQ quy đổi]) [AMT], count(distinct [Mã KH]) [SL_KH]
+
+	FROM [10.1.123.130].[BI_DATA].[dbo].[DP_104]  d
+  left join (select * from [10.1.123.130].[MAPPING].[dbo].[PhanKhuc] where [PhanKhuc] = '1.KHCN') p
+  on d.[Nhóm khách hàng] = p.[NhomKH]
+  left join (select * from [10.1.123.130].[MAPPING].[dbo].[SP_dacthu] where [LoaiSp] ='FD') s
+  on d.[Tên sản Phẩm] = s.TenSP
+  where Rpt_date >= 20230101 and [Cầm cố STK SLH] ='N' and p.[NhomKH] is not null and s.[LoaiSp] is null
+  group by rpt_date, [kỳ hạn]
+  order by Rpt_date
+--------4.4.2. Kỳ hạn chung (ngắn/trung/dài hạn)---------
+with abc as 
+(select rpt_date, [kỳ hạn],
+		
+			sum([Số dư BQ quy đổi]) [AMT], count(distinct [Mã KH]) [SL_KH]
+
+	FROM [10.1.123.130].[BI_DATA].[dbo].[DP_104]  d
+  left join (select * from [10.1.123.130].[MAPPING].[dbo].[PhanKhuc] where [PhanKhuc] = '1.KHCN') p
+  on d.[Nhóm khách hàng] = p.[NhomKH]
+  left join (select * from [10.1.123.130].[MAPPING].[dbo].[SP_dacthu] where [LoaiSp] ='FD') s
+  on d.[Tên sản Phẩm] = s.TenSP
+  where Rpt_date >= 20230101 and [Cầm cố STK SLH] ='N' and p.[NhomKH] is not null and s.[LoaiSp] is null
+  group by rpt_date, [kỳ hạn]
+  )
+
+  select rpt_date, case when [kỳ hạn] like '%W' or left([kỳ hạn],3) <=12 then N'Ngắn hạn'
+						when left([kỳ hạn],3) >= 5*12 then N'Dài hạn'
+						else N'Trung hạn' end [Kỳ hạn gửi]
+		, sum([amt]) [Số dư], sum([SL_KH]) [KH]
+from abc
+group by Rpt_date, case when [kỳ hạn] like '%W' or left([kỳ hạn],3) <=12 then N'Ngắn hạn'
+						when left([kỳ hạn],3) >= 5*12 then N'Dài hạn'
+						else N'Trung hạn' end
+order by Rpt_date
+------------4.5. Tiền gửi CKH - gửi mới mỗi tháng-------------
+------------4.5.1. Vùng/sản phẩm/kỳ hạn/AMT gửi------------
+select [Rpt_date], m.Vùng, sp.[Sub_Product],
+	case when [kỳ hạn 2] <=12 then N'Ngắn hạn'
+			when [kỳ hạn 2] > 60 then N'Dài hạn'
+			when [kỳ hạn 2] is null then 'N/A'
+			else N'Trung hạn' end [Period]
+		,sum([amt])/1e9 [AMT gửi]
+FROM ( select EOMONTH([ngày gửi]) [Rpt_date], [mã chi nhánh], [Nhóm khách hàng],[tên sản phẩm],
+		case when [kỳ hạn] like '%M' then convert(float,left([kỳ hạn],3))
+			when [kỳ hạn] like '%W' then convert(float,left([kỳ hạn],1))/4
+			else null end [kỳ hạn 2],
+			sum([số dư]) [amt]
+		from [BI_DATA].[dbo].[DP_101] 
+		where [mã khách hàng] in 
+									(select [mã khách hàng]
+										from [BI_DATA].[dbo].[CU_401] c
+										left join [MAPPING].dbo.[PhanKhuc] p1
+										on p1.NhomKH = c.[Nhóm Khách hàng]
+										where p1.PhanKhuc ='1.KHCN')
+		group by EOMONTH([ngày gửi]), [Mã khách hàng], [mã chi nhánh], [tên sản phẩm], [Nhóm khách hàng],
+		case when [kỳ hạn] like '%M' then convert(float,left([kỳ hạn],3))
+			when [kỳ hạn] like '%W' then convert(float,left([kỳ hạn],1))/4
+			else null end 
+		)d 
+
+  left join (select * from [MAPPING].[dbo].[SP_dacthu] where [LoaiSp] ='FD') s
+  on d.[Tên sản phẩm] = s.TenSP
+  left join (select distinct [Core_Name], [Sub_Product] from [MAPPING].[dbo].[Sanpham_KHCN] where [Product] = 'CKH') sp
+  on d.[Tên sản phẩm] = sp.Core_Name
+  left join (select * FROM [MAPPING].[dbo].[DS_DVKD]) m
+  on d.[Mã chi nhánh] = m.Ma_DVKD
+where  s.LoaiSp is null
+group by [Rpt_date], m.Vùng, sp.[Sub_Product],
+	case when [kỳ hạn 2] <=12 then N'Ngắn hạn'
+			when [kỳ hạn 2] > 60 then N'Dài hạn'
+			when [kỳ hạn 2] is null then 'N/A'
+			else N'Trung hạn' end
+order by [rpt_date] 
+-----------4.5.2. SLKH & AMT gửi--------------
+select EOMONTH([ngày gửi]) [Rpt_date],
+		sum([số dư]) [amt], count(distinct [mã khách hàng]) [SLKH]
+from [BI_DATA].[dbo].[DP_101]  d
+
+  left join (select * from [MAPPING].[dbo].[SP_dacthu] where [LoaiSp] ='FD') s
+  on d.[Tên sản phẩm] = s.TenSP
+  left join (select distinct [Core_Name], [Sub_Product] from [MAPPING].[dbo].[Sanpham_KHCN] where [Product] = 'CKH') sp
+  on d.[Tên sản phẩm] = sp.Core_Name
+  left join (select * FROM [MAPPING].[dbo].[DS_DVKD]) m
+  on d.[Mã chi nhánh] = m.Ma_DVKD
+where  s.LoaiSp is null and [mã khách hàng] in 
+									(select [mã khách hàng]
+										from [BI_DATA].[dbo].[CU_401] c
+										left join [MAPPING].dbo.[PhanKhuc] p1
+										on p1.NhomKH = c.[Nhóm Khách hàng]
+										where p1.PhanKhuc ='1.KHCN')
+group by EOMONTH([ngày gửi])
+-----------------5. CHo vay------------------
+-----------------5.1. Giải ngân mới: Vùng/Kỳ hạn/Sản phẩm/AMT giải ngân------------------
+SELECT EOMONTH([ngày giải ngân]) [Rpt_date], m.Vùng, [Kỳ hạn], sp.Sub_Product, sum([gốc vay giải ngân])/1e9 [AMT giải ngân]
+  FROM [BI_DATA].[dbo].[LD_101] l
+  left join (select * from [MAPPING].[dbo].[PhanKhuc] where [PhanKhuc] ='1.KHCN') p
+  on l.[Nhóm khách hàng] = p.NhomKH
+  left join (select * from [MAPPING].[dbo].[SP_dacthu] where [LoaiSp] ='Lending') s
+  on l.[Sub product#Tên sản phẩm] = s.TenSP
+  left join (select distinct [Core_Name], [Sub_Product] from [MAPPING].[dbo].[Sanpham_KHCN] where [Product_line] = N'Cho vay') sp
+  on l.[Sub product#Tên sản phẩm] = sp.Core_Name
+  left join (select * FROM [MAPPING].[dbo].[DS_DVKD]) m
+  on l.[Mã chi nhánh] = m.Ma_DVKD
+
+where p.PhanKhuc is not null and s.LoaiSp is null
+group by EOMONTH([ngày giải ngân]), m.[vùng], [Kỳ hạn], sp.Sub_Product
+order by EOMONTH([ngày giải ngân])
+------------------------------------------------------------------------------------------------------------------------------------------
+
+
+
+
 ----------------------------------------------SLKH----------------------------------------------------
 -----------kh vay & gửi-------------
 with abc as (
