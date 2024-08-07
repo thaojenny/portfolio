@@ -82,6 +82,29 @@ where  s.LoaiSp is null and [mã khách hàng] in
 group by year([ngày gửi])  , sp.[sub_product]
 order by year([ngày gửi])
 
+------2.4. Product holding - Cho vay --------------
+with abc as(
+select distinct [rpt_date],[Mã kh], convert(float,count( [Mã sản phẩm (loan_subproduct)] ) over (partition by [mã kh],[Rpt_date])) [SLSP]
+from
+(
+select year([ngày giải ngân]) [Rpt_date] ,[mã kh],  [Mã sản phẩm (loan_subproduct)]
+from [BI_DATA].[dbo].[LD_101]  d
+left join (select * from [MAPPING].[dbo].[SP_dacthu] where [LoaiSp] ='Lending') s
+  on d.[Sub product#Tên sản phẩm] = s.TenSP
+where  s.LoaiSp is null and [Mã chi nhánh] <> 'VN0010001' and [mã kh] in 
+																	(select [mã khách hàng]
+																		from [BI_DATA].[dbo].[CU_401] c
+																		left join [MAPPING].dbo.[PhanKhuc] p1
+																		on p1.NhomKH = c.[Nhóm Khách hàng]
+																		where p1.PhanKhuc ='1.KHCN')
+
+
+) b
+)
+select rpt_date, round(avg([slsp]),2)  [Product holding]
+from abc
+group by Rpt_date
+order by Rpt_date
 ------------3.MBNT/CTQT----------------
 ------3.1. MBNT-----------
  select [Loại giao dịch (mua, bán)],  concat(year([Ngày ký hợp đồng]),'-', MONTH([ngày ký hợp đồng])) [date], SUM([Khối lượng quy đổi USD]) [KL]	
