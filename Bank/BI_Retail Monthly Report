@@ -168,3 +168,91 @@ select rpt_date, [Date],
 			[Độ tuổi KH],
 			[giới tính],
 			[Vùng]
+----------cho vay----------------
+select rpt_date, [Date], 'Chovay' as [Group_product],
+		[Channel],
+		[Product],
+		[Sub_product],
+		case when [SD] <= 1*1e8 then N'Dưới 100 tr'
+				when [SD] > 1*1e8 and  [SD] <= 5*1e8 then N'Từ 100-500tr'
+				when  [SD] > 5*1e8 and  [SD] <= 1e9 then N'Từ 500tr-1 tỷ'
+				when  [SD] > 1e9 and  [SD] <= 5*1e9 then N'Từ 1-5 tỷ'
+				when  [SD] > 5*1e9 and  [SD] <= 10*1e9 then N'5-10 tỷ'
+				else N'Trên 10 tỷ'end [Seg 1] ,
+		case when [SD] <= 5*1e9 then N'Dưới 5 tỷ'
+			else N'Trên 5 tỷ' end [Seg 2],
+			[kỳ hạn] [Period 1],
+		case when left([kỳ hạn],3) <=12 then N'Ngắn hạn'
+			when left([kỳ hạn],3) > 5*12 then N'Dài hạn'
+			else N'Trung hạn' end [Period 2],
+			[customer type],
+			[Độ tuổi KH],
+			[giới tính],
+			[Vùng],
+
+		sum([SD]) [Số dư BQ],
+		sum([SD2]) [Số dư CK]
+	from (
+	select d.Rpt_date,eomonth([Date in]) [Date],d.[Mã Khách hàng],d.[kỳ hạn], 'N/A' as [Channel],
+				case when d.[Tên SP] like N'%thấu chi%' or d.[Tên SP] like N'%Thau chi%' then 'OD'
+	  else 'LD' end [Product],
+	  sp.[Sub_Product],
+				case when c.[loại khách hàng] =N'Nhân viên nội bộ' then N'NV nội bộ'
+						else N'Khách hàng' end [Customer Type],
+				case when c.[tuổi KH] < 23 then N'Dưới 23 tuổi'
+						when c.[tuổi KH] between 23 and 45 then N'Từ 23-45 tuổi'
+						when c.[tuổi KH] between 46 and 67 then N'Từ 46-67 tuổi'
+						else N'Trên 67 tuổi' end [Độ tuổi KH],
+						[giới tính],
+						dv.Vùng,
+			sum([Số dư BQ qui đổi]) [SD],
+			sum([số dư cuối kỳ qui đổi]) [SD2]
+		 from [BI_DATA].[dbo].[LD_104] d
+		
+		left join  (select  [Mã Khách hàng],[loại khách hàng],[giới tính],
+						DATEDIFF(year, [ngày sinh],getdate()) [tuổi KH]
+					from [BI_DATA].[dbo].[CU_401]  c4
+						) c
+		on d.[mã khách hàng] = c.[Mã Khách hàng]
+		left join [MAPPING].[dbo].[DS_DVKD] dv
+		on d.[mã chi nhánh GD] = dv.Ma_DVKD
+		 left join (select * from [MAPPING].[dbo].[PhanKhuc] where [PhanKhuc] = '1.KHCN') p
+		 on d.[Nhóm kh] = p.[NhomKH]
+		 left join (select * from [MAPPING].[dbo].[SP_dacthu] where [LoaiSp] ='Lending') s
+		 on d.[Tên SP] = s.TenSP
+		 left join (select distinct [Core_Name], [Sub_Product]  from [MAPPING].[dbo].[Sanpham_KHCN] where [Product] ='CV') sp
+		 on d.[Tên SP] = sp.Core_Name
+		 where d.rpt_date >= 20180101 and [Mã chi nhánh GD] <> 'VN0010001' and p.[NhomKH] is not null and s.[LoaiSp] is null
+		 group by  d.Rpt_date, eomonth([Date in]) ,d.[Mã Khách hàng],d.[kỳ hạn], 
+				case when d.[Tên SP] like N'%thấu chi%' or d.[Tên SP] like N'%Thau chi%' then 'OD'
+	  else 'LD' end ,
+	  sp.[Sub_Product],
+				case when c.[loại khách hàng] =N'Nhân viên nội bộ' then N'NV nội bộ'
+						else N'Khách hàng' end ,
+				case when c.[tuổi KH] < 23 then N'Dưới 23 tuổi'
+						when c.[tuổi KH] between 23 and 45 then N'Từ 23-45 tuổi'
+						when c.[tuổi KH] between 46 and 67 then N'Từ 46-67 tuổi'
+						else N'Trên 67 tuổi' end ,
+						[giới tính],
+						dv.Vùng
+		 ) b
+  group by rpt_date, [Date], 
+		[Channel],
+		[Product],
+		[Sub_product],
+		case when [SD] <= 1*1e8 then N'Dưới 100 tr'
+				when [SD] > 1*1e8 and  [SD] <= 5*1e8 then N'Từ 100-500tr'
+				when  [SD] > 5*1e8 and  [SD] <= 1e9 then N'Từ 500tr-1 tỷ'
+				when  [SD] > 1e9 and  [SD] <= 5*1e9 then N'Từ 1-5 tỷ'
+				when  [SD] > 5*1e9 and  [SD] <= 10*1e9 then N'5-10 tỷ'
+				else N'Trên 10 tỷ'end,
+		case when [SD] <= 5*1e9 then N'Dưới 5 tỷ'
+			else N'Trên 5 tỷ' end,
+			[kỳ hạn] ,
+		case when left([kỳ hạn],3) <=12 then N'Ngắn hạn'
+			when left([kỳ hạn],3) > 5*12 then N'Dài hạn'
+			else N'Trung hạn' end ,
+			[customer type],
+			[Độ tuổi KH],
+			[giới tính],
+			[Vùng]
