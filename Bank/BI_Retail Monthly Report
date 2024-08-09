@@ -1,4 +1,5 @@
 ------------------------------------------------------Quy mô---------------------------------------------------------------------------------
+---------------TG_CKH----------------
 select rpt_date, [date],
 		case when [ext channel] in ('IB','MB') then N'Online'
 		else N'Tại quầy' end [Channel],
@@ -79,3 +80,5 @@ select rpt_date, [date],
 			[giới tính],
 			[Vùng]
 order by rpt_date
+
+---------------
