@@ -1,5 +1,5 @@
 ------------------------------------------------------Quy mô---------------------------------------------------------------------------------
-select rpt_date,
+select rpt_date, [date],
 		case when [ext channel] in ('IB','MB') then N'Online'
 		else N'Tại quầy' end [Channel],
 		case when [SD] <= 2*1e8 then N'Dưới 200 tr'
@@ -22,7 +22,7 @@ select rpt_date,
 		sum([SD]) [Số dư BQ],
 		sum([SD2]) [Số dư CK]
 	from (
-	select d.Rpt_date, [Mã KH],d.[kỳ hạn], d1.[ext channel],
+	select d.Rpt_date,eomonth([date_in]), [Mã KH],d.[kỳ hạn], d1.[ext channel],
 				case when c.[loại khách hàng] =N'Nhân viên nội bộ' then N'NV nội bộ'
 						else N'Khách hàng' end [Customer Type],
 				case when c.[tuổi KH] < 23 then N'Dưới 23 tuổi'
@@ -49,7 +49,7 @@ select rpt_date,
 		 left join (select * from [MAPPING].[dbo].[SP_dacthu] where [LoaiSp] ='FD') s
 		 on d.[Tên sản Phẩm] = s.TenSP
 		 where d.rpt_date >= 20180101 and [Cầm cố STK SLH] ='N' and p.[NhomKH] is not null and s.[LoaiSp] is null
-		 group by  d.Rpt_date, [Mã KH],d.[kỳ hạn], d1.[ext channel],
+		 group by  d.Rpt_date,eomonth([date_in]), [Mã KH],d.[kỳ hạn], d1.[ext channel],
 				case when c.[loại khách hàng] =N'Nhân viên nội bộ' then N'NV nội bộ'
 						else N'Khách hàng' end ,
 				case when c.[tuổi KH] < 23 then N'Dưới 23 tuổi'
@@ -59,7 +59,7 @@ select rpt_date,
 						[giới tính],
 						dv.Vùng
 		 ) b
-  group by rpt_date,
+  group by rpt_date,[date],
 		case when [ext channel] in ('IB','MB') then N'Online'
 		else N'Tại quầy' end ,
 		case when [SD] <= 2*1e8 then N'Dưới 200 tr'
