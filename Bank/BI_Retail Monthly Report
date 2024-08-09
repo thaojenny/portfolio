@@ -1,8 +1,10 @@
-------------------------------------------------------Quy mô---------------------------------------------------------------------------------
----------------TG_CKH----------------
-select rpt_date, [date],
+------------------------------Quy mô ---------------------------------------
+-------TG_CKH----------
+create procedure [dbo].[Huydong_JBI] as
+select rpt_date, [Date],
 		case when [ext channel] in ('IB','MB') then N'Online'
 		else N'Tại quầy' end [Channel],
+		[Product],
 		case when [SD] <= 2*1e8 then N'Dưới 200 tr'
 				when [SD] > 2*1e8 and  [SD] <= 5*1e8 then N'Dưới 500 tr'
 				when  [SD] > 5*1e8 and  [SD] <= 1e9 then N'Dưới 1 tỷ'
@@ -23,7 +25,9 @@ select rpt_date, [date],
 		sum([SD]) [Số dư BQ],
 		sum([SD2]) [Số dư CK]
 	from (
-	select d.Rpt_date,eomonth([date_in]), [Mã KH],d.[kỳ hạn], d1.[ext channel],
+	select d.Rpt_date,eomonth([date_in]) [Date],[Mã KH],d.[kỳ hạn], d1.[ext channel],
+				case when ( [tên sản phẩm] like N'%Chứng chỉ%' or [tên sản phẩm] like N'%Chung chi%'  or [tên sản phẩm] like N'%CCTG%' ) then 'GTCG'
+	  else 'TG_CKH'end [Product],
 				case when c.[loại khách hàng] =N'Nhân viên nội bộ' then N'NV nội bộ'
 						else N'Khách hàng' end [Customer Type],
 				case when c.[tuổi KH] < 23 then N'Dưới 23 tuổi'
@@ -51,6 +55,8 @@ select rpt_date, [date],
 		 on d.[Tên sản Phẩm] = s.TenSP
 		 where d.rpt_date >= 20180101 and [Cầm cố STK SLH] ='N' and p.[NhomKH] is not null and s.[LoaiSp] is null
 		 group by  d.Rpt_date,eomonth([date_in]), [Mã KH],d.[kỳ hạn], d1.[ext channel],
+				case when ( [tên sản phẩm] like N'%Chứng chỉ%' or [tên sản phẩm] like N'%Chung chi%'  or [tên sản phẩm] like N'%CCTG%' ) then 'GTCG'
+				else 'TG_CKH'end,
 				case when c.[loại khách hàng] =N'Nhân viên nội bộ' then N'NV nội bộ'
 						else N'Khách hàng' end ,
 				case when c.[tuổi KH] < 23 then N'Dưới 23 tuổi'
@@ -60,9 +66,9 @@ select rpt_date, [date],
 						[giới tính],
 						dv.Vùng
 		 ) b
-  group by rpt_date,[date],
+  group by rpt_date, [Date],
 		case when [ext channel] in ('IB','MB') then N'Online'
-		else N'Tại quầy' end ,
+		else N'Tại quầy' end ,[Product],
 		case when [SD] <= 2*1e8 then N'Dưới 200 tr'
 				when [SD] > 2*1e8 and  [SD] <= 5*1e8 then N'Dưới 500 tr'
 				when  [SD] > 5*1e8 and  [SD] <= 1e9 then N'Dưới 1 tỷ'
@@ -79,6 +85,86 @@ select rpt_date, [date],
 			[Độ tuổi KH],
 			[giới tính],
 			[Vùng]
-order by rpt_date
 
----------------
+-------TG_KKH--------------
+union all
+
+select rpt_date, [Date],
+		 [Channel],
+		[Product],
+		case when [SD] <5e4 then N'Dưới 50k'
+				when [SD] >= 5e4 and  [SD] < 5e5 then N'Từ 50k-500k'
+				when  [SD] >= 5e5 and  [SD] < 2e6 then N'Từ 500k-2 triệu'
+				when  [SD] >= 2e6 and  [SD] < 5e6 then N'Từ 2-5 triệu'
+				when  [SD] >= 5e6 and  [SD] < 1e7 then N'Từ 5-10 triệu'
+				when  [SD] >= 1e7 and  [SD] < 3e7 then N'Từ 10-30 triệu'
+				when  [SD] >= 3e7 and  [SD] < 5e7 then N'Từ 30-50 triệu'
+				when  [SD] >= 5e7 and  [SD] < 1e8 then N'Từ 50-100 triệu'
+				else N'Trên 100 triệu'end [Seg 1] ,
+		case when [SD] < 1e8 then N'Dưới 100 triệu'
+			else N'Trên 100 triệu' end [Seg 2],
+			'0M' as [Period 1],
+		'0M' as [Period 2],
+			[customer type],
+			[Độ tuổi KH],
+			[giới tính],
+			[Vùng],
+
+		sum([SD]) [Số dư BQ],
+		sum([SD2]) [Số dư CK]
+	from (
+	select d.Rpt_date,eomonth([date_in]) [Date],[Mã KH],  N'Online' as [Channel],
+				N'TG_KKH' [Product] ,
+				case when c.[loại khách hàng] =N'Nhân viên nội bộ' then N'NV nội bộ'
+						else N'Khách hàng' end [Customer Type],
+				case when c.[tuổi KH] < 23 then N'Dưới 23 tuổi'
+						when c.[tuổi KH] between 23 and 45 then N'Từ 23-45 tuổi'
+						when c.[tuổi KH] between 46 and 67 then N'Từ 46-67 tuổi'
+						else N'Trên 67 tuổi' end [Độ tuổi KH],
+						[giới tính],
+						dv.Vùng,
+			sum([Số dư BQ quy đổi]) [SD],
+			sum([số dư cuối quy đổi]) [SD2]
+		 from [BI_DATA].[dbo].[AC_101] d
+		
+		left join  (select  [Mã Khách hàng],[loại khách hàng],[giới tính],
+						DATEDIFF(year, [ngày sinh],getdate()) [tuổi KH]
+					from [BI_DATA].[dbo].[CU_401]  c4
+						) c
+		on d.[mã kh] = c.[Mã Khách hàng]
+		left join [MAPPING].[dbo].[DS_DVKD] dv
+		on d.[mã chi nhánh] = dv.Ma_DVKD
+		 left join (select * from [MAPPING].[dbo].[PhanKhuc] where [PhanKhuc] = '1.KHCN') p
+		 on d.[Nhóm khách hàng] = p.[NhomKH]
+		 left join (select * from [MAPPING].[dbo].[SP_dacthu] where [LoaiSp] ='CASA') s
+		 on d.[Tên sản Phẩm] = s.TenSP
+		 where d.rpt_date >= 20180101 and p.[NhomKH] is not null and s.[LoaiSp] is null
+		 group by  d.Rpt_date,eomonth([date_in]) ,[Mã KH],  
+				case when c.[loại khách hàng] =N'Nhân viên nội bộ' then N'NV nội bộ'
+						else N'Khách hàng' end ,
+				case when c.[tuổi KH] < 23 then N'Dưới 23 tuổi'
+						when c.[tuổi KH] between 23 and 45 then N'Từ 23-45 tuổi'
+						when c.[tuổi KH] between 46 and 67 then N'Từ 46-67 tuổi'
+						else N'Trên 67 tuổi' end ,
+						[giới tính],
+						dv.Vùng
+		 ) b
+  group by rpt_date, [Date],
+		 [Channel],
+		[Product],
+		case when [SD] <5e4 then N'Dưới 50k'
+				when [SD] >= 5e4 and  [SD] < 5e5 then N'Từ 50k-500k'
+				when  [SD] >= 5e5 and  [SD] < 2e6 then N'Từ 500k-2 triệu'
+				when  [SD] >= 2e6 and  [SD] < 5e6 then N'Từ 2-5 triệu'
+				when  [SD] >= 5e6 and  [SD] < 1e7 then N'Từ 5-10 triệu'
+				when  [SD] >= 1e7 and  [SD] < 3e7 then N'Từ 10-30 triệu'
+				when  [SD] >= 3e7 and  [SD] < 5e7 then N'Từ 30-50 triệu'
+				when  [SD] >= 5e7 and  [SD] < 1e8 then N'Từ 50-100 triệu'
+				else N'Trên 100 triệu'end  ,
+		case when [SD] < 1e8 then N'Dưới 100 triệu'
+			else N'Trên 100 triệu' end ,
+			
+			[customer type],
+			[Độ tuổi KH],
+			[giới tính],
+			[Vùng]
