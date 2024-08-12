@@ -256,3 +256,80 @@ select rpt_date, [Date], 'Chovay' as [Group_product],
 			[Độ tuổi KH],
 			[giới tính],
 			[Vùng]
+
+
+--------------------------Phí dịch vụ: NFI, Doanh thu/Doanh số/CPDV (Thẻ, thanh toán, Bảo lãnh, LC, Bảo hiểm, CTQT, MBNT---------------------------
+---------------1.MBNT-------------------------------------
+if OBJECT_ID ('tempdb..#tygiaNB') is not null drop table #tygiaNB
+
+---temp table fill in null of [tỷ giá nội bộ]-----------
+----Cùng chi nhánh --> cùng ngày --> từ trước đến nay-------------
+select  rpt_date, [ngày ký hợp đồng], [mã chi nhánh], [cặp loại tiền], [Loại giao dịch (mua, bán)],
+		[loại hợp đồng (today/tom/spot/fw)], avg([tỷ giá nội bộ]) [temp_TygiaNB]
+into #tygiaNB
+from (select *,eomonth([ngày ký hợp đồng]) rpt_date from [BI_DATA].[dbo].[FX_100]) f1
+group by 
+grouping sets
+(	
+    ([mã chi nhánh],
+	[ngày ký hợp đồng],
+	rpt_date,
+	[cặp loại tiền],
+	[Loại giao dịch (mua, bán)],
+	[loại hợp đồng (today/tom/spot/fw)]),
+
+	([ngày ký hợp đồng],
+	rpt_date,
+	[cặp loại tiền],
+	[Loại giao dịch (mua, bán)],
+	[loại hợp đồng (today/tom/spot/fw)]),
+
+	(rpt_date,
+	[cặp loại tiền],
+	[Loại giao dịch (mua, bán)],
+	[loại hợp đồng (today/tom/spot/fw)])
+	)
+having avg([tỷ giá nội bộ]) is not null
+
+--------
+select EOMONTH([Ngày ký hợp đồng]) [Rpt_date], 
+	([Khối lượng bán] + [Khối lượng mua])*[Tỷ giá] [Doanh số],
+	case when [Loại giao dịch (mua, bán)] = 'BUY' then ([Khối lượng bán] + [Khối lượng mua])*([TGNB_final]-[Tỷ giá])
+		else ([Khối lượng bán] + [Khối lượng mua])*([Tỷ giá]-[TGNB_final]) end [NFI]
+from 
+	(select f.*,
+	coalesce(f.[tỷ giá nội bộ], Tg1.[temp_TygiaNB],TG2.[temp_TygiaNB], TG3.[temp_TygiaNB]) [TGNB_final]
+	from [BI_DATA].[dbo].[FX_100] f
+	-------------filter KHCN---------------------
+	left join (select * from [MAPPING].[dbo].[PhanKhuc] )p
+	on f.[nhóm khách hàng] = p.[NhomKH]
+	 ------------find tygia trong cùng CN+ngày+loại gd+ loại hđ+cặp tiền-----all conditions--
+	left join (select * from  #tygiaNB where [Mã chi nhánh] is not null) TG1   
+	on (f.[Loại giao dịch (mua, bán)] = TG1.[Loại giao dịch (mua, bán)]
+		and f.[Loại hợp đồng (today/tom/spot/fw)] = TG1.[Loại hợp đồng (today/tom/spot/fw)]
+		and f.[Cặp loại tiền]= TG1.[Cặp loại tiền] 
+		and f.[Ngày ký hợp đồng] = TG1.[Ngày ký hợp đồng]
+		and f.[Mã chi nhánh] = TG1.[Mã chi nhánh])
+	------------find tygia trong cùng ngày+loại gd+ loại hđ+cặp tiền-----ko cùng CN--
+	left join (select * from  #tygiaNB where [Mã chi nhánh] is null and [ngày ký hợp đồng] is not null) TG2   
+	on (f.[Loại giao dịch (mua, bán)] = TG2.[Loại giao dịch (mua, bán)]
+		and f.[Loại hợp đồng (today/tom/spot/fw)] = TG2.[Loại hợp đồng (today/tom/spot/fw)]
+		and f.[Cặp loại tiền]= TG2.[Cặp loại tiền] 
+		and f.[Ngày ký hợp đồng] = TG2.[Ngày ký hợp đồng])
+	------------find tygia trong cùng loại gd+ loại hđ+cặp tiền-----ko cùng CN và ngày--đảm bảo ngày gần nhất trong #tygiaNB---
+	left join (select * from  #tygiaNB where [Mã chi nhánh] is null and [ngày ký hợp đồng] is null) TG3   
+	on (f.[Loại giao dịch (mua, bán)] = TG3.[Loại giao dịch (mua, bán)]
+		and f.[Loại hợp đồng (today/tom/spot/fw)] = TG3.[Loại hợp đồng (today/tom/spot/fw)]
+		and f.[Cặp loại tiền]= TG3.[Cặp loại tiền]
+		and TG3.rpt_date = (select max(rpt_date) from #tygiaNB
+								where #tygiaNB.[temp_TygiaNB] is not null and #tygiaNB.[rpt_date] <= EOMONTH(f.[ngày ký hợp đồng],0)
+								and #tygiaNB.[Cặp loại tiền] = f.[Cặp loại tiền] and #tygiaNB.[Loại giao dịch (mua, bán)] = f.[Loại giao dịch (mua, bán)] 
+								and #tygiaNB.[Loại hợp đồng (today/tom/spot/fw)] = f.[Loại hợp đồng (today/tom/spot/fw)])
+		) 
+
+				
+where p.[PhanKhuc] = '1.KHCN'
+	) b
+
+
+-----------2.CTQT------------------------Doanh số + NFI -----------------------------------------------
