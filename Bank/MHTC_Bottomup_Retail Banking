@@ -23,3 +23,14 @@ b.rpt_date,count(*) [SLKH lũy kế]
   ) b
   on a.[Ngày tạo CIF] <= b.rpt_date
   group by b.rpt_date
+
+--C3---
+SELECT 
+    b.[rpt_date],
+    count(*) OVER (ORDER BY b.[rpt_date]) AS RunningTotal
+FROM 
+    [BI_DATA].[dbo].[CU_401] a
+left join (select '20231231' as Rpt_date) b
+on a.[Ngày tạo CIF] = b.Rpt_date
+ORDER BY 
+   b.[rpt_date];
