@@ -1,1 +1,25 @@
+----------SLKH theo số năm gắn kết với PVCB----------
 
+---c1---
+SELECT 
+b.rpt_date,count(*)
+  FROM [BI_DATA].[dbo].[CU_401] a
+  left join
+  (
+  select distinct(EOMONTH([Ngày tạo CIF])) rpt_date
+  from BI_DATA..CU_401
+  where [Ngày tạo CIF] >= '20230131'
+  ) b
+  on a.[Ngày tạo CIF] <= b.rpt_date
+  group by rpt_date
+---c2---
+SELECT 
+b.rpt_date,count(*) [SLKH lũy kế]
+  FROM [BI_DATA].[dbo].[CU_401] a
+  left join
+  (select '20231231' as rpt_date
+  union all
+  select '20241231' 
+  ) b
+  on a.[Ngày tạo CIF] <= b.rpt_date
+  group by b.rpt_date
