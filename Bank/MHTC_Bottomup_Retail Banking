@@ -34,3 +34,22 @@ left join (select '20231231' as Rpt_date) b
 on a.[Ngày tạo CIF] = b.Rpt_date
 ORDER BY 
    b.[rpt_date];
+------------------
+SELECT 
+a.rpt_date,  count(c.[mã khách hàng]) [SLKH lũy kế]
+  FROM [BI_DATA].[dbo].[CU_401] c
+  left join
+  (
+  select distinct rpt_date
+  from BI_DATA.dbo.AC_101 ) a
+  
+  on c.[Ngày tạo CIF] <= a.rpt_date
+  where c.[Mã Khách hàng] in 
+					(select [mã khách hàng]
+									from BI_DATA.dbo.CU_401 c1
+									left join [MAPPING].[dbo].[PhanKhuc] p
+									on c1.[Nhóm Khách hàng] = p.[NhomKH]
+									where p.PhanKhuc ='1.KHCN') 
+	where rpt_date is not null		
+  group by rpt_date
+  order by a.rpt_date
