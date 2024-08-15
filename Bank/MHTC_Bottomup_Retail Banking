@@ -116,3 +116,31 @@ select
   FROM [CLKD].[dbo].[JQM_HDCV]
   where rpt_date >= '20240101' and [Product] in ('TG_CKH','TG_KKH')
   group by rpt_date, [Product]
+--------------------QM tín dụng theo phân khúc----------------
+
+select rpt_date, case when DATEDIFF(year, [ngày tạo cif],[rpt_date]) <=1 then N'KH <= 1 năm'
+		when DATEDIFF(year, [ngày tạo cif],[rpt_date]) >1 and DATEDIFF(year, [ngày tạo cif],[rpt_date]) <= 3 then N'KH <= 3 năm'
+		when DATEDIFF(year, [ngày tạo cif],[rpt_date]) >3 and DATEDIFF(year, [ngày tạo cif],[rpt_date]) <= 5 then N'KH <= 5 năm'
+		else N'KH > 5 năm' end [KH type],
+		sum([BQ])/1e9 [SDBQ], sum([CK])/1e9 [SDCK]
+from 
+(
+select RPT_DATE, l.[Mã khách hàng], c.[Ngày tạo CIF],
+	sum([số dư BQ qui đổi]) [BQ], sum([số dư cuối kỳ qui đổi]) [CK]
+from [BI_DATA].[dbo].[LD_104] l
+left join [MAPPING].[dbo].[PhanKhuc] p
+on l.[Nhóm KH]= p.[NhomKH]
+left join (select [mã khách hàng], [ngày tạo cif]
+			from BI_DATA.dbo.CU_401 ) c
+on l.[Mã khách hàng] = c.[Mã Khách hàng]
+left join [MAPPING].[dbo].[SP_dacthu] s
+on s.TenSP = l.[Tên SP]
+where p.PhanKhuc ='1.KHCN' and l.[RPT_DATE] in ('20231231','20240131','20240229','20240331' ,'20240430' ,'20240531' ,'20240630' ,'20240731' ,'20221231' ,'20211231')
+		and [Mã chi nhánh GD] <> 'VN0010001' and s.LoaiSp is null
+group by RPT_DATE, l.[Mã khách hàng], c.[Ngày tạo CIF]
+) b
+group by 
+ rpt_date, case when DATEDIFF(year, [ngày tạo cif],[rpt_date]) <=1 then N'KH <= 1 năm'
+		when DATEDIFF(year, [ngày tạo cif],[rpt_date]) >1 and DATEDIFF(year, [ngày tạo cif],[rpt_date]) <= 3 then N'KH <= 3 năm'
+		when DATEDIFF(year, [ngày tạo cif],[rpt_date]) >3 and DATEDIFF(year, [ngày tạo cif],[rpt_date]) <= 5 then N'KH <= 5 năm'
+		else N'KH > 5 năm' end
