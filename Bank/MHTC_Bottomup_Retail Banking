@@ -50,6 +50,6 @@ a.rpt_date,  count(c.[mã khách hàng]) [SLKH lũy kế]
 									left join [MAPPING].[dbo].[PhanKhuc] p
 									on c1.[Nhóm Khách hàng] = p.[NhomKH]
 									where p.PhanKhuc ='1.KHCN') 
-	where rpt_date is not null		
+	and rpt_date is not null		
   group by rpt_date
   order by a.rpt_date
