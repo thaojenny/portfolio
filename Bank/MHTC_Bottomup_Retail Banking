@@ -98,3 +98,21 @@ b.rpt_date,
 		when DATEDIFF(year, a.[ngày tạo cif],b.[rpt_date]) >3 and DATEDIFF(year, a.[ngày tạo cif],b.[rpt_date]) <= 5 then N'KH <= 5 năm'
 		else N'KH > 5 năm' end
   order by b.rpt_date
+
+--------------------------------------QM_HD_CK&BQ--------------------------------------------
+SELECT [rpt_date], [Product]
+      ,sum([Số dư BQ])/1e9 [SDBQ]
+      ,sum([Số dư CK])/1e9 [SDCK]
+  FROM [CLKD].[dbo].[JQM_HDCV]
+  
+  where  [rpt_date] in ('20211231','20221231','20231231')and [Product] in ('TG_CKH','TG_KKH')
+  group by rpt_date, [Product]
+
+union all
+select 
+		rpt_date, [Product]
+      ,sum([Số dư BQ])/1e9 [SDBQ]
+      ,sum([Số dư CK])/1e9 [[SDCK]
+  FROM [CLKD].[dbo].[JQM_HDCV]
+  where rpt_date >= '20240101' and [Product] in ('TG_CKH','TG_KKH')
+  group by rpt_date, [Product]
