@@ -141,3 +141,52 @@ select rpt_date, [năm mở], [PL KH],[mã khách hàng], [PLKH] , [segment],
 from abcd
 group by rpt_date, [năm mở], [PL KH],[mã khách hàng], [PLKH] , [segment]
 order by rpt_date
+
+
+----------------------------------PV Fix & PV Flux----------------------------------------------
+---check KH sử dụng sản phẩm PVFIXFLUX trong 3 năm và có phát sinh các dịch vụ khác không ------
+
+select 
+	l.[Mã khách hàng], 
+	case when d.[Mã KH] is not null then [max ngày giao dịch]  end [DP],
+	case when f.[Mã khách hàng] is not null then [max ngày ký hđ]  end [MBNT],
+	case when t.[Mã KH] is not null then [max Ngày mở] end [CTQT],
+	case when fa.[Customer Id] is not null then [max Booking Date]end [Phí khác]
+from
+
+(SELECT 
+      [Mã khách hàng],
+	  sum([số dư BQ qui đổi]) [BQ]
+  FROM [BI_DATA].[dbo].[LD_104]
+  where [mã sp] ='110671'		and [Ngày giải ngân]>= DATEADD(year, -3,'2024-01-01')
+  group by [Mã khách hàng]) l
+  -----------gửi tiền-----------
+  left join 
+  (
+ select [mã kh], max([ngày giao dịch cuối]) over (partition by [mã kh]) [max ngày giao dịch], sum([số dư BQ quy đổi]) [BQ]
+from [BI_DATA].dbo.dp_104
+where [Ngày giao dịch cuối] >= DATEADD(year, -3,'2024-01-01')
+group by [mã kh], [ngày giao dịch cuối]
+) d
+on l.[Mã khách hàng] = d.[Mã KH]
+-----------MBNT----------
+left join (
+select [Mã khách hàng], max([Ngày ký hợp đồng]) over (partition by [Mã khách hàng]) [max ngày ký hđ]
+ FROM [BI_DATA].[dbo].[FX_100]
+ where [Ngày ký hợp đồng]>= DATEADD(year, -3,'2024-01-01')
+ ) f
+ on f.[Mã khách hàng] = l.[Mã khách hàng]
+ -----------CTQT-----------
+ left join (
+	select [mã kh], max([Ngày mở]) over (partition by [mã kh]) [max Ngày mở]
+	from [BI_DATA].[dbo].[TF_301]
+	where [Loại nguồn] = 'FT' and [Ngày mở] >= DATEADD(year, -3,'2024-01-01')
+	) t
+on l.[Mã khách hàng] = t.[Mã KH]
+-----------phí khác (thanh toán, LC, bảo lãnh, bảo hiểm)--------------
+left join (
+select [Customer Id],  max([Booking Date]) over (partition by [Customer Id]) [max Booking Date]
+FROM [BI_DATA].[dbo].[FA_303]
+where [Booking Date] >= DATEADD(year, -3,'2024-01-01')
+) fa 
+on l.[Mã khách hàng] = fa.[Customer Id]
