@@ -147,7 +147,7 @@ order by rpt_date
 ---check KH sử dụng sản phẩm PVFIXFLUX trong 3 năm và có phát sinh các dịch vụ khác không ------
 
 select 
-	l.[Mã khách hàng], 
+	distinct l.[Mã khách hàng], 
 	case when d.[Mã KH] is not null then [max ngày giao dịch]  end [DP],
 	case when f.[Mã khách hàng] is not null then [max ngày ký hđ]  end [MBNT],
 	case when t.[Mã KH] is not null then [max Ngày mở] end [CTQT],
