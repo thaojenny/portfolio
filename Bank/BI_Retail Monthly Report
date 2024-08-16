@@ -333,3 +333,53 @@ where p.[PhanKhuc] = '1.KHCN'
 
 
 -----------2.CTQT------------------------Doanh số + NFI -----------------------------------------------
+
+-----------------------------------SLKH--------------------------------
+-----------phân theo độ tuổi KH-----------
+select r.rpt_date, r.[Độ tuổi],[SLKH lũy kế], cu.[SLKH mở mới]
+from (
+-----------------SLKH lũy kế-------------
+SELECT 
+a.rpt_date, case when DATEDIFF(year,[ngày sinh],[ngày tạo cif]) <23 then N'Dưới 23 tuổi'
+			when DATEDIFF(year,[ngày sinh],[ngày tạo cif]) between 23 and 45 then N'Từ 23-45 tuổi'
+                         when DATEDIFF(year,[ngày sinh],[ngày tạo cif]) between 46 and 67 then N'Từ 46-67 tuổi'
+			else N'Trên 67 tuổi' end [Độ tuổi]
+
+	, count(c.[mã khách hàng]) [SLKH lũy kế]
+  FROM [BI_DATA].[dbo].[CU_401] c
+  left join
+  (
+  select distinct rpt_date
+  from BI_DATA.dbo.AC_101 ) a
+  
+  on c.[Ngày tạo CIF] <= a.rpt_date
+  where c.[Mã Khách hàng] in 
+					(select [mã khách hàng]
+									from BI_DATA.dbo.CU_401 c1
+									left join [MAPPING].[dbo].[PhanKhuc] p
+									on c1.[Nhóm Khách hàng] = p.[NhomKH]
+									where p.PhanKhuc ='1.KHCN') 
+	and rpt_date is not null		
+  group by rpt_date, case when DATEDIFF(year,[ngày sinh],[ngày tạo cif]) <23 then N'Dưới 23 tuổi'
+			when DATEDIFF(year,[ngày sinh],[ngày tạo cif]) between 23 and 45 then N'Từ 23-45 tuổi'
+                         when DATEDIFF(year,[ngày sinh],[ngày tạo cif]) between 46 and 67 then N'Từ 46-67 tuổi'
+			else N'Trên 67 tuổi' end
+) r
+left join 
+--------------------------SLKH mở mới-------------
+(select eomonth([ngày tạo cif]) [rpt_date], 
+	case when DATEDIFF(year,[ngày sinh],[ngày tạo cif]) <23 then N'Dưới 23 tuổi'
+			when DATEDIFF(year,[ngày sinh],[ngày tạo cif]) between 23 and 45 then N'Từ 23-45 tuổi'
+                         when DATEDIFF(year,[ngày sinh],[ngày tạo cif]) between 46 and 67 then N'Từ 46-67 tuổi'
+			else N'Trên 67 tuổi' end [Độ tuổi],
+	count(*) [SLKH mở mới]
+	from [BI_DATA].[dbo].[CU_401] c
+	left join [MAPPING].[dbo].[PhanKhuc] p
+	on c.[Nhóm Khách hàng] = p.[NhomKH]
+	where p.PhanKhuc ='1.KHCN'
+	group by eomonth([ngày tạo cif]), case when DATEDIFF(year,[ngày sinh],[ngày tạo cif]) <23 then N'Dưới 23 tuổi'
+			when DATEDIFF(year,[ngày sinh],[ngày tạo cif]) between 23 and 45 then N'Từ 23-45 tuổi'
+                         when DATEDIFF(year,[ngày sinh],[ngày tạo cif]) between 46 and 67 then N'Từ 46-67 tuổi'
+			else N'Trên 67 tuổi' end ) cu
+on cu.rpt_date = r.Rpt_date and r.[Độ tuổi] = cu.[Độ tuổi]
+order by r.rpt_date
