@@ -1,0 +1,50 @@
+-------------------------------Product holding-----------------------
+
+
+-----------------------TG_CKH------------------
+select rpt_date, 'HĐ_CKH' as [Group] ,round(avg([slsp]),2)  [Product holding]
+from (
+select distinct [rpt_date],[Mã khách hàng], convert(float,count( [Mã sản phẩm]) over (partition by [mã khách hàng],[Rpt_date])) [SLSP]
+from
+(
+select year([ngày gửi]) [Rpt_date] ,[mã khách hàng],  [mã sản phẩm]
+from [BI_DATA].[dbo].[DP_101]  d
+left join (select * from [MAPPING].[dbo].[SP_dacthu] where [LoaiSp] ='FD') s
+  on d.[Tên sản phẩm] = s.TenSP
+where  s.LoaiSp is null and [mã khách hàng] in 
+									(select [mã khách hàng]
+										from [BI_DATA].[dbo].[CU_401] c
+										left join [MAPPING].dbo.[PhanKhuc] p1
+										on p1.NhomKH = c.[Nhóm Khách hàng]
+										where p1.PhanKhuc ='1.KHCN')
+
+
+) b
+) abc
+group by Rpt_date
+
+
+----------------Cho vay-----------
+union all
+
+ select rpt_date, 'Chovay' as [Group] ,round(avg([slsp]),2)  [Product holding]
+ from (
+select distinct [rpt_date],[Mã kh], convert(float,count( [Mã sản phẩm (loan_subproduct)] ) over (partition by [mã kh],[Rpt_date])) [SLSP]
+from
+(
+select year([ngày giải ngân]) [Rpt_date] ,[mã kh],  [Mã sản phẩm (loan_subproduct)]
+from [BI_DATA].[dbo].[LD_101]  d
+left join (select * from [MAPPING].[dbo].[SP_dacthu] where [LoaiSp] ='Lending') s
+  on d.[Sub product#Tên sản phẩm] = s.TenSP
+where  s.LoaiSp is null and [Mã chi nhánh] <> 'VN0010001' and [mã kh] in 
+																	(select [mã khách hàng]
+																		from [BI_DATA].[dbo].[CU_401] c
+																		left join [MAPPING].dbo.[PhanKhuc] p1
+																		on p1.NhomKH = c.[Nhóm Khách hàng]
+																		where p1.PhanKhuc ='1.KHCN')
+
+
+) b
+
+) abc
+group by Rpt_date
