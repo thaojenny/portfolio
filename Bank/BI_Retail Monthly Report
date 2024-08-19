@@ -397,11 +397,16 @@ GO
 
 
 
-------------------------------------------------------Thu/chi lãi----------------------------------------------------------------
------------1.Huy dong (TG_CKH & GTCG-------------------------------
-
+-------------------------Thu/chi lãi-------------------------------
+-----------1.Huy dong (TG_CKH & GTCG)-------------------------------
+DROP TABLE IF EXISTS ThuChiLai_KHCNJ
+select *
+into ThuChiLai_KHCNJ
+from (
 select EOMONTH([từ ngày]) [Rpt_date],
 		'Huydong' as [Group_product],
+		case when dp.[ext channel] in ('IB','MB') then N'Online'
+		else N'Tại quầy' end [Channel],
 	case when ( [tên sản phẩm] like N'%Chứng chỉ%' or [tên sản phẩm] like N'%Chung chi%'  or [tên sản phẩm] like N'%CCTG%' ) then 'GTCG'
 	  else 'TG_CKH'end [Product]
 	  , sp.Sub_Product
@@ -433,10 +438,13 @@ left join  (select  [Mã Khách hàng],[loại khách hàng],[giới tính],
 
 left join [MAPPING].[dbo].[DS_DVKD] dv
 		on a.[Mã đơn vị] = dv.Ma_DVKD
+left join (select [số tài khoản], [mã khách hàng], [ext channel]  FROM [BI_DATA].[dbo].[DP_100] group by [số tài khoản], [mã khách hàng], [ext channel]) dp
+on (a.[Số hợp đồng/số tài khoản] = dp.[số tài khoản] and a.[mã khách hàng] = dp.[mã khách hàng])
 
 where a.[Kỳ hạn (KKH/CKH)] = 'CKH' and a.[Trạng thái cầm cố] <> 'Y' and  a.[Tên khối khách hàng] = N'Khối KHCN'
 group by  EOMONTH([từ ngày]),
-		
+		case when dp.[ext channel] in ('IB','MB') then N'Online'
+		else N'Tại quầy' end,
 	case when ( [tên sản phẩm] like N'%Chứng chỉ%' or [tên sản phẩm] like N'%Chung chi%'  or [tên sản phẩm] like N'%CCTG%' ) then 'GTCG'
 	  else 'TG_CKH'end 
 	  , sp.Sub_Product
@@ -452,5 +460,125 @@ group by  EOMONTH([từ ngày]),
 		[giới tính]
 	, dv.Vùng
 
+-----------2.Huy dong (KKH)-------------------------------
 
+
+union all
+
+select EOMONTH([từ ngày]) [Rpt_date],
+		'Huydong' as [Group_product],
+		'Online' as [Channel],
+	 'TG_KKH'as [Product]
+	  , sp.Sub_Product
+	  , '0' as [Period 1-month]
+	  ,  '0M' as [Period 2]
+	  , case when c.[loại khách hàng] =N'Nhân viên nội bộ' then N'NV nội bộ'
+						else N'Khách hàng' end [Customer Type]
+	,case when c.[tuổi KH] < 23 then N'Dưới 23 tuổi'
+						when c.[tuổi KH] between 23 and 45 then N'Từ 23-45 tuổi'
+						when c.[tuổi KH] between 46 and 67 then N'Từ 46-67 tuổi'
+						else N'Trên 67 tuổi' end [Độ tuổi KH],
+		[giới tính]
+	, dv.Vùng
+	  ,sum([Chi phí thực tế]* isnull([DTNB quy đổi]/nullif([DTNB quy đổi],0),1)) [Chi lãi]
+,sum([DTNB quy đổi]) [Thu lãi]
+
+from BI_DATA.dbo.FTP_CASA a
+left join 
+(SELECT * FROM MAPPING..SP_dacthu WHERE LoaiSp = 'CASA') b
+on a.[tên sản phẩm] = b.[TenSP]
+left join (select distinct [core_name], [sub_product] from MAPPING.dbo.Sanpham_KHCN where [Product] ='KKH') sp
+on a.[Tên sản phẩm] = sp.Core_Name
+left join  (select  [Mã Khách hàng],[loại khách hàng],[giới tính],
+						DATEDIFF(year, [ngày sinh],getdate()) [tuổi KH]
+					from [BI_DATA].[dbo].[CU_401] 
+						) c
+		on a.[mã khách hàng] = c.[Mã Khách hàng]
+
+left join [MAPPING].[dbo].[DS_DVKD] dv
+		on a.[Mã đơn vị] = dv.Ma_DVKD
+
+
+where  a.[Tên khối khách hàng] = N'Khối KHCN'
+group by  EOMONTH([từ ngày]) 
+		
+	  , sp.Sub_Product
+	
+	  , case when c.[loại khách hàng] =N'Nhân viên nội bộ' then N'NV nội bộ'
+						else N'Khách hàng' end 
+	,case when c.[tuổi KH] < 23 then N'Dưới 23 tuổi'
+						when c.[tuổi KH] between 23 and 45 then N'Từ 23-45 tuổi'
+						when c.[tuổi KH] between 46 and 67 then N'Từ 46-67 tuổi'
+						else N'Trên 67 tuổi' end,
+		[giới tính]
+	, dv.Vùng
+
+-----------3.Tín dụng-------------------------------
+
+union all
+
+select EOMONTH([từ ngày]) [Rpt_date],
+		'Chovay' as [Group_product],
+		case when a.[Nhóm nợ] in (N'Nhóm 3',N'Nhóm 4',N'Nhóm 5') then N'Nhóm 3 - 5'
+	 else a.[Nhóm nợ] end as [Channel],
+	 case when a.[Tên Sản phẩm] like N'%thấu chi%' or [Tên sản phẩm] like N'%Thau chi%' then 'OD'
+	  else 'LD' end as [Product]
+	  , sp.Sub_Product
+	  , ld.[Kỳ hạn] as  [Period 1-month]
+	  ,  case when left(ld.[kỳ hạn],3) <=12 then N'Ngắn hạn'
+			when left(ld.[kỳ hạn],3) > 5*12 then N'Dài hạn'
+			else N'Trung hạn' end  [Period 2]
+	  , case when c.[loại khách hàng] =N'Nhân viên nội bộ' then N'NV nội bộ'
+						else N'Khách hàng' end [Customer Type]
+	,case when c.[tuổi KH] < 23 then N'Dưới 23 tuổi'
+						when c.[tuổi KH] between 23 and 45 then N'Từ 23-45 tuổi'
+						when c.[tuổi KH] between 46 and 67 then N'Từ 46-67 tuổi'
+						else N'Trên 67 tuổi' end [Độ tuổi KH],
+		[giới tính]
+	, dv.Vùng
+	  ,sum([CPNB quy đổi])  [Chi lãi]
+,sum([DTTT]* isnull([CPNB quy đổi]/nullif([CPNB nguyên tệ],0),1)) [Thu lãi]
+
+from BI_DATA.dbo.FTP_LD a
+left join 
+(SELECT * FROM MAPPING..SP_dacthu WHERE LoaiSp = 'Lending') b
+on a.[tên sản phẩm] = b.[TenSP]
+left join (select distinct [core_name], [sub_product] from MAPPING.dbo.Sanpham_KHCN where [Product] ='CV') sp
+on a.[Tên sản phẩm] = sp.Core_Name
+left join  (select  [Mã Khách hàng],[loại khách hàng],[giới tính],
+						DATEDIFF(year, [ngày sinh],getdate()) [tuổi KH]
+					from [BI_DATA].[dbo].[CU_401] 
+						) c
+		on a.[mã khách hàng] = c.[Mã Khách hàng]
+
+left join [MAPPING].[dbo].[DS_DVKD] dv
+		on a.[Mã đơn vị] = dv.Ma_DVKD
+left join (select [mã khách hàng], [số khế ước], [kỳ hạn] 
+							from [BI_DATA].[dbo].[LD_104]  l1
+							left join MAPPING.dbo.PhanKhuc p
+							on l1.[Nhóm KH] = p.NhomKH
+				where [Mã chi nhánh GD] <> 'VN0010001' and p.PhanKhuc = '1.KHCN'
+			group by [mã khách hàng], [số khế ước], [kỳ hạn]) ld
+on a.[Mã khách hàng] = ld.[Mã khách hàng] and a.[Số khế ước] = ld.[Số khế ước]
+
+where   b.LoaiSp is null and ld.[Mã khách hàng] is not null
+group by  EOMONTH([từ ngày]),
+		case when a.[Nhóm nợ] in (N'Nhóm 3',N'Nhóm 4',N'Nhóm 5') then N'Nhóm 3 - 5'
+	 else a.[Nhóm nợ] end,
+	 case when a.[Tên Sản phẩm] like N'%thấu chi%' or [Tên sản phẩm] like N'%Thau chi%' then 'OD'
+	  else 'LD' end 
+	  , sp.Sub_Product
+	  , ld.[Kỳ hạn] 
+	  ,  case when left(ld.[kỳ hạn],3) <=12 then N'Ngắn hạn'
+			when left(ld.[kỳ hạn],3) > 5*12 then N'Dài hạn'
+			else N'Trung hạn' end 
+	  , case when c.[loại khách hàng] =N'Nhân viên nội bộ' then N'NV nội bộ'
+						else N'Khách hàng' end 
+	,case when c.[tuổi KH] < 23 then N'Dưới 23 tuổi'
+						when c.[tuổi KH] between 23 and 45 then N'Từ 23-45 tuổi'
+						when c.[tuổi KH] between 46 and 67 then N'Từ 46-67 tuổi'
+						else N'Trên 67 tuổi' end ,
+		[giới tính]
+	, dv.Vùng
+	) thao
 
