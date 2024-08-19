@@ -582,3 +582,61 @@ group by  EOMONTH([từ ngày]),
 	, dv.Vùng
 	) thao
 
+
+------------------------------Giải ngân mới (Cho vay)/Gửi mới (TG_CKH)--------------------------------
+select *
+from (
+-------------------------Gửi mới (TG_CKH)----------------
+select [Rpt_date],'Huydong' as [Group], m.Vùng, sp.[Sub_Product],
+	case when [kỳ hạn 2] <=12 then N'Ngắn hạn'
+			when [kỳ hạn 2] > 60 then N'Dài hạn'
+			when [kỳ hạn 2] is null then 'N/A'
+			else N'Trung hạn' end [Period]
+		,sum([amt])/1e9 [AMT]
+FROM ( select EOMONTH([ngày gửi]) [Rpt_date], [mã chi nhánh], [Nhóm khách hàng],[tên sản phẩm],
+		case when [kỳ hạn] like '%M' then convert(float,left([kỳ hạn],3))
+			when [kỳ hạn] like '%W' then convert(float,left([kỳ hạn],1))/4
+			else null end [kỳ hạn 2],
+			sum([số dư]) [amt]
+		from [BI_DATA].[dbo].[DP_101] 
+		where [mã khách hàng] in 
+									(select [mã khách hàng]
+										from [BI_DATA].[dbo].[CU_401] c
+										left join [MAPPING].dbo.[PhanKhuc] p1
+										on p1.NhomKH = c.[Nhóm Khách hàng]
+										where p1.PhanKhuc ='1.KHCN')
+		group by EOMONTH([ngày gửi]), [Mã khách hàng], [mã chi nhánh], [tên sản phẩm], [Nhóm khách hàng],
+		case when [kỳ hạn] like '%M' then convert(float,left([kỳ hạn],3))
+			when [kỳ hạn] like '%W' then convert(float,left([kỳ hạn],1))/4
+			else null end 
+		)d 
+
+  left join (select * from [MAPPING].[dbo].[SP_dacthu] where [LoaiSp] ='FD') s
+  on d.[Tên sản phẩm] = s.TenSP
+  left join (select distinct [Core_Name], [Sub_Product] from [MAPPING].[dbo].[Sanpham_KHCN] where [Product] = 'CKH') sp
+  on d.[Tên sản phẩm] = sp.Core_Name
+  left join (select * FROM [MAPPING].[dbo].[DS_DVKD]) m
+  on d.[Mã chi nhánh] = m.Ma_DVKD
+where  s.LoaiSp is null
+group by [Rpt_date], m.Vùng, sp.[Sub_Product],
+	case when [kỳ hạn 2] <=12 then N'Ngắn hạn'
+			when [kỳ hạn 2] > 60 then N'Dài hạn'
+			when [kỳ hạn 2] is null then 'N/A'
+			else N'Trung hạn' end
+
+union all
+---------------Giải ngân mới (Cho vay)----------------------
+SELECT EOMONTH([ngày giải ngân]) [Rpt_date], 'Huydong' as [Group], m.Vùng, sp.Sub_Product, [Kỳ hạn],  sum([gốc vay giải ngân])/1e9 [AMT]
+  FROM [BI_DATA].[dbo].[LD_101] l
+  left join (select * from [MAPPING].[dbo].[PhanKhuc] where [PhanKhuc] ='1.KHCN') p
+  on l.[Nhóm khách hàng] = p.NhomKH
+  left join (select * from [MAPPING].[dbo].[SP_dacthu] where [LoaiSp] ='Lending') s
+  on l.[Sub product#Tên sản phẩm] = s.TenSP
+  left join (select distinct [Core_Name], [Sub_Product] from [MAPPING].[dbo].[Sanpham_KHCN] where [Product_line] = N'Cho vay') sp
+  on l.[Sub product#Tên sản phẩm] = sp.Core_Name
+  left join (select * FROM [MAPPING].[dbo].[DS_DVKD]) m
+  on l.[Mã chi nhánh] = m.Ma_DVKD
+
+where p.PhanKhuc is not null and s.LoaiSp is null
+group by EOMONTH([ngày giải ngân]), m.[vùng], [Kỳ hạn], sp.Sub_Product
+) thao
