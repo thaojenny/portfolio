@@ -196,3 +196,110 @@ b.rpt_date,
 		when DATEDIFF(year, a.[ngày tạo cif],b.[rpt_date]) >3 and DATEDIFF(year, a.[ngày tạo cif],b.[rpt_date]) <= 5 then N'KH <= 5 năm'
 		else N'KH > 5 năm' end
   order by b.rpt_date
+
+
+--------------------------CASA theo KH gắn bó-----------------
+SELECT 
+b.rpt_date,
+	case when DATEDIFF(year, a.[ngày tạo cif],b.[rpt_date]) <=1 then N'KH <= 1 năm'
+		when DATEDIFF(year, a.[ngày tạo cif],b.[rpt_date]) >1 and DATEDIFF(year, a.[ngày tạo cif],b.[rpt_date]) <= 3 then N'KH <= 3 năm'
+		when DATEDIFF(year, a.[ngày tạo cif],b.[rpt_date]) >3 and DATEDIFF(year, a.[ngày tạo cif],b.[rpt_date]) <= 5 then N'KH <= 5 năm'
+		else N'KH > 5 năm' end [KH type]
+		,count(*) [SLKH lũy kế]
+		, sum([SDBQ]) [BQ_CASA]	
+		,sum([SDCK]) [CK_CASA]
+  FROM (select * from [BI_DATA].[dbo].[CU_401] c
+			 where c.[Mã Khách hàng] in 
+					(select [mã khách hàng]
+									from BI_DATA.dbo.CU_401 c1
+									left join [MAPPING].[dbo].[PhanKhuc] p
+									on c1.[Nhóm Khách hàng] = p.[NhomKH]
+									where p.PhanKhuc ='1.KHCN') 
+  )a
+  left join
+  (select '20231231' as rpt_date
+  union all
+  select '20240131' 
+  union all
+  select '20240229' 
+  union all
+  select '20240331' 
+  union all
+  select '20240430' 
+  union all
+   select '20240531' 
+  union all
+   select '20240630' 
+  union all
+  select '20240731' 
+  
+  ) b
+  on a.[Ngày tạo CIF] <= b.rpt_date
+
+  left join (select rpt_date, [Mã KH], sum([số dư BQ quy đổi]) [SDBQ], sum([số dư cuối quy đổi]) [SDCK] 
+				from  [BI_DATA].[dbo].[AC_101] p
+				left join MAPPING.dbo.SP_dacthu  d
+				on p.[Tên Sản phẩm] = d.TenSP
+				where Rpt_date >= '20230101'  and d.LoaiSp is null
+				group by rpt_date, [Mã kh] ) l
+	on (b.rpt_date = l.Rpt_date and a.[Mã Khách hàng] = l.[Mã KH])
+  where b.rpt_date is not null 
+  group by b.rpt_date,
+  case when DATEDIFF(year, a.[ngày tạo cif],b.[rpt_date]) <=1 then N'KH <= 1 năm'
+		when DATEDIFF(year, a.[ngày tạo cif],b.[rpt_date]) >1 and DATEDIFF(year, a.[ngày tạo cif],b.[rpt_date]) <= 3 then N'KH <= 3 năm'
+		when DATEDIFF(year, a.[ngày tạo cif],b.[rpt_date]) >3 and DATEDIFF(year, a.[ngày tạo cif],b.[rpt_date]) <= 5 then N'KH <= 5 năm'
+		else N'KH > 5 năm' end
+  order by b.rpt_date
+
+--------------------Tín dụng theo KH gắn bó----------------------------------
+SELECT 
+b.rpt_date,
+	case when DATEDIFF(year, a.[ngày tạo cif],b.[rpt_date]) <=1 then N'KH <= 1 năm'
+		when DATEDIFF(year, a.[ngày tạo cif],b.[rpt_date]) >1 and DATEDIFF(year, a.[ngày tạo cif],b.[rpt_date]) <= 3 then N'KH <= 3 năm'
+		when DATEDIFF(year, a.[ngày tạo cif],b.[rpt_date]) >3 and DATEDIFF(year, a.[ngày tạo cif],b.[rpt_date]) <= 5 then N'KH <= 5 năm'
+		else N'KH > 5 năm' end [KH type]
+		,count(*) [SLKH lũy kế]
+		, sum([SDBQ]) [BQ_LD]
+		,sum([SDCK]) [CK_LD]
+  FROM (select * from [BI_DATA].[dbo].[CU_401] c
+			 where c.[Mã Khách hàng] in 
+					(select [mã khách hàng]
+									from BI_DATA.dbo.CU_401 c1
+									left join [MAPPING].[dbo].[PhanKhuc] p
+									on c1.[Nhóm Khách hàng] = p.[NhomKH]
+									where p.PhanKhuc ='1.KHCN') 
+  )a
+  left join
+  (select '20231231' as rpt_date
+  union all
+  select '20240131' 
+  union all
+  select '20240229' 
+  union all
+  select '20240331' 
+  union all
+  select '20240430' 
+  union all
+   select '20240531' 
+  union all
+   select '20240630' 
+  union all
+  select '20240731' 
+  
+  ) b
+  on a.[Ngày tạo CIF] <= b.rpt_date
+
+  left join (select rpt_date, [Mã Khách hàng], sum([số dư BQ qui đổi]) [SDBQ], sum([số dư cuối kỳ qui đổi]) [SDCK] 
+				from  [BI_DATA].[dbo].[LD_104] p
+				left join MAPPING.dbo.SP_dacthu  d
+				on p.[Tên SP] = d.TenSP
+				where Rpt_date >= '20230101'  and d.LoaiSp is null and [mã chi nhánh GD] <> 'VN0010001'
+				group by rpt_date, [Mã khách hàng] ) l
+	on (b.rpt_date = l.Rpt_date and a.[Mã Khách hàng] = l.[Mã khách hàng])
+  where b.rpt_date is not null 
+  group by b.rpt_date,
+  case when DATEDIFF(year, a.[ngày tạo cif],b.[rpt_date]) <=1 then N'KH <= 1 năm'
+		when DATEDIFF(year, a.[ngày tạo cif],b.[rpt_date]) >1 and DATEDIFF(year, a.[ngày tạo cif],b.[rpt_date]) <= 3 then N'KH <= 3 năm'
+		when DATEDIFF(year, a.[ngày tạo cif],b.[rpt_date]) >3 and DATEDIFF(year, a.[ngày tạo cif],b.[rpt_date]) <= 5 then N'KH <= 5 năm'
+		else N'KH > 5 năm' end
+  order by b.rpt_date
