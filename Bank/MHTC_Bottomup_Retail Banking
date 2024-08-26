@@ -355,3 +355,96 @@ left join (select Rpt_date, [Mã KH], sum([số dư BQ quy đổi]) [SDBQ casa]
 on l1.RPT_DATE = a.Rpt_date and l1.[Mã khách hàng] = a.[Mã KH]
 group by l1.RPT_DATE,l1.[Sub_Product]
 order by  l1.Sub_Product,l1.[RPT_DATE]
+
+
+---------------draw normal distribution of TG_CKH--------------
+------result: outstanding point: > 5billion ---------
+drop table if exists ##dp104
+select [Rpt_date],[mã kh], AVG([Số dư BQ quy đổi]) [avg]
+into ##dp104
+from BI_DATA.dbo.DP_104 d
+left join [MAPPING].[dbo].[PhanKhuc] p
+  on d.[Nhóm Khách hàng] = p.NhomKH
+  left join [MAPPING].[dbo].[SP_dacthu] s
+  on s.TenSP = d.[Tên Sản phẩm]
+  where p.PhanKhuc ='1.KHCN' and s.LoaiSp is null and Rpt_date >= '20210101'
+  group by [Rpt_date],[mã kh]
+  order by AVG([Số dư BQ quy đổi])
+
+
+----------------percentile Q1 & Q3---------
+---------Q3 ~ 3e11------
+with abc as (
+select left(rpt_date,4) [year],
+		PERCENTILE_CONT(0.25) within group (order by avg([avg])) over (partition by [mã kh]) [Q1],
+		PERCENTILE_CONT(0.60) within group (order by avg([avg])) over (partition by [mã kh]) [Q3]
+from ##dp104
+
+group by   left(rpt_date,4),[mã kh]
+
+)
+select [year], min(Q1) [Q1], max(Q3) [Q3]
+from abc
+group by [year]
+
+----------mean, mode, median-----------
+--min	max					avg					Median					mode--
+--0		700523561643.839	404500729.240827	150917016.903226	100000000--
+--------------------mean > median > mode ----> right skewed-----------------------
+ select 
+		min([avg]) [min], max([avg]) [max], AVG([avg]) [avg], 
+		 
+				((SELECT MAX([avg])
+				FROM (
+						 SELECT TOP 50 PERCENT [avg]
+						 FROM ##dp104
+						 ORDER BY [avg]) AS BottomHalf) +
+						(SELECT MIN([avg])
+						FROM (
+						 SELECT TOP 50 PERCENT [avg]
+						 FROM ##dp104
+						 ORDER BY [avg] DESC) AS TopHalf)
+						 )/ 2 AS Median,
+		(select top 1 [avg]
+			from (select [avg], count(*) [sl]
+					from ##dp104
+					group by [avg]
+					 ) b
+			order by [sl] desc
+					) [mode]
+
+from ##dp104
+
+------mean/mode/median in each year from 2021 to 2024----------
+select left(rpt_date,4) [year],
+		min([avg]) [min], max([avg]) [max], AVG([avg]) [avg], 
+		 
+				((SELECT MAX([avg])
+				FROM (
+						 SELECT TOP 50 PERCENT [avg]
+						 FROM ##dp104
+						 ORDER BY [avg]) AS BottomHalf) +
+						(SELECT MIN([avg])
+						FROM (
+						 SELECT TOP 50 PERCENT [avg]
+						 FROM ##dp104
+						 ORDER BY [avg] DESC) AS TopHalf)
+						 )/ 2 AS Median,
+		(select top 1 [avg]
+			from (select [avg], count(*) [sl]
+					from ##dp104
+					group by [avg]
+					 ) b
+			order by [sl] desc
+					) [mode]
+
+from ##dp104
+group by  left(rpt_date,4)
+
+---------calculate mean and standard deviation -----
+select left([rpt_date],4) [year], [Mã KH],
+		[avg], 
+		avg([avg]) over ( partition by left([rpt_date],4)) [avg],
+		stdev([avg]) over ( partition by left([rpt_date],4)) [stdev]
+from ##dp104
+group by left([rpt_date],4) , [Mã KH], 	[avg]
