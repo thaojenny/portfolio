@@ -448,3 +448,37 @@ select left([rpt_date],4) [year], [Mã KH],
 		stdev([avg]) over ( partition by left([rpt_date],4)) [stdev]
 from ##dp104
 group by left([rpt_date],4) , [Mã KH], 	[avg]
+
+-----------------------------SLKH Gửi tiền theo Năm mở CIF & phân khúc amt tiền gửi----------------
+select Rpt_date, 
+		case when [Năm mở TK]<=1 then N'KH <= 1 năm'
+		 when [năm mở TK] > 1 and [năm mở TK]<= 3 then N'KH <= 3 năm'
+		 when [năm mở TK] >3 and [năm mở TK]<= 5 then N'KH <= 5 năm'
+		else N'KH > 5 năm' end [KH type],
+		case when [SDBQ] >= 5e9 then N'>= 5 tỷ' else N'< 5 tỷ' end [Tiền gửi]
+		, count(distinct [Mã KH]) [SLKH DP]
+
+from (
+
+select Rpt_date, [Mã KH]
+		, DATEDIFF(year, c.[ngày tạo cif],p.[rpt_date]) [Năm mở TK]
+		,sum([số dư BQ quy đổi]) [SDBQ]
+
+from  [BI_DATA].[dbo].[DP_104] p
+left join MAPPING.dbo.SP_dacthu  d
+on p.[Tên Sản phẩm] = d.TenSP
+left join [MAPPING].[dbo].[PhanKhuc] y
+on p.[Nhóm Khách hàng]= y.[NhomKH]
+left join (select [Mã Khách hàng], [Ngày tạo CIF]  from [BI_DATA].[dbo].[CU_401]) c
+on p.[Mã KH] = c.[Mã Khách hàng]
+where d.LoaiSp is null and y.[PhanKhuc] ='1.KHCN' and [Cầm cố STK SLH] <> 'Y'
+group by Rpt_date, [Mã KH], DATEDIFF(year, c.[ngày tạo cif],p.[rpt_date])
+)ab
+
+group by  Rpt_date, 
+		case when [Năm mở TK]<=1 then N'KH <= 1 năm'
+		 when [năm mở TK] > 1 and [năm mở TK]<= 3 then N'KH <= 3 năm'
+		 when [năm mở TK] >3 and [năm mở TK]<= 5 then N'KH <= 5 năm'
+		 else N'KH > 5 năm' end ,
+		case when [SDBQ] >= 5e9 then N'>= 5 tỷ' else N'< 5 tỷ' end
+order by Rpt_date
