@@ -482,3 +482,97 @@ group by  Rpt_date,
 		 else N'KH > 5 năm' end ,
 		case when [SDBQ] >= 5e9 then N'>= 5 tỷ' else N'< 5 tỷ' end
 order by Rpt_date
+
+
+---KH gửi tiền--
+select Rpt_date, [Mã KH], sum([Số dư BQ quy đổi]) [SDBQ]
+into ##dp104
+from BI_DATA.dbo.DP_104
+where Rpt_date >= '20210101'
+group by Rpt_date, [Mã KH]
+
+----KH tín dụng--
+select RPT_DATE, [Mã khách hàng], sum([số dư BQ qui đổi]) [SDBQ]
+into ##ld104
+from BI_DATA.dbo.LD_104
+where RPT_DATE >= '20210101'
+group by RPT_DATE, [Mã khách hàng]
+
+-----casa---
+select rpt_date, sum([SDBQ])[SDBQ casa]
+from (
+select a.Rpt_date, [Mã KH], 
+		--datediff(year,cu.[ngày tạo cif],
+		sum([số dư BQ quy đổi]) [SDBQ]
+from [BI_DATA].[dbo].[AC_101] a
+left join (select * from MAPPING.dbo.SP_dacthu where LoaiSp ='CASA' )d
+on a.[Tên Sản phẩm] = d.TenSP
+left join (select * from MAPPING.dbo.PhanKhuc ) p
+on a.[Nhóm Khách hàng] = p.NhomKH
+left join (select * from ##ld104 l
+on (a.[rpt_date] = l.[rpt_date] and a.[mã kh]= l.[mã khách hàng])
+--left join (select [mã khách hàng], [ngày tạo cif]  from bi_data.dbo.cu_401) cu
+--on a.[mã kh] = cu.[mã khách hàng]
+
+where d.LoaiSp is null and p.PhanKhuc = '1.KHCN' and a.rpt_date in ('20211231','20221231','20231231','20240731') 
+	and l.[mã khách hàng] is null
+group by a.Rpt_date, [Mã KH]
+	) ab
+	group by rpt_date
+
+
+
+
+
+
+	----------------tín dụng
+	select l1.RPT_DATE,l1.[Sub_Product], sum([SDBQ casa] )[CASA]
+from (select RPT_DATE,sp.[Sub_Product], [Mã khách hàng], sum([số dư BQ qui đổi]) [SDBQ TD]
+		from [BI_DATA].[dbo].[LD_104] l
+		left join [MAPPING].[dbo].[PhanKhuc] p
+		on l.[Nhóm KH]= p.[NhomKH]
+		left join (select * from MAPPING.dbo.SP_dacthu where LoaiSp ='lending')  s
+		on s.TenSP = l.[Tên SP]
+		left join (select distinct Core_Name, Sub_Product from MAPPING.dbo.Sanpham_KHCN where [Product_line] ='Cho vay') sp
+		on l.[Tên SP] = sp.Core_Name
+		where p.PhanKhuc = '1.KHCN' and s.LoaiSp is null and RPT_DATE in ('20211231','20221231','20231231','20240131','20240229','20240331','20240430',
+					'20240531',
+					'20240630',
+					'20240731')
+		group by RPT_DATE,sp.[Sub_Product], [Mã khách hàng]
+		) l1
+left join (select Rpt_date, [Mã KH], sum([số dư BQ quy đổi]) [SDBQ casa] 
+			from BI_DATA.dbo.AC_101 a
+			left join (select * from MAPPING.dbo.SP_dacthu where LoaiSp ='CASA' )d
+			on a.[Tên Sản phẩm] = d.TenSP
+			where Rpt_date >= '20210101' and d.LoaiSp is null 
+			group by Rpt_date, [Mã KH]) a
+on l1.RPT_DATE = a.Rpt_date and l1.[Mã khách hàng] = a.[Mã KH]
+group by l1.RPT_DATE,l1.[Sub_Product]
+order by  l1.Sub_Product,l1.[RPT_DATE]
+
+
+----select l1.RPT_DATE,l1.[Sub_Product], sum([SDBQ casa] )[CASA]
+from (select RPT_DATE,sp.[Sub_Product], [Mã khách hàng], sum([số dư BQ qui đổi]) [SDBQ TD]
+		from [BI_DATA].[dbo].[LD_104] l
+		left join [MAPPING].[dbo].[PhanKhuc] p
+		on l.[Nhóm KH]= p.[NhomKH]
+		left join (select * from MAPPING.dbo.SP_dacthu where LoaiSp ='lending')  s
+		on s.TenSP = l.[Tên SP]
+		left join (select distinct Core_Name, Sub_Product from MAPPING.dbo.Sanpham_KHCN where [Product_line] ='Cho vay') sp
+		on l.[Tên SP] = sp.Core_Name
+		where p.PhanKhuc = '1.KHCN' and s.LoaiSp is null and RPT_DATE in ('20211231','20221231','20231231','20240131','20240229','20240331','20240430',
+					'20240531',
+					'20240630',
+					'20240731')
+		group by RPT_DATE,sp.[Sub_Product], [Mã khách hàng]
+		) l1
+left join (select Rpt_date, [Mã KH], sum([số dư BQ quy đổi]) [SDBQ casa] 
+			from BI_DATA.dbo.AC_101 a
+			left join (select * from MAPPING.dbo.SP_dacthu where LoaiSp ='CASA' )d
+			on a.[Tên Sản phẩm] = d.TenSP
+			where Rpt_date >= '20210101' and d.LoaiSp is null 
+			group by Rpt_date, [Mã KH]) a
+on l1.RPT_DATE = a.Rpt_date and l1.[Mã khách hàng] = a.[Mã KH]
+group by l1.RPT_DATE,l1.[Sub_Product]
+order by  l1.Sub_Product,l1.[RPT_DATE]
