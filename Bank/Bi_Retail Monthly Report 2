@@ -48,3 +48,127 @@ where  s.LoaiSp is null and [Mã chi nhánh] <> 'VN0010001' and [mã kh] in
 
 ) abc
 group by Rpt_date
+
+
+
+-----------------------------------------SLKH lũy kế & mở mới -----------------------------------------------
+select r.rpt_date, r.[Độ tuổi],r.[LD_DP Customer],[SLKH lũy kế], r.[Customer Type], Cu.[SLKH mở mới]
+--into JSLKHCN
+from (
+--------------SLKH lũy kế theo: Độ tuổi, Sản phẩm sử dụng, KH/NV nội bộ--------------
+SELECT 
+a.rpt_date, case when DATEDIFF(year,[ngày sinh],[ngày tạo cif]) <23 then N'Dưới 23 tuổi'
+			when DATEDIFF(year,[ngày sinh],[ngày tạo cif]) between 23 and 45 then N'Từ 23-45 tuổi'
+                         when DATEDIFF(year,[ngày sinh],[ngày tạo cif]) between 46 and 67 then N'Từ 46-67 tuổi'
+			else N'Trên 67 tuổi' end [Độ tuổi]
+		, case when c.[loại khách hàng] =N'Nhân viên nội bộ' then N'NV nội bộ'
+						else N'Khách hàng' end [Customer Type]
+		, case when ld.[Mã khách hàng] is not null and dp.[Mã KH] is null then N'KH tín dụng'
+				when ld.[Mã khách hàng] is not null and dp.[Mã KH] is not null then N'KH Vay và Gửi tiền'
+				when ld.[Mã khách hàng] is null and dp.[Mã KH] is not null then N'KH Gửi tiền'
+				else N'KH CASA' end [LD_DP Customer]
+	, count(c.[mã khách hàng]) [SLKH lũy kế]
+  FROM [BI_DATA].[dbo].[CU_401] c
+  left join
+  (
+  select distinct rpt_date
+  from BI_DATA.dbo.AC_101 ) a
+  on c.[Ngày tạo CIF] <= a.rpt_date
+  left join 
+  ( select RPT_DATE, [Mã khách hàng], 
+		sum([số dư BQ qui đổi]) [SDBQ dư nợ]
+		from BI_DATA.dbo.LD_104 l1
+		left join (select * from MAPPING.dbo.SP_dacthu where [LoaiSp] = 'Lending') s
+		on l1.[Tên SP] = s.TenSP
+		left join (select * from MAPPING.dbo.PhanKhuc where [PhanKhuc] ='1.KHCN') p
+		on l1.[Nhóm KH] = p.NhomKH
+		where s.LoaiSp is null and p.PhanKhuc is not null and [Mã chi nhánh GD] <> 'VN0010001'
+		group by RPT_DATE, [Mã khách hàng]
+		) ld
+	on c.[Mã Khách hàng] = ld.[Mã khách hàng] and a.Rpt_date = ld.RPT_DATE
+	left join 
+	(select Rpt_date, [Mã KH],
+			sum([số dư BQ quy đổi]) [SDBQ tiền gửi]
+		from BI_DATA.dbo.DP_104 d1
+		left join (select * from MAPPING.dbo.SP_dacthu where [LoaiSp] = 'FD') s
+		on d1.[Tên Sản phẩm]= s.TenSP
+		left join (select * from MAPPING.dbo.PhanKhuc where [PhanKhuc] ='1.KHCN') p
+		on d1.[Nhóm Khách hàng]= p.NhomKH
+		where s.LoaiSp is null and p.PhanKhuc is not null 
+		group by Rpt_date, [Mã KH]
+		) dp
+	on c.[Mã Khách hàng] = dp.[Mã KH] and a.Rpt_date = dp.Rpt_date
+  where c.[Mã Khách hàng] in 
+					(select [mã khách hàng]
+									from BI_DATA.dbo.CU_401 c1
+									left join [MAPPING].[dbo].[PhanKhuc] p
+									on c1.[Nhóm Khách hàng] = p.[NhomKH]
+									where p.PhanKhuc ='1.KHCN') 
+	and a.rpt_date is not null		
+  group by a.rpt_date, case when DATEDIFF(year,[ngày sinh],[ngày tạo cif]) <23 then N'Dưới 23 tuổi'
+			when DATEDIFF(year,[ngày sinh],[ngày tạo cif]) between 23 and 45 then N'Từ 23-45 tuổi'
+                         when DATEDIFF(year,[ngày sinh],[ngày tạo cif]) between 46 and 67 then N'Từ 46-67 tuổi'
+			else N'Trên 67 tuổi' end
+			, case when c.[loại khách hàng] =N'Nhân viên nội bộ' then N'NV nội bộ'
+						else N'Khách hàng' end
+		, case when ld.[Mã khách hàng] is not null and dp.[Mã KH] is null then N'KH tín dụng'
+		when ld.[Mã khách hàng] is not null and dp.[Mã KH] is not null then N'KH Vay và Gửi tiền'
+		when ld.[Mã khách hàng] is null and dp.[Mã KH] is not null then N'KH Gửi tiền'
+		else N'KH CASA' end
+) r
+left join 
+--------------SLKH mở mới theo: Độ tuổi, Sản phẩm sử dụng, KH/NV nội bộ--------------
+(select eomonth([ngày tạo cif]) [rpt_date], 
+	case when DATEDIFF(year,[ngày sinh],[ngày tạo cif]) <23 then N'Dưới 23 tuổi'
+			when DATEDIFF(year,[ngày sinh],[ngày tạo cif]) between 23 and 45 then N'Từ 23-45 tuổi'
+                         when DATEDIFF(year,[ngày sinh],[ngày tạo cif]) between 46 and 67 then N'Từ 46-67 tuổi'
+			else N'Trên 67 tuổi' end [Độ tuổi],
+			 case when c.[loại khách hàng] =N'Nhân viên nội bộ' then N'NV nội bộ'
+						else N'Khách hàng' end [Customer Type]
+		, case when ld.[Mã khách hàng] is not null and dp.[Mã KH] is null then N'KH tín dụng'
+				when ld.[Mã khách hàng] is not null and dp.[Mã KH] is not null then N'KH Vay và Gửi tiền'
+				when ld.[Mã khách hàng] is null and dp.[Mã KH] is not null then N'KH Gửi tiền'
+				else N'KH CASA' end [LD_DP Customer]
+	,ISNULL(count(*),0) [SLKH mở mới]
+	from [BI_DATA].[dbo].[CU_401] c
+	left join [MAPPING].[dbo].[PhanKhuc] p
+	on c.[Nhóm Khách hàng] = p.[NhomKH]
+	left join 
+		( select RPT_DATE, [Mã khách hàng], 
+		sum([số dư BQ qui đổi]) [SDBQ dư nợ]
+		from BI_DATA.dbo.LD_104 l1
+		left join (select * from MAPPING.dbo.SP_dacthu where [LoaiSp] = 'Lending') s
+		on l1.[Tên SP] = s.TenSP
+		left join (select * from MAPPING.dbo.PhanKhuc where [PhanKhuc] ='1.KHCN') p
+		on l1.[Nhóm KH] = p.NhomKH
+		where s.LoaiSp is null and p.PhanKhuc is not null and [Mã chi nhánh GD] <> 'VN0010001'
+		group by RPT_DATE, [Mã khách hàng]
+		) ld
+	on c.[Mã Khách hàng] = ld.[Mã khách hàng] and eomonth(c.[ngày tạo cif]) = ld.RPT_DATE
+	left join 
+	(select Rpt_date, [Mã KH],
+			sum([số dư BQ quy đổi]) [SDBQ tiền gửi]
+		from BI_DATA.dbo.DP_104 d1
+		left join (select * from MAPPING.dbo.SP_dacthu where [LoaiSp] = 'FD') s
+		on d1.[Tên Sản phẩm]= s.TenSP
+		left join (select * from MAPPING.dbo.PhanKhuc where [PhanKhuc] ='1.KHCN') p
+		on d1.[Nhóm Khách hàng]= p.NhomKH
+		where s.LoaiSp is null and p.PhanKhuc is not null 
+		group by Rpt_date, [Mã KH]
+		) dp
+	on c.[Mã Khách hàng] = dp.[Mã KH] and eomonth(c.[ngày tạo cif]) = dp.Rpt_date
+	where p.PhanKhuc ='1.KHCN'
+	group by eomonth([ngày tạo cif]), case when DATEDIFF(year,[ngày sinh],[ngày tạo cif]) <23 then N'Dưới 23 tuổi'
+			when DATEDIFF(year,[ngày sinh],[ngày tạo cif]) between 23 and 45 then N'Từ 23-45 tuổi'
+                         when DATEDIFF(year,[ngày sinh],[ngày tạo cif]) between 46 and 67 then N'Từ 46-67 tuổi'
+			else N'Trên 67 tuổi' end ,
+			case when c.[loại khách hàng] =N'Nhân viên nội bộ' then N'NV nội bộ'
+						else N'Khách hàng' end
+			, case when ld.[Mã khách hàng] is not null and dp.[Mã KH] is null then N'KH tín dụng'
+				when ld.[Mã khách hàng] is not null and dp.[Mã KH] is not null then N'KH Vay và Gửi tiền'
+				when ld.[Mã khách hàng] is null and dp.[Mã KH] is not null then N'KH Gửi tiền'
+				else N'KH CASA' end
+			) cu
+on cu.rpt_date = r.Rpt_date and r.[Độ tuổi] = cu.[Độ tuổi] and r.[Customer Type] = cu.[Customer Type] and r.[LD_DP Customer] = cu.[LD_DP Customer]
+
+order by r.rpt_date
