@@ -89,9 +89,10 @@ select rpt_date, [Date],
 -------TG_KKH--------------
 union all
 
-select rpt_date, [Date],
+select rpt_date, [Date],'Huydong' as [Group_product],
 		 [Channel],
 		[Product],
+		[sub_product],
 		case when [SD] <5e4 then N'Dưới 50k'
 				when [SD] >= 5e4 and  [SD] < 5e5 then N'Từ 50k-500k'
 				when  [SD] >= 5e5 and  [SD] < 2e6 then N'Từ 500k-2 triệu'
@@ -114,7 +115,8 @@ select rpt_date, [Date],
 		sum([SD2]) [Số dư CK]
 	from (
 	select d.Rpt_date,eomonth([date_in]) [Date],[Mã KH],  N'Online' as [Channel],
-				N'TG_KKH' [Product] ,
+				N'TG_KKH' [Product] , 
+				case when ld.[Mã khách hàng] is not null then N'KH Lending' else N'KH Non-Lending' end  [sub_product],
 				case when c.[loại khách hàng] =N'Nhân viên nội bộ' then N'NV nội bộ'
 						else N'Khách hàng' end [Customer Type],
 				case when c.[tuổi KH] < 23 then N'Dưới 23 tuổi'
@@ -138,20 +140,30 @@ select rpt_date, [Date],
 		 on d.[Nhóm khách hàng] = p.[NhomKH]
 		 left join (select * from [MAPPING].[dbo].[SP_dacthu] where [LoaiSp] ='CASA') s
 		 on d.[Tên sản Phẩm] = s.TenSP
+		  left join (select rpt_date, [Mã khách hàng], sum([số dư BQ qui đổi]) [SDBQ]    
+							from BI_DATA.dbo.ld_104 l1
+							left join (select * from [MAPPING].[dbo].[PhanKhuc] where [PhanKhuc] = '1.KHCN') p
+							on l1.[Nhóm KH] = p.NhomKH
+							left join (select * from [MAPPING].[dbo].[SP_dacthu] where [LoaiSp] ='Lending') s
+							on l1.[Tên SP] = s.TenSP
+							where p.PhanKhuc = '1.KHCN' and s.LoaiSp is null and [Mã chi nhánh GD] <> 'VN0010001'
+							group by rpt_date, [Mã khách hàng]) ld
+			on d.[Rpt_date] = ld.RPT_DATE and d.[Mã KH] = ld.[Mã khách hàng]
 		 where d.rpt_date >= 20180101 and p.[NhomKH] is not null and s.[LoaiSp] is null
 		 group by  d.Rpt_date,eomonth([date_in]) ,[Mã KH],  
 				case when c.[loại khách hàng] =N'Nhân viên nội bộ' then N'NV nội bộ'
-						else N'Khách hàng' end ,
+						else N'Khách hàng' end , case when ld.[Mã khách hàng] is not null then N'KH Lending' else N'KH Non-Lending' end ,
 				case when c.[tuổi KH] < 23 then N'Dưới 23 tuổi'
 						when c.[tuổi KH] between 23 and 45 then N'Từ 23-45 tuổi'
 						when c.[tuổi KH] between 46 and 67 then N'Từ 46-67 tuổi'
-						else N'Trên 67 tuổi' end ,
+						else N'Trên 67 tuổi' end ,   
 						[giới tính],
 						dv.Vùng
 		 ) b
   group by rpt_date, [Date],
 		 [Channel],
 		[Product],
+		[Sub_Product],
 		case when [SD] <5e4 then N'Dưới 50k'
 				when [SD] >= 5e4 and  [SD] < 5e5 then N'Từ 50k-500k'
 				when  [SD] >= 5e5 and  [SD] < 2e6 then N'Từ 500k-2 triệu'
