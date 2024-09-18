@@ -553,7 +553,7 @@ select EOMONTH([từ ngày]) [Rpt_date],
 
 from BI_DATA.dbo.FTP_LD a
 left join 
-(SELECT * FROM MAPPING..SP_dacthu WHERE LoaiSp = 'Lending') b
+(SELECT * FROM MAPPING.dbo.SP_dacthu WHERE LoaiSp = 'Lending') b
 on a.[tên sản phẩm] = b.[TenSP]
 left join (select distinct [core_name], [sub_product] from MAPPING.dbo.Sanpham_KHCN where [Product] ='CV') sp
 on a.[Tên sản phẩm] = sp.Core_Name
@@ -565,15 +565,18 @@ left join  (select  [Mã Khách hàng],[loại khách hàng],[giới tính],
 
 left join [MAPPING].[dbo].[DS_DVKD] dv
 		on a.[Mã đơn vị] = dv.Ma_DVKD
-left join (select [mã khách hàng], [số khế ước], [kỳ hạn] 
+left join (select RPT_DATE , [số khế ước], [kỳ hạn], [nhóm kh],
+				ROW_NUMBER() OVER (PARTITION BY RPT_DATE,[Số khế ước] ORDER BY [SỐ DƯ CUỐI KỲ QUI ĐỔI] DESC,[SỐ DƯ BQ QUI ĐỔI] DESC,STT ASC,[LÃI SUẤT] DESC ) [rank]
 							from [BI_DATA].[dbo].[LD_104]  l1
 							left join MAPPING.dbo.PhanKhuc p
 							on l1.[Nhóm KH] = p.NhomKH
-				where [Mã chi nhánh GD] <> 'VN0010001' and p.PhanKhuc = '1.KHCN'
-			group by [mã khách hàng], [số khế ước], [kỳ hạn]) ld
-on a.[Mã khách hàng] = ld.[Mã khách hàng] and a.[Số khế ước] = ld.[Số khế ước]
+							left join (select * from MAPPING.dbo.SP_dacthu where [LoaiSp] = 'Lending') sp
+							on l1.[Tên SP] = sp.TenSP 
+				where [Mã chi nhánh GD] <> 'VN0010001' and p.PhanKhuc = '1.KHCN' and sp.LoaiSp is null
+			) ld
+on  CONVERT(NVARCHAR(8),EOMONTH(a.[Từ ngày],0),112) = ld.RPT_DATE and a.[Số khế ước] = ld.[Số khế ước] and ld.[rank] = 1
 
-where   b.LoaiSp is null and ld.[Mã khách hàng] is not null
+where   b.LoaiSp is null and [Mã đơn vị] <> 'VN0010001' and ld.[Nhóm KH] is not null 
 group by  EOMONTH([từ ngày]),
 		case when a.[Nhóm nợ] in (N'Nhóm 3',N'Nhóm 4',N'Nhóm 5') then N'Nhóm 3 - 5'
 	 else a.[Nhóm nợ] end,
