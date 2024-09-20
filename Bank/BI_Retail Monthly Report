@@ -477,6 +477,7 @@ group by  EOMONTH([từ ngày]),
 
 union all
 
+
 select EOMONTH([từ ngày]) [Rpt_date],
 		'Huydong' as [Group_product],
 		'Online' as [Channel],
@@ -492,6 +493,8 @@ select EOMONTH([từ ngày]) [Rpt_date],
 						else N'Trên 67 tuổi' end [Độ tuổi KH],
 		[giới tính]
 	, dv.Vùng
+	, case when [Mã sản phẩm] in ('1001','1022','1020','1028','1021','1019','1027','1003','1002','1023') then N'ĐK KHCN' else 'None' end [Condition]
+
 	  ,sum([Chi phí thực tế]* isnull([DTNB quy đổi]/nullif([DTNB quy đổi],0),1)) [Chi lãi]
 ,sum([DTNB quy đổi]) [Thu lãi]
 
@@ -519,7 +522,7 @@ left join (select rpt_date, [Mã khách hàng], sum([số dư BQ qui đổi]) [S
 							group by rpt_date, [Mã khách hàng]) ld
 			on convert(nvarchar(8),eomonth(a.[Từ ngày]),112) = ld.RPT_DATE and a.[Mã khách hàng] = ld.[Mã khách hàng]
 
-where  a.[Tên khối khách hàng] = N'Khối KHCN' and b.LoaiSp is null
+where  a.[Tên khối khách hàng] = N'Khối KHCN' and b.LoaiSp is null and year([từ ngày]) =2024
 group by  EOMONTH([từ ngày]) 
 		
 	  ,case when ld.[Mã khách hàng] is not null then N'KH Lending' else N'KH Non-Lending' end 
@@ -532,7 +535,7 @@ group by  EOMONTH([từ ngày])
 						else N'Trên 67 tuổi' end,
 		[giới tính]
 	, dv.Vùng
-
+	,case when [Mã sản phẩm] in ('1001','1022','1020','1028','1021','1019','1027','1003','1002','1023') then N'ĐK KHCN' else 'None' end
 
 -----------3.Tín dụng-------------------------------
 
