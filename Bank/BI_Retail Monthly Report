@@ -481,7 +481,7 @@ select EOMONTH([từ ngày]) [Rpt_date],
 		'Huydong' as [Group_product],
 		'Online' as [Channel],
 	 'TG_KKH'as [Product]
-	  , sp.Sub_Product
+	  , case when ld.[Mã khách hàng] is not null then N'KH Lending' else N'KH Non-Lending' end [Sub_Product]
 	  , '0' as [Period 1-month]
 	  ,  '0M' as [Period 2]
 	  , case when c.[loại khách hàng] =N'Nhân viên nội bộ' then N'NV nội bộ'
@@ -497,10 +497,9 @@ select EOMONTH([từ ngày]) [Rpt_date],
 
 from BI_DATA.dbo.FTP_CASA a
 left join 
-(SELECT * FROM MAPPING..SP_dacthu WHERE LoaiSp = 'CASA') b
+(SELECT * FROM MAPPING.dbo.SP_dacthu WHERE LoaiSp = 'CASA') b
 on a.[tên sản phẩm] = b.[TenSP]
-left join (select distinct [core_name], [sub_product] from MAPPING.dbo.Sanpham_KHCN where [Product] ='KKH') sp
-on a.[Tên sản phẩm] = sp.Core_Name
+
 left join  (select  [Mã Khách hàng],[loại khách hàng],[giới tính],
 						DATEDIFF(year, [ngày sinh],getdate()) [tuổi KH]
 					from [BI_DATA].[dbo].[CU_401] 
@@ -508,13 +507,22 @@ left join  (select  [Mã Khách hàng],[loại khách hàng],[giới tính],
 		on a.[mã khách hàng] = c.[Mã Khách hàng]
 
 left join [MAPPING].[dbo].[DS_DVKD] dv
-		on a.[Mã đơn vị] = dv.Ma_DVKD
+		on a.[Mã đơn vị ]= dv.Ma_DVKD
 
+left join (select rpt_date, [Mã khách hàng], sum([số dư BQ qui đổi]) [SDBQ]    
+							from BI_DATA.dbo.ld_104 l1
+							left join (select * from [MAPPING].[dbo].[PhanKhuc] where [PhanKhuc] = '1.KHCN') p
+							on l1.[Nhóm KH] = p.NhomKH
+							left join (select * from [MAPPING].[dbo].[SP_dacthu] where [LoaiSp] ='Lending') s
+							on l1.[Tên SP] = s.TenSP
+							where p.PhanKhuc = '1.KHCN' and s.LoaiSp is null and [Mã chi nhánh GD] <> 'VN0010001'
+							group by rpt_date, [Mã khách hàng]) ld
+			on convert(nvarchar(8),eomonth(a.[Từ ngày]),112) = ld.RPT_DATE and a.[Mã khách hàng] = ld.[Mã khách hàng]
 
-where  a.[Tên khối khách hàng] = N'Khối KHCN'
+where  a.[Tên khối khách hàng] = N'Khối KHCN' and b.LoaiSp is null
 group by  EOMONTH([từ ngày]) 
 		
-	  , sp.Sub_Product
+	  ,case when ld.[Mã khách hàng] is not null then N'KH Lending' else N'KH Non-Lending' end 
 	
 	  , case when c.[loại khách hàng] =N'Nhân viên nội bộ' then N'NV nội bộ'
 						else N'Khách hàng' end 
@@ -524,6 +532,7 @@ group by  EOMONTH([từ ngày])
 						else N'Trên 67 tuổi' end,
 		[giới tính]
 	, dv.Vùng
+
 
 -----------3.Tín dụng-------------------------------
 
