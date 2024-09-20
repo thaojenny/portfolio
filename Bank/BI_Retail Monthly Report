@@ -411,7 +411,7 @@ GO
 
 -------------------------Thu/chi lãi-------------------------------
 -----------1.Huy dong (TG_CKH & GTCG)-------------------------------
-DROP TABLE IF EXISTS ThuChiLai_KHCNJ
+--DROP TABLE IF EXISTS ThuChiLai_KHCNJ
 select *
 into ThuChiLai_KHCNJ
 from (
@@ -544,6 +544,8 @@ group by  EOMONTH([từ ngày])
 	, dv.Vùng
 	,case when [Mã sản phẩm] in ('1001','1022','1020','1028','1021','1019','1027','1003','1002','1023') then N'ĐK KHCN' else 'None' end
 
+	
+
 -----------3.Tín dụng-------------------------------
 
 union all
@@ -567,6 +569,10 @@ select EOMONTH([từ ngày]) [Rpt_date],
 						else N'Trên 67 tuổi' end [Độ tuổi KH],
 		[giới tính]
 	, dv.Vùng
+	
+	, case when [Tên sản phẩm] in (N'Cho vay đầu tư kinh doanh BĐS',N'Cho vay hạn mức khác',N'Cho vay tái tài trợ dành cho KHCN',N'Cho vay tiêu dùng có TSĐB',N'Cho vay từng lần khác – KHCN',N'Cho vay tài trợ vốn SXKD đối với CN,HKD',N'Cho vay từng lần - K.KHDN',N'Cho vay KHCN mua, xây, sửa nhà',N'Cho vay hạn mức - K.KHDN',N'Cho vay KHCN mua ô tô',N'CV thấu chi chuyên dụng',N'Cho vay thấu chi CBNV',N'CV thau chi thong thuong',N'Cho vay thấu chi CBNV TT39',N'Cho vay thấu chi thong thuong TT39',N'CV thấu chi chuyên dụng TT39',N'Cho vay thấu chi – Quá hạn',N'Cho vay trả góp')
+						then N'ĐK KHCN' else 'None' end [Condition]
+
 	  ,sum([CPNB quy đổi])  [Chi lãi]
 ,sum([DTTT]* isnull([CPNB quy đổi]/nullif([CPNB nguyên tệ],0),1)) [Thu lãi]
 
@@ -595,7 +601,7 @@ left join (select RPT_DATE , [số khế ước], [kỳ hạn], [nhóm kh],
 			) ld
 on  CONVERT(NVARCHAR(8),EOMONTH(a.[Từ ngày],0),112) = ld.RPT_DATE and a.[Số khế ước] = ld.[Số khế ước] and ld.[rank] = 1
 
-where   b.LoaiSp is null and [Mã đơn vị] <> 'VN0010001' and ld.[Nhóm KH] is not null 
+where   b.LoaiSp is null and [Mã đơn vị] <> 'VN0010001' and ld.[Nhóm KH] is not null and year([từ ngày]) >= 2023
 group by  EOMONTH([từ ngày]),
 		case when a.[Nhóm nợ] in (N'Nhóm 3',N'Nhóm 4',N'Nhóm 5') then N'Nhóm 3 - 5'
 	 else a.[Nhóm nợ] end,
@@ -614,8 +620,9 @@ group by  EOMONTH([từ ngày]),
 						else N'Trên 67 tuổi' end ,
 		[giới tính]
 	, dv.Vùng
+	, case when [Tên sản phẩm] in (N'Cho vay đầu tư kinh doanh BĐS',N'Cho vay hạn mức khác',N'Cho vay tái tài trợ dành cho KHCN',N'Cho vay tiêu dùng có TSĐB',N'Cho vay từng lần khác – KHCN',N'Cho vay tài trợ vốn SXKD đối với CN,HKD',N'Cho vay từng lần - K.KHDN',N'Cho vay KHCN mua, xây, sửa nhà',N'Cho vay hạn mức - K.KHDN',N'Cho vay KHCN mua ô tô',N'CV thấu chi chuyên dụng',N'Cho vay thấu chi CBNV',N'CV thau chi thong thuong',N'Cho vay thấu chi CBNV TT39',N'Cho vay thấu chi thong thuong TT39',N'CV thấu chi chuyên dụng TT39',N'Cho vay thấu chi – Quá hạn',N'Cho vay trả góp')
+						then N'ĐK KHCN' else 'None' end
 	) thao
-
 
 ------------------------------Giải ngân mới (Cho vay)/Gửi mới (TG_CKH)--------------------------------
 select *
