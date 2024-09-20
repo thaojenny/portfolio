@@ -433,12 +433,17 @@ select EOMONTH([từ ngày]) [Rpt_date],
 						else N'Trên 67 tuổi' end [Độ tuổi KH],
 		[giới tính]
 	, dv.Vùng
+	, case when [Tên sản phẩm] in (N'CHUNG CHI TIEN GUI CUOI KY - THANG',N'IB DAI CHUNG TRA LAI CUOI KY - TUAN',N'IB DAI CHUNG TRA LAI CUOI KY-THANG',N'IB DAI CHUNG TRA LAI QUY',N'IB DAI CHUNG TRA LAI THANG',N'IB LAI SUAT BAC THANG CA NHAN',N'TG DAI CHUNG TRA LAI CUOI KY',N'TG DAI CHUNG TRA LAI THANG',N'TG KY QUY THANH LAP DOANH NGHIEP',N'TG LAI SUAT BAC THANG 6+ CA NHAN',N'TG trả lãi trước địnhkỳ(discounted)',
+									N'TIEN GUI AN THINH',N'TIEN GUI AN THINH (ROLLED)',N'TIEN GUI NHU Y',N'TIET KIEM DU THUONG CA NHAN',N'TIET KIEM DU THUONG CA NHAN (ROLL)',N'Tiết kiệm Đại chúng trả lãi trước',N'Tiết kiệm tích luỹ',N'TK DAI CHUNG TRA LAI CUOI KY - TUAN',N'TK DAI CHUNG TRA LAI CUOI KY-THANG',N'TK DAI CHUNG TRA LAI QUY',N'TK DAI CHUNG TRA LAI THANG',N'TK KY QUY DU HOC',N'TK LAI SUAT BAC THANG CA NHAN'
+									,N'TIEN GUI THAP SANG NIEM TIN',N'TK LAI SUAT BAC THANG DOANH NGHIEP',N'TIEN GUI DA KY HAN'	,N'Tiền gửi trung niên',N'Chứng chỉ tiền gửi trả lãi trước',N'Tiền gửi Yêu thương cho con',N'CCTG TRA LAI HANG THANG',N'TIEN GUI BAO TOAN LAI SUAT',N'TIEN GUI TRA LAI CUOI KY',N'TG DAI CHUNG TRA LAI QUY',N'TIEN GUI TRA LAI THANG',N'TIEN GUI TRA LAI QUY',N'TK KY QUY DU HOC (ROLLED)')
+									then N'ĐK KHCN' else 'None' end [Condition]
+
 	  ,sum([Chi phí thực tế]* isnull([DTNB quy đổi]/nullif([DTNB quy đổi],0),1)) [Chi lãi]
 ,sum([DTNB quy đổi]) [Thu lãi]
 
 from BI_DATA.dbo.FTP_FD a
 left join 
-(SELECT * FROM MAPPING..SP_dacthu WHERE LoaiSp = 'FD') b
+(SELECT * FROM MAPPING.dbo.SP_dacthu WHERE LoaiSp = 'FD') b
 on a.[tên sản phẩm] = b.[TenSP]
 left join (select distinct [core_name], [sub_product] from MAPPING.dbo.Sanpham_KHCN where [Product] ='CKH') sp
 on a.[Tên sản phẩm] = sp.Core_Name
@@ -471,12 +476,14 @@ group by  EOMONTH([từ ngày]),
 						else N'Trên 67 tuổi' end ,
 		[giới tính]
 	, dv.Vùng
-
+	,case when [Tên sản phẩm] in (N'CHUNG CHI TIEN GUI CUOI KY - THANG',N'IB DAI CHUNG TRA LAI CUOI KY - TUAN',N'IB DAI CHUNG TRA LAI CUOI KY-THANG',N'IB DAI CHUNG TRA LAI QUY',N'IB DAI CHUNG TRA LAI THANG',N'IB LAI SUAT BAC THANG CA NHAN',N'TG DAI CHUNG TRA LAI CUOI KY',N'TG DAI CHUNG TRA LAI THANG',N'TG KY QUY THANH LAP DOANH NGHIEP',N'TG LAI SUAT BAC THANG 6+ CA NHAN',N'TG trả lãi trước địnhkỳ(discounted)',
+									N'TIEN GUI AN THINH',N'TIEN GUI AN THINH (ROLLED)',N'TIEN GUI NHU Y',N'TIET KIEM DU THUONG CA NHAN',N'TIET KIEM DU THUONG CA NHAN (ROLL)',N'Tiết kiệm Đại chúng trả lãi trước',N'Tiết kiệm tích luỹ',N'TK DAI CHUNG TRA LAI CUOI KY - TUAN',N'TK DAI CHUNG TRA LAI CUOI KY-THANG',N'TK DAI CHUNG TRA LAI QUY',N'TK DAI CHUNG TRA LAI THANG',N'TK KY QUY DU HOC',N'TK LAI SUAT BAC THANG CA NHAN'
+									,N'TIEN GUI THAP SANG NIEM TIN',N'TK LAI SUAT BAC THANG DOANH NGHIEP',N'TIEN GUI DA KY HAN'	,N'Tiền gửi trung niên',N'Chứng chỉ tiền gửi trả lãi trước',N'Tiền gửi Yêu thương cho con',N'CCTG TRA LAI HANG THANG',N'TIEN GUI BAO TOAN LAI SUAT',N'TIEN GUI TRA LAI CUOI KY',N'TG DAI CHUNG TRA LAI QUY',N'TIEN GUI TRA LAI THANG',N'TIEN GUI TRA LAI QUY',N'TK KY QUY DU HOC (ROLLED)')
+									then N'ĐK KHCN' else 'None' end
 -----------2.Huy dong (KKH)-------------------------------
 
 
 union all
-
 
 select EOMONTH([từ ngày]) [Rpt_date],
 		'Huydong' as [Group_product],
