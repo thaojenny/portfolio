@@ -168,3 +168,51 @@ SIGN(x): Lấy dấu của số x ( -1:x<0, 0: x=0, +1: x>0)
 ROUND (x,n): Làm tròn tới n số lẻ
 CEILING(x): Số nguyên nhỏ nhất nhưng lớn hơn x
 FLOOR(x): Số nguyên lớn nhất nhưng nhỏ hơn x
+
+
+--------------- dynamic unpivot-----------------
+--way1: concatenate columns name with 'string_agg'--
+DECLARE 
+  @table_id NVARCHAR(MAX) = (select OBJECT_ID('BCTC_bank..sheet1')), 
+  @key_column    NVARCHAR(MAX) = N'[Tài sản]',
+  @colNames  NVARCHAR(MAX) = N'', 
+  @sql       NVARCHAR(MAX) = N'';
+
+
+select @colNames = string_agg(quotename([name]) ,',') 
+from sys.columns
+where column_id >1 and  object_id = @table_id;
+
+SET @sql = 
+N'SELECT [Tài sản], [Bankcode], AMT
+FROM
+(SELECT  * FROM BCTC_bank..sheet1 ) AS t
+UNPIVOT
+(AMT FOR [Bankcode] IN ('+@ColNames+')) AS up;';
+
+EXEC (@sql)
+-- way 2 concatenate columns name with WHILE (điều kiện vòng lặp)---
+DECLARE 
+  @table_id NVARCHAR(MAX) = (select OBJECT_ID('BCTC_bank..sheet1')), 
+  @key_column    NVARCHAR(MAX) = N'[Tài sản]';
+DECLARE 
+  @colNames  NVARCHAR(MAX) = N'', 
+  @sql       NVARCHAR(MAX) = N'',
+  @col_num int  = (select count(*) FROM sys.columns  WHERE [object_id] = @table_id),
+  @int int = 2;--
+WHILE @int <= @col_num
+	BEGIN
+		SELECT @colNames += (select QUOTENAME(name) +',' from sys.all_columns where object_id = @table_id and column_id = @int )
+		SELECT @int += 1
+	END
+SELECT @colNames = (SELECT left(@colNames,len(@colNames)-1)) 
+
+SET @sql = 
+N'SELECT [Tài sản], [Bankcode], AMT
+FROM
+(SELECT  * FROM BCTC_bank..sheet1 ) AS t
+UNPIVOT
+(AMT FOR [Bankcode] IN ('+@ColNames+')) AS up;';
+
+EXEC (@sql)
+
