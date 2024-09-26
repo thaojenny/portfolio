@@ -1,4 +1,4 @@
---------problem: many columns --> turn into rows --------
+--------problem: many columns --> turn into rows --> using dynamic unpivot--------
 --way1: concatenate columns name with 'string_agg'--
 DECLARE 
   @table_id NVARCHAR(MAX) = (select OBJECT_ID('BCTC_bank..sheet1')), 
