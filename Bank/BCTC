@@ -64,7 +64,7 @@ FROM (SELECT distinct [Tài sản] FROM BCTC_bank.dbo.sheet1  ) AS assetList;
 SET @sql = 
 
 N'select [Bankcode], ' + @assetNames + '
-into taisan 
+
 from (' +N'
 
 SELECT [Tài sản], [Bankcode], AMT
@@ -79,6 +79,8 @@ pivot'+N'
  ) pivot_table
 order by [Bankcode];'
  ;
+
+EXEC (@sql)
 ------------------------
 
 
