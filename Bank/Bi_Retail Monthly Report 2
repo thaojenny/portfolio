@@ -173,9 +173,11 @@ on cu.rpt_date = r.Rpt_date and r.[Độ tuổi] = cu.[Độ tuổi] and r.[Cust
 
 order by r.rpt_date
 --------------------------------------------Quy mô (update)--------------------------------------------------------
+insert into dbo.JQM_HDCV_KHCN
 select *
-into JQM_HDCV_KHCN2
-from (
+from
+(
+
 ---------------1.TG_CKH--------------------
 select rpt_date, [Date], 'Huydong' as [Group_product],
 		case when [ext channel] in ('IB','MB') then N'Online'
@@ -248,7 +250,7 @@ select rpt_date, [Date], 'Huydong' as [Group_product],
 						where [Mã chi nhánh GD] <> 'VN0010001' and p.[NhomKH] is not null and s.[LoaiSp] is null
 						group by rpt_date, [mã khách hàng]) ld1
 		 on ld1.[rpt_date] = d.[rpt_date] and ld1.[Mã khách hàng] = d.[mã kh]
-		 where d.rpt_date >= 20180101 and [Cầm cố STK SLH] <> 'Y' and p.[NhomKH] is not null and s.[LoaiSp] is null
+		 where d.rpt_date = '20240930' and [Cầm cố STK SLH] <> 'Y' and p.[NhomKH] is not null and s.[LoaiSp] is null
 		 group by  d.Rpt_date,eomonth([date_in]), [Mã KH],d.[kỳ hạn], d1.[ext channel],
 				case when ( [tên sản phẩm] like N'%Chứng chỉ%' or [tên sản phẩm] like N'%Chung chi%'  or [tên sản phẩm] like N'%CCTG%' ) then 'GTCG'
 				else 'TG_CKH'end, sp.[Sub_Product],
@@ -354,7 +356,7 @@ select rpt_date, [Date],'Huydong' as [Group_product],
 							where p.PhanKhuc = '1.KHCN' and s.LoaiSp is null and [Mã chi nhánh GD] <> 'VN0010001'
 							group by rpt_date, [Mã khách hàng]) ld
 			on d.[Rpt_date] = ld.RPT_DATE and d.[Mã KH] = ld.[Mã khách hàng]
-		 where d.rpt_date >= 20180101 and p.[NhomKH] is not null and s.[LoaiSp] is null
+		 where d.rpt_date = '20240930'  and p.[NhomKH] is not null and s.[LoaiSp] is null
 		 group by  d.Rpt_date,eomonth([date_in]) ,[Mã KH],  
 				case when c.[loại khách hàng] =N'Nhân viên nội bộ' then N'NV nội bộ'
 						else N'Khách hàng' end , case when ld.[Mã khách hàng] is not null then N'KH Lending' else N'KH Non-Lending' end ,
@@ -456,7 +458,7 @@ select rpt_date, [Date], 'Chovay' as [Group_product],
 						 group by rpt_date, [mã kh])dp
 			on dp.Rpt_date = d.[RPT_DATE] and dp.[Mã KH] = d.[Mã khách hàng]
 
-		 where d.rpt_date >= 20180101 and [Mã chi nhánh GD] <> 'VN0010001' and p.[NhomKH] is not null and s.[LoaiSp] is null
+		 where d.rpt_date = '20240930' and [Mã chi nhánh GD] <> 'VN0010001' and p.[NhomKH] is not null and s.[LoaiSp] is null
 		 group by  d.Rpt_date, eomonth([Date in]) ,d.[Mã Khách hàng],d.[kỳ hạn], 
 				case when d.[Tên SP] like N'%thấu chi%' or d.[Tên SP] like N'%Thau chi%' then 'OD'
 	  else 'LD' end ,
@@ -496,4 +498,4 @@ select rpt_date, [Date], 'Chovay' as [Group_product],
 			[Vùng],
 			[condition]
 
-	)thao
+)thao
