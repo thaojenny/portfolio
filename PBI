@@ -1,0 +1,16 @@
+--------selection/ bookmark-----------
+--1. with one table---
+B1:  copy table --> paste
+B2: Hide table
+B3: create bookmart --> unhide table --> update bookmart
+B4: Insert button --> action --> link to the bookmark
+
+--2. with more than 2 tables--
+B1: Copy all tables --> paste
+B2: Hide all tables
+B3: create bookmark for each table:
+- unhide table 1 --> bookmark 1
+- hide table 1, unhide table 2 --> bookmark 2
+- hide table 2, unhide table 3 --> bookmark 3
+B4: Create bookmark to hide all tables: hide all tables --> bookmark "reset"
+B5: Create buttons --> link to all bookmarks
