@@ -1,0 +1,108 @@
+/****** Script for SelectTopNRows command from SSMS  ******/
+select a.Rpt_date
+      ,a.[Group_product]
+      ,[Chan] [Channel]
+      ,a.[Product]
+      ,a.[sub_pro] [Sub_product]
+      ,a.[ped1] [Period 1-month]
+      ,a.[Period 2]
+      ,a.[Customer Type]
+      ,a.[giới tính]
+      ,a.[Vùng]
+      ,a.[Condition]
+	  ,sum([chi]) [Chi lãi]
+	  ,sum([thu]) [Thu lãi]
+	  , sum([BQ]) [SDBQ]
+from 
+(SELECT Rpt_date
+      ,[Group_product]
+      ,case when [Channel] not in (N'Online',N'Tại quầy') then 'N/A' else [channel] end [Chan]
+      ,[Product]
+      ,case when [Sub_Product] in ('KH Lending','KH Non-Lending') then N'TG Thanh toán' else Sub_Product end [sub_pro]
+      ,CASE 
+        WHEN CHARINDEX('W', [Period 1-month]) > 0 THEN
+            CAST(SUBSTRING([Period 1-month], 1, CHARINDEX('W', [Period 1-month]) - 1) AS FLOAT) / 4
+        WHEN CHARINDEX('M', [Period 1-month]) > 0 THEN
+            CAST(SUBSTRING([Period 1-month], 1, CHARINDEX('M', [Period 1-month]) - 1) AS FLOAT)
+        ELSE [Period 1-month]
+    END AS ped1
+      ,[Period 2]
+      ,[Customer Type]
+      ,[giới tính]
+      ,[Vùng]
+      ,[Condition]
+      ,sum([Chi lãi]) [chi]
+      ,sum([Thu lãi]) [Thu]
+  FROM [CLKD].[dbo].[JThuChiLai_KHCN]
+  where Rpt_date = '2024-09-30'
+  group by Rpt_date
+      ,[Group_product]
+      ,case when [Channel] not in (N'Online',N'Tại quầy') then 'N/A' else [channel] end
+      ,[Product]
+      ,case when [Sub_Product] in ('KH Lending','KH Non-Lending') then N'TG Thanh toán' else Sub_Product end 
+      ,CASE 
+        WHEN CHARINDEX('W', [Period 1-month]) > 0 THEN
+            CAST(SUBSTRING([Period 1-month], 1, CHARINDEX('W', [Period 1-month]) - 1) AS FLOAT) / 4
+        WHEN CHARINDEX('M', [Period 1-month]) > 0 THEN
+            CAST(SUBSTRING([Period 1-month], 1, CHARINDEX('M', [Period 1-month]) - 1) AS FLOAT)
+        ELSE [Period 1-month]
+    END
+      ,[Period 2]
+      ,[Customer Type]
+   
+      ,[giới tính]
+      ,[Vùng]
+      ,[Condition]) a
+  left join (select [Date]
+      ,[Group_product]
+      ,[Channel]
+      ,[Product]
+      ,[Sub_Product]
+      ,
+			CASE 
+				WHEN CHARINDEX('W', [Period 1]) > 0 THEN
+					CAST(SUBSTRING([Period 1], 1, CHARINDEX('W', [Period 1]) - 1) AS FLOAT) / 4
+				WHEN CHARINDEX('M', [Period 1]) > 0 THEN
+					CAST(SUBSTRING([Period 1], 1, CHARINDEX('M', [Period 1]) - 1) AS FLOAT)
+				ELSE NULL
+			END AS Ped1
+
+      ,[Period 2]
+	  , [customer type]
+      ,[giới tính]
+      ,[Vùng]
+      ,[condition]
+      ,sum([Số dư BQ]) [BQ]
+		from clkd.dbo.JQM_HDCV_KHCN
+		where rpt_date = '20240930'
+		group by [Date]
+      ,[Group_product]
+      ,[Channel]
+      ,[Product]
+      ,[Sub_Product]
+      ,CASE 
+				WHEN CHARINDEX('W', [Period 1]) > 0 THEN
+					CAST(SUBSTRING([Period 1], 1, CHARINDEX('W', [Period 1]) - 1) AS FLOAT) / 4
+				WHEN CHARINDEX('M', [Period 1]) > 0 THEN
+					CAST(SUBSTRING([Period 1], 1, CHARINDEX('M', [Period 1]) - 1) AS FLOAT)
+				ELSE NULL
+			END
+      ,[Period 2]
+	  , [customer type]
+      ,[giới tính]
+      ,[Vùng]
+      ,[condition]	) b
+on (a.[Rpt_date] = b.[Date] and a.Group_product = b.Group_product and a.Chan = b.Channel and a.Product = b.Product and
+		a.[sub_pro] = b.Sub_Product and a.[ped1] = b.[Ped1] and a.[Period 2] = b.[Period 2]
+		and a.[Customer Type] = b.[customer type] and a.[giới tính] = b.[giới tính] and a.[Vùng] = b.Vùng and a.[Condition] = b.condition)
+group by  a.Rpt_date
+      ,a.[Group_product]
+      ,[Chan]
+      ,a.[Product]
+      ,a.[sub_pro]
+      ,a.[ped1]
+      ,a.[Period 2]
+      ,a.[Customer Type]
+      ,a.[giới tính]
+      ,a.[Vùng]
+      ,a.[Condition]
