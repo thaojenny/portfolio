@@ -499,3 +499,69 @@ select rpt_date, [Date], 'Chovay' as [Group_product],
 			[condition]
 
 )thao
+
+
+------------------------------TG RÚT TRƯỚC HẠN------------------------------------
+select Rpt_date, [Kỳ hạn gốc],
+			case when [kỳ hạn] < 1 then '<1M'
+			when [kỳ hạn]>= 1 and [kỳ hạn] <=3 then '1-3M'
+			when [kỳ hạn] >3 and [kỳ hạn] <= 6 then '>3-6M'
+			when [kỳ hạn] > 6 and [kỳ hạn] <= 12 then '>6-12M'
+			else '>12M' end [Kỳ hạn 2]
+			, case when [kỳ hạn] <= 12 then N'Ngắn hạn'
+				when [Kỳ hạn] > 60 then N'Dài hạn'
+				else N'Trung hạn' end [Kỳ hạn 3]
+			, [Vùng]
+			,[sản phẩm]
+			,[Số ngày rút trước hạn]
+			, avg([Lãi suất]) [AVG_LS]
+			, sum([AMT rút trước hạn]) [AMT rút trước]
+
+from (
+
+select  EOMONTH([ngày mở tài khoản]) [Rpt_date],
+			[Số tài khoản]
+			,[Kỳ hạn gốc]
+			, case when [Kỳ hạn gốc] like '%W' then convert(int,left([kỳ hạn gốc],1))/4
+				else convert(int,left([kỳ hạn gốc],3)) end [kỳ hạn]
+			, e.Vùng
+			, [Lãi suất]
+			, d.[Sub_Product] [Sản phẩm]
+			,DATEDIFF(day, [ngày tất toán], [ngày đến hạn]) [Số ngày rút trước hạn]
+			,sum([số tiền rút]) [AMT rút trước hạn]
+	
+from BI_DATA.dbo.DP_103 a
+left join (select * from MAPPING.dbo.PhanKhuc where [PhanKhuc] = '1.KHCN') b
+on a.[Nhóm khách hàng] = b.NhomKH
+left join (select * from MAPPING.dbo.SP_dacthu where [LoaiSp] ='FD') c
+on a.[Tên sản phẩm] = c.TenSP
+left join (select distinct  [Core_Name], Sub_Product from MAPPING.dbo.Sanpham_KHCN where Product = 'CKH') d
+on a.[Tên sản phẩm] = d.Core_Name
+left join MAPPING.dbo.DS_DVKD e
+on a.[Mã chi nhánh mở sổ] = e.Ma_DVKD
+where [ngày tất toán] < [ngày đến hạn] and YEAR([Ngày mở tài khoản]) >= 2021 and b.PhanKhuc is not null
+		and c.[LoaiSp] is null
+group by EOMONTH([ngày mở tài khoản]),
+			[Số tài khoản]
+			 ,[Kỳ hạn gốc]
+			, case when [Kỳ hạn gốc] like '%W' then convert(int,left([kỳ hạn gốc],1))/4
+				else convert(int,left([kỳ hạn gốc],3)) end 
+			, e.Vùng
+			, [Lãi suất]
+			, d.[Sub_Product]
+			,DATEDIFF(day, [ngày tất toán], [ngày đến hạn])
+) thao
+
+group by Rpt_date, [Kỳ hạn gốc],
+			case when [kỳ hạn] < 1 then '<1M'
+			when [kỳ hạn]>= 1 and [kỳ hạn] <=3 then '1-3M'
+			when [kỳ hạn] >3 and [kỳ hạn] <= 6 then '>3-6M'
+			when [kỳ hạn] > 6 and [kỳ hạn] <= 12 then '>6-12M'
+			else '>12M' end 
+			, case when [kỳ hạn] <= 12 then N'Ngắn hạn'
+				when [Kỳ hạn] > 60 then N'Dài hạn'
+				else N'Trung hạn' end 
+			, [Vùng]
+			,[sản phẩm]
+			,[Số ngày rút trước hạn]
+order by rpt_date
