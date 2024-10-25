@@ -1,13 +1,13 @@
---------------------create a shopping cart----------------
+--------------------create a list of customer using products in PVCB (a shopping cart)----------------
+
 select distinct a.[mã khách hàng], f.[Tên sp] [Tên SPTD], i.[Sub_Product] [Tên SPTG]
-				, coalesce(k.[tên SP phí], h.[DM]) [Phí DV]
+				,h.[Tên SP Phí]
 
 		, isnull(SUM(f.[SL SP vay]),0) [SL SPTD]
 		, isnull(sum(i. [SL SPDP]),0)  [SL SPTG]
 		, CASE WHEN f.[Tên sp] IS NOT NULL THEN 1 ELSE 0 END +
 							CASE WHEN i.[Sub_Product] IS NOT NULL THEN 1 ELSE 0 END +
-							CASE WHEN k.[tên SP phí] IS NOT NULL THEN 1 ELSE 0 END + 
-							CASE WHEN h.[DM] IS NOT NULL THEN 1 ELSE 0 END [SLSP]
+							CASE WHEN h.[tên SP phí] IS NOT NULL THEN 1 ELSE 0 END 	 [SLSP]
 from BI_DATA.dbo.CU_401 a
 left join (select * from MAPPING.dbo.[PhanKhuc] where [PhanKhuc] ='1.KHCN') b ----filter retail customer--
 on a.[Nhóm Khách hàng] = b.NhomKH
@@ -23,7 +23,10 @@ left join (select [Mã khách hàng], e.Sub_Product [Tên sp], count(distinct [S
 				group by [Mã khách hàng], e.Sub_Product) f
 on a.[Mã Khách hàng] = f.[Mã khách hàng]
 
-left join (select [mã khách hàng],e.[Sub_Product]  , count([số tài khoản]) [SL SPDP] --------------------------deposit products------------
+left join (select [mã khách hàng],
+					case when e.[Sub_Product]  like N'CCTG%' then 'CCTG'
+						else N'TG_CKH' end [Sub_product]
+					, count([số tài khoản]) [SL SPDP] --------------------------deposit products------------
 				from BI_DATA.dbo.DP_101 h
 				left join (select * from MAPPING.dbo.[PhanKhuc] where [PhanKhuc] ='1.KHCN') b
 				on h.[Nhóm khách hàng] = b.NhomKH
@@ -31,25 +34,27 @@ left join (select [mã khách hàng],e.[Sub_Product]  , count([số tài khoản
 				on h.[Tên sản phẩm] = d.[TenSP]
 				left join (select distinct [Core_Name], [Sub_Product] from MAPPING.dbo.Sanpham_KHCN where [Product] ='CKH') e
 				on h.[Tên sản phẩm] = e.Core_Name
-				where b.PhanKhuc is not null and d.LoaiSp is null and year([từ ngày]) >= 2021
+				where b.PhanKhuc is not null and d.LoaiSp is null and year([từ ngày]) >= 2021 and e.[sub_product] <> N'NA'
 				group by [mã khách hàng],e.[Sub_Product]) i
 on a.[Mã Khách hàng] = i.[Mã khách hàng]
-left join (select [Customer Id],				------sản phẩm phí dịch vụ---
+left join (select [Customer Id] [Mã khách hàng],				------sản phẩm phí dịch vụ---
 					b.[Phân loại] [Tên SP Phí]		
 			from [BI_DATA].[dbo].[FA_303] a
 			left join (select * from MAPPING.dbo.[Mapping_phi]) b ----phí bảo lãnh, bảo hiểm-- 
 			on a.[ten tk]  = b.[SP]
-			where a.[DAO cua KH] like '2%' and b.[Phân loại] not in (N'khác', N'Thanh toán') and year([booking date])>=2021
-			) k
-on a.[mã khách hàng] = k.[customer id]
+			left join (select * from mapping.[dbo].[Map_khoi] ) c 
+			on a.[DAO cua GD] = c.[phòng]
+			where  b.[Phân loại] not in (N'khác', N'Thanh toán') and year([booking date])>=2021 and (a.[DAO cua KH] like '2%' or c.[Nhóm PK] = '1.KHCN')
+			
+			union all
 
-left join (select distinct [Mã khách hàng], 'MBNT' as [DM]										 -----MBNT----
+				select distinct [Mã khách hàng], 'MBNT' as [Tên SP Phí]									 -----MBNT----
 							from BI_DATA.dbo.FX_100 a                        
 							left join (select * from MAPPING.dbo.[PhanKhuc] where [PhanKhuc] ='1.KHCN') b
 							on a.[Nhóm khách hàng] = b.NhomKH
 							where b.PhanKhuc is not null and year([ngày ký hợp đồng]) >= 2021
 			union all 
-			select distinct [mã KH], 'CTQT' as [DM]								------CTQT----
+				select distinct [mã KH] [Mã khách hàng], 'CTQT' as [Tên SP Phí]							------CTQT----
 				from BI_DATA.dbo.TF_301
 				where year([ngày mở]) >= 2021
 			) h
@@ -59,14 +64,13 @@ where b.[PhanKhuc] is not null and
 									(
 							CASE WHEN f.[Tên sp] IS NOT NULL THEN 1 ELSE 0 END +
 							CASE WHEN i.[Sub_Product] IS NOT NULL THEN 1 ELSE 0 END +
-							CASE WHEN k.[tên SP phí] IS NOT NULL THEN 1 ELSE 0 END + 
-							CASE WHEN h.[DM] IS NOT NULL THEN 1 ELSE 0 END
+							CASE WHEN h.[tên SP phí] IS NOT NULL THEN 1 ELSE 0 END 
 						) > 0
 
 
-group by a.[mã khách hàng], f.[Tên sp] , i.[Sub_Product] 
-				, coalesce(k.[tên SP phí], h.[DM])
-				,CASE WHEN f.[Tên sp] IS NOT NULL THEN 1 ELSE 0 END +
+group by a.[mã khách hàng], f.[Tên sp], i.[Sub_Product] 
+				,h.[Tên SP Phí]
+
+				, CASE WHEN f.[Tên sp] IS NOT NULL THEN 1 ELSE 0 END +
 							CASE WHEN i.[Sub_Product] IS NOT NULL THEN 1 ELSE 0 END +
-							CASE WHEN k.[tên SP phí] IS NOT NULL THEN 1 ELSE 0 END + 
-							CASE WHEN h.[DM] IS NOT NULL THEN 1 ELSE 0 END
+							CASE WHEN h.[tên SP phí] IS NOT NULL THEN 1 ELSE 0 END 	
