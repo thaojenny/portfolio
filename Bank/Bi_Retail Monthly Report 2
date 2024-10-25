@@ -569,17 +569,12 @@ order by rpt_date
 
 -----------------------DP maturity---------------------
 
+
 select [Date_Maturity], [Kỳ hạn],
-			case when [kỳ hạn 2] < 1 then '<1M'
-			when [kỳ hạn 2]>= 1 and [kỳ hạn 2] <=3 then '1-3M'
-			when [kỳ hạn 2] >3 and [kỳ hạn 2] <= 6 then '>3-6M'
-			when [kỳ hạn 2] > 6 and [kỳ hạn 2] <= 12 then '>6-12M'
-			else '>12M' end [Kỳ hạn_2]
-			, case when [kỳ hạn 2] <= 12 then N'Ngắn hạn'
-				when [Kỳ hạn 2] > 60 then N'Dài hạn'
-				else N'Trung hạn' end [Kỳ hạn_3]
+			[Kỳ hạn 2]
+			, [Kỳ hạn 3]
 			, [Vùng]
-			,[sản phẩm]
+			,[Sản phẩm]
 			, avg([Lãi suất]) [AVG_LS]
 			, sum([AMT]) [AMT_Maturity]
 
@@ -588,9 +583,14 @@ from (
 select  EOMONTH([ngày đến hạn]) [Date_Maturity],
 			a.[Số tài khoản]
 			,[Kỳ hạn]
-			, case when [Kỳ hạn] like '%W' then convert(int,left([kỳ hạn],1))/4
-					when [Kỳ hạn] is null or [kỳ hạn] != '' then 0
-				else convert(int,left([kỳ hạn],3)) end [kỳ hạn 2]
+			, case when [kỳ hạn] like '%W' then '<1M'
+			when [kỳ hạn] >= '001M'  and  [kỳ hạn] <= '003M' and [kỳ hạn] < '1%' then '1-3M'
+			when [kỳ hạn] > '003M'  and  [kỳ hạn] <= '006M' and [kỳ hạn] < '1%' then '>3-6M'
+			when [kỳ hạn] > '006M'  and  [kỳ hạn] <= '012M' and [kỳ hạn] < '1%' then '>6-12M'
+			else '>12M' end [kỳ hạn 2]
+			, case when [kỳ hạn] like '%W' or ([kỳ hạn] >= '001M' and  [kỳ hạn] <= '012M' and [kỳ hạn] < '1%') then N'Ngắn hạn'
+					when [kỳ hạn] > '060M' and [kỳ hạn] not like  '%W' then N'Dài hạn'
+					when [kỳ hạn] > '012M' and [kỳ hạn] <= '060M' and [kỳ hạn] not like  '%W' then N'Trung hạn' end [Kỳ hạn 3]
 			, e.Vùng
 			, [Lãi suất]
 			, d.[Sub_Product] [Sản phẩm]
@@ -614,28 +614,27 @@ left join (select * from MAPPING.dbo.PhanKhuc where [PhanKhuc] = '1.KHCN') b
 			where b.PhanKhuc is not null and c.LoaiSp is null ) f
 on a.[Số tài khoản] = f.[Số tài khoản]
 where b.PhanKhuc is not null and year([ngày đến hạn]) >=2024 and f.[Số tài khoản] is null
-		and c.[LoaiSp] is null
+		and c.[LoaiSp] is null 
 
-group by EOMONTH([ngày đến hạn]),
+group by EOMONTH([ngày đến hạn]) ,
 			a.[Số tài khoản]
 			,[Kỳ hạn]
-			, case when [Kỳ hạn] like '%W' then convert(int,left([kỳ hạn],1))/4
-					when [Kỳ hạn] is null or [kỳ hạn] != '' then 0
-				else convert(int,left([kỳ hạn],3)) end 
+			, case when [kỳ hạn] like '%W' then '<1M'
+			when [kỳ hạn] >= '001M'  and  [kỳ hạn] <= '003M' and [kỳ hạn] < '1%' then '1-3M'
+			when [kỳ hạn] > '003M'  and  [kỳ hạn] <= '006M' and [kỳ hạn] < '1%' then '>3-6M'
+			when [kỳ hạn] > '006M'  and  [kỳ hạn] <= '012M' and [kỳ hạn] < '1%' then '>6-12M'
+			else '>12M' end 
+			, case when [kỳ hạn] like '%W' or ([kỳ hạn] >= '001M' and  [kỳ hạn] <= '012M' and [kỳ hạn] < '1%') then N'Ngắn hạn'
+					when [kỳ hạn] > '060M' and [kỳ hạn] not like  '%W' then N'Dài hạn'
+					when [kỳ hạn] > '012M' and [kỳ hạn] <= '060M' and [kỳ hạn] not like  '%W' then N'Trung hạn' end 
 			, e.Vùng
 			, [Lãi suất]
 			, d.[Sub_Product] 
 ) thao
 
 group by [Date_Maturity], [Kỳ hạn],
-			case when [kỳ hạn 2] < 1 then '<1M'
-			when [kỳ hạn 2]>= 1 and [kỳ hạn 2] <=3 then '1-3M'
-			when [kỳ hạn 2] >3 and [kỳ hạn 2] <= 6 then '>3-6M'
-			when [kỳ hạn 2] > 6 and [kỳ hạn 2] <= 12 then '>6-12M'
-			else '>12M' end 
-			, case when [kỳ hạn 2] <= 12 then N'Ngắn hạn'
-				when [Kỳ hạn 2] > 60 then N'Dài hạn'
-				else N'Trung hạn' end 
+			[Kỳ hạn 2]
+			, [Kỳ hạn 3]
 			, [Vùng]
-			,[sản phẩm]
+			,[Sản phẩm]
 order by [Date_Maturity]
