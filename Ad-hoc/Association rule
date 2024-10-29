@@ -74,3 +74,57 @@ group by a.[mã khách hàng], f.[Tên sp], i.[Sub_Product]
 				, CASE WHEN f.[Tên sp] IS NOT NULL THEN 1 ELSE 0 END +
 							CASE WHEN i.[Sub_Product] IS NOT NULL THEN 1 ELSE 0 END +
 							CASE WHEN h.[tên SP phí] IS NOT NULL THEN 1 ELSE 0 END 	
+
+--------------------------------DS mã KH sử dụng 3 sp (TG_CKH, MBNT, CTQT)------------------------------------
+select count(*)
+from (
+select distinct a.[mã khách hàng],  i.[Sub_Product] [Tên SPTG]
+				,h.[Phí 2], k.[Phí 1]
+
+		
+from BI_DATA.dbo.CU_401 a
+left join (select * from MAPPING.dbo.[PhanKhuc] where [PhanKhuc] ='1.KHCN') b ----filter retail customer--
+on a.[Nhóm Khách hàng] = b.NhomKH
+
+
+left join (select [mã khách hàng],
+					case when e.[Sub_Product]  like N'CCTG%' then 'CCTG'
+						else N'TG_CKH' end [Sub_product]
+					, count([số tài khoản]) [SL SPDP] --------------------------deposit products------------
+				from BI_DATA.dbo.DP_101 h
+				left join (select * from MAPPING.dbo.[PhanKhuc] where [PhanKhuc] ='1.KHCN') b
+				on h.[Nhóm khách hàng] = b.NhomKH
+				left join (select * from mapping.dbo.SP_dacthu where [LoaiSp] = 'FD') d
+				on h.[Tên sản phẩm] = d.[TenSP]
+				left join (select distinct [Core_Name], [Sub_Product] from MAPPING.dbo.Sanpham_KHCN where [Product] ='CKH') e
+				on h.[Tên sản phẩm] = e.Core_Name
+				where b.PhanKhuc is not null and d.LoaiSp is null and year([từ ngày]) >= 2021 and e.[sub_product] <> N'NA'
+				group by [mã khách hàng],e.[Sub_Product]) i
+on a.[Mã Khách hàng] = i.[Mã khách hàng]
+left join (
+				select distinct [Mã khách hàng], 'MBNT' as [Phí 1]									 -----MBNT----
+							from BI_DATA.dbo.FX_100 a                        
+							left join (select * from MAPPING.dbo.[PhanKhuc] where [PhanKhuc] ='1.KHCN') b
+							on a.[Nhóm khách hàng] = b.NhomKH
+							where b.PhanKhuc is not null and year([ngày ký hợp đồng]) >= 2021
+							) k
+on a.[Mã Khách hàng] = k.[Mã khách hàng]
+left join 
+			(
+				select distinct [mã KH] [Mã khách hàng], 'CTQT' as [Phí 2]							------CTQT----
+				from BI_DATA.dbo.TF_301
+				where year([ngày mở]) >= 2021
+			) h
+on a.[Mã Khách hàng] = h.[Mã khách hàng]
+
+where b.[PhanKhuc] is not null and 
+									(
+							CASE WHEN k.[Phí 1] IS NOT NULL THEN 1 ELSE 0 END +
+							CASE WHEN i.[Sub_Product] IS NOT NULL THEN 1 ELSE 0 END +
+							CASE WHEN h.[Phí 2] IS NOT NULL THEN 1 ELSE 0 END 
+						) =3
+
+		and i.Sub_product = 'TG_CKH'
+group by  a.[mã khách hàng],  i.[Sub_Product] 
+				,h.[Phí 2], k.[Phí 1]
+) thao
