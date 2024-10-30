@@ -1,33 +1,62 @@
-------------Dự chi lãi CCTG----------
-/****** Script for SelectTopNRows command from SSMS  ******/
-select [Maturity date], [Kỳ hạn], [PhanKhuc],
-		avg([LS]) [Lãi suất],
-		sum([AMT]) [AMT gửi],
-		sum([Dự chi lãi]) [Dự chi lãi CCTG]
-		
-from (
-SELECT eomonth([ngày đến hạn]) [Maturity date]
-		,a.[Số tài khoản]
-		,   case when [kỳ hạn] like '%W' or ([kỳ hạn] >= '001M' and  [kỳ hạn] <= '012M' and [kỳ hạn] < '1%') then N'Ngắn hạn'
-					when [kỳ hạn] > '060M' and [kỳ hạn] not like  '%W' then N'Dài hạn'
-					when [kỳ hạn] > '012M' and [kỳ hạn] <= '060M' and [kỳ hạn] not like  '%W' then N'Trung hạn' end [Kỳ hạn]
-		, b.PhanKhuc
-		, avg([Lãi suất]) [LS]
-		, sum([Số dư]* ([Lãi suất]/100)) [Dự chi lãi]
-		, sum([số dư]) [AMT]
-  FROM [BI_DATA].[dbo].[DP_101] a
-  left join (select * from MAPPING.dbo.PhanKhuc) b
-  on  a.[Nhóm khách hàng] = b.[NhomKH]
- left join (select * from MAPPING.dbo.SP_dacthu where [LoaiSp] ='FD') c
+------------------------dự chi lãi CCTG-------------------
+WITH Years AS (
+    SELECT 2024 AS [Năm] UNION ALL
+    SELECT 2025 UNION ALL
+    SELECT 2026 UNION ALL
+    SELECT 2027 UNION ALL
+    SELECT 2028 UNION ALL
+    SELECT 2029 UNION ALL
+    SELECT 2030
+),
+chitiet as (
+SELECT distinct
+    a.[số tài khoản],
+	
+    y.[Năm],
+    a.[ngày mở tài khoản],
+    a.[ngày đến hạn],
+    a.[số dư],
+    a.[lãi suất],
+	CASE
+        WHEN YEAR(a.[ngày mở tài khoản]) = y.[Năm] AND YEAR(a.[ngày đến hạn]) = y.[Năm] THEN ------ năm mở tk = năm báo cáo = năm đến hạn --> days = datediff của  ngày mở và ngày đến hạn
+            a.[số dư] * (a.[lãi suất] / 100) * (DATEDIFF(day, a.[ngày mở tài khoản], a.[ngày đến hạn]) / 365.0)
+        WHEN YEAR(a.[ngày mở tài khoản]) = y.[Năm] THEN  -----năm mở tk = năm báo cáo --> datediff của ngày mở tk và cuối năm báo cáo
+            a.[số dư] * (a.[lãi suất] / 100) * (DATEDIFF(day, a.[ngày mở tài khoản], DATEFROMPARTS(y.[Năm], 12, 31)) / 365.0)
+        WHEN YEAR(a.[ngày đến hạn]) = y.[Năm] THEN ----------- năm ngày đến hạn = năm báo cáo --> datediff của 1/1/năm bc và ngày đến hạn
+            a.[số dư] * (a.[lãi suất] / 100) * (DATEDIFF(day, DATEFROMPARTS(y.[Năm], 1, 1),a.[ngày đến hạn]) / 365.0)
+        WHEN YEAR(a.[ngày mở tài khoản]) < y.[Năm] THEN ---------năm mở tk < năm bc:
+            CASE 
+                WHEN YEAR(a.[ngày đến hạn]) < y.[Năm] THEN 0 --------1. ngày đến hạn nằm ngoài năm báo cáo --> 0
+                ELSE a.[số dư] * (a.[lãi suất] / 100) * (DATEDIFF(day, DATEFROMPARTS(y.[Năm], 1, 1), DATEFROMPARTS(y.[Năm], 12, 31)) / 365.0) ---2. days = 365
+            END
+        WHEN YEAR(a.[ngày đến hạn]) < y.[Năm] THEN  --------- năm đến hạn < năm báo cáo
+            a.[số dư] * (a.[lãi suất] / 100) * (DATEDIFF(day, DATEFROMPARTS(y.[Năm], 1, 1), a.[ngày đến hạn]) / 365.0) ------
+        ELSE 
+            a.[số dư] * (a.[lãi suất] / 100) * (DATEDIFF(day, DATEFROMPARTS(y.[Năm], 1, 1), DATEFROMPARTS(y.[Năm], 12, 31)) / 365.0)
+    END AS [Lãi dự chi]
+	--,ROW_NUMBER() OVER (PARTITION BY a.[số tài khoản], y.[Năm] ORDER BY a.[ngày mở tài khoản]) AS rn
+ 
+FROM 
+    [BI_DATA].[dbo].[DP_100] a
+left join (select * from MAPPING.dbo.SP_dacthu where [LoaiSp] ='FD') c
 on a.[Tên sản phẩm] = c.TenSP
-  where year([ngày đến hạn]) <= 2030 and c.LoaiSp is null 
-			and (a.[Tên sản phẩm] like N'%Chứng chỉ%' or a.[tên sản phẩm] like N'%Chung chi%'  or a.[tên sản phẩm] like N'%CCTG%')
-group by  eomonth([ngày đến hạn]) 
-		,a.[Số tài khoản]
-		,   case when [kỳ hạn] like '%W' or ([kỳ hạn] >= '001M' and  [kỳ hạn] <= '012M' and [kỳ hạn] < '1%') then N'Ngắn hạn'
-					when [kỳ hạn] > '060M' and [kỳ hạn] not like  '%W' then N'Dài hạn'
-					when [kỳ hạn] > '012M' and [kỳ hạn] <= '060M' and [kỳ hạn] not like  '%W' then N'Trung hạn' end 
-		, b.PhanKhuc
-) j
-group by [Maturity date], [Kỳ hạn], [PhanKhuc]
-order by [Maturity date]
+CROSS JOIN 
+    Years y
+
+WHERE 
+    YEAR(a.[ngày mở tài khoản]) <= y.[Năm] 
+    AND YEAR(a.[ngày đến hạn]) >= y.[Năm]
+	and c.LoaiSp is null
+	and (a.[Tên sản phẩm] like N'%Chứng chỉ%' or a.[tên sản phẩm] like N'%Chung chi%'  or a.[tên sản phẩm] like N'%CCTG%')
+	and [Cầm cố STK] <> 'Y'
+	
+)
+select [Năm] ,
+		avg([lãi suất]) [LS],
+		sum([Số dư])/1e9 [AMT TG],
+		sum([lãi dự chi])/1e9 [AMT dự chi]
+
+from chitiet
+--where rn = 1
+group by [Năm]
+order by [Năm]
