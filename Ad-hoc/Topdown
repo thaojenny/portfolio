@@ -1,0 +1,33 @@
+------------Dự chi lãi CCTG----------
+/****** Script for SelectTopNRows command from SSMS  ******/
+select [Maturity date], [Kỳ hạn], [PhanKhuc],
+		avg([LS]) [Lãi suất],
+		sum([AMT]) [AMT gửi],
+		sum([Dự chi lãi]) [Dự chi lãi CCTG]
+		
+from (
+SELECT eomonth([ngày đến hạn]) [Maturity date]
+		,a.[Số tài khoản]
+		,   case when [kỳ hạn] like '%W' or ([kỳ hạn] >= '001M' and  [kỳ hạn] <= '012M' and [kỳ hạn] < '1%') then N'Ngắn hạn'
+					when [kỳ hạn] > '060M' and [kỳ hạn] not like  '%W' then N'Dài hạn'
+					when [kỳ hạn] > '012M' and [kỳ hạn] <= '060M' and [kỳ hạn] not like  '%W' then N'Trung hạn' end [Kỳ hạn]
+		, b.PhanKhuc
+		, avg([Lãi suất]) [LS]
+		, sum([Số dư]* ([Lãi suất]/100)) [Dự chi lãi]
+		, sum([số dư]) [AMT]
+  FROM [BI_DATA].[dbo].[DP_101] a
+  left join (select * from MAPPING.dbo.PhanKhuc) b
+  on  a.[Nhóm khách hàng] = b.[NhomKH]
+ left join (select * from MAPPING.dbo.SP_dacthu where [LoaiSp] ='FD') c
+on a.[Tên sản phẩm] = c.TenSP
+  where year([ngày đến hạn]) <= 2030 and c.LoaiSp is null 
+			and (a.[Tên sản phẩm] like N'%Chứng chỉ%' or a.[tên sản phẩm] like N'%Chung chi%'  or a.[tên sản phẩm] like N'%CCTG%')
+group by  eomonth([ngày đến hạn]) 
+		,a.[Số tài khoản]
+		,   case when [kỳ hạn] like '%W' or ([kỳ hạn] >= '001M' and  [kỳ hạn] <= '012M' and [kỳ hạn] < '1%') then N'Ngắn hạn'
+					when [kỳ hạn] > '060M' and [kỳ hạn] not like  '%W' then N'Dài hạn'
+					when [kỳ hạn] > '012M' and [kỳ hạn] <= '060M' and [kỳ hạn] not like  '%W' then N'Trung hạn' end 
+		, b.PhanKhuc
+) j
+group by [Maturity date], [Kỳ hạn], [PhanKhuc]
+order by [Maturity date]
