@@ -17,7 +17,7 @@ chitiet AS (
         a.[số dư],
         a.[lãi suất],
         
-        -- Xác định ngày bắt đầu và ngày kết thúc tính lãi cho từng tài khoản
+        -- Xác định ngày bắt đầu và ngày kết thúc tính lãi cho từng tài khoản dựa vào ngày thực tế
         CASE 
             WHEN YEAR(a.[ngày mở tài khoản]) <= y.[Năm] THEN DATEFROMPARTS(y.[Năm], 1, 1)
             ELSE a.[ngày mở tài khoản]
@@ -28,12 +28,7 @@ chitiet AS (
             ELSE a.[ngày đến hạn]
         END AS [Ngày kết thúc],
 
-           -- Tính số dư bình quân (SDBQ) cho từng tài khoản
-        a.[số dư] * (DATEDIFF(day, 
-                CASE WHEN a.[ngày mở tài khoản] < DATEFROMPARTS(y.[Năm], 1, 1) THEN DATEFROMPARTS(y.[Năm], 1, 1) ELSE a.[ngày mở tài khoản] END, 
-                CASE WHEN a.[ngày đến hạn] > DATEFROMPARTS(y.[Năm], 12, 31) THEN DATEFROMPARTS(y.[Năm], 12, 31) ELSE a.[ngày đến hạn] END) / 365.0) AS [SDBQ],
-
-        -- Tính lãi phải trả (thulai) cho từng tài khoản
+        -- Tính lãi dự chi trên số ngày thực tế
         CASE
             WHEN YEAR(a.[ngày mở tài khoản]) > y.[Năm] THEN 0  -- Nếu tài khoản mở sau năm hiện tại
             WHEN YEAR(a.[ngày đến hạn]) < y.[Năm] THEN 0        -- Nếu tài khoản hết hạn trước năm hiện tại
@@ -43,27 +38,33 @@ chitiet AS (
                            CASE WHEN a.[ngày mở tài khoản] < DATEFROMPARTS(y.[Năm], 1, 1) THEN DATEFROMPARTS(y.[Năm], 1, 1) ELSE a.[ngày mở tài khoản] END, 
                            CASE WHEN a.[ngày đến hạn] > DATEFROMPARTS(y.[Năm], 12, 31) THEN DATEFROMPARTS(y.[Năm], 12, 31) ELSE a.[ngày đến hạn] END) 
                 / 365.0)
-        END AS [Lãi phải trả]
+        END AS [Lãi dự chi],
+
+        -- Tính SDBQ dựa trên số dư và số ngày thực tế
+        a.[số dư] * 
+        DATEDIFF(day, 
+            CASE WHEN a.[ngày mở tài khoản] < DATEFROMPARTS(y.[Năm], 1, 1) THEN DATEFROMPARTS(y.[Năm], 1, 1) ELSE a.[ngày mở tài khoản] END,
+            CASE WHEN a.[ngày đến hạn] > DATEFROMPARTS(y.[Năm], 12, 31) THEN DATEFROMPARTS(y.[Năm], 12, 31) ELSE a.[ngày đến hạn] END
+        ) / 365.0 AS [SDBQ]
+        
     FROM 
         [BI_DATA].[dbo].[DP_100] a
     LEFT JOIN (SELECT * FROM MAPPING.dbo.SP_dacthu WHERE [LoaiSp] = 'FD') c
-        ON a.[Tên sản phẩm] = c.TenSP
+      ON a.[Tên sản phẩm] = c.TenSP
     CROSS JOIN 
         Years y
     WHERE 
         YEAR(a.[ngày mở tài khoản]) <= y.[Năm]  -- Tài khoản mở trước hoặc trong năm cần tính
         AND YEAR(a.[ngày đến hạn]) >= y.[Năm]  -- Tài khoản còn hạn ít nhất đến năm cần tính
-        AND a.[ngày đến hạn] > '2024-09-30'  -- Chỉ lấy tài khoản còn hạn sau ngày 30/09/2024
+        AND a.[Rpt_date] = '20240930'  -- Chỉ lấy tài khoản còn hạn sau ngày 30/09/2024
         AND c.LoaiSp IS NULL
         AND (a.[Tên sản phẩm] LIKE N'%Chứng chỉ%' OR a.[Tên sản phẩm] LIKE N'%Chung chi%' OR a.[Tên sản phẩm] LIKE N'%CCTG%')
        
 )
 SELECT 
     [Năm],
-	
-    SUM([SDBQ]) / 1e9 AS [SDBQ],             -- Tổng SDBQ chia cho 1 tỷ
-    SUM([Lãi phải trả]) / 1e9 AS [lai]   -- Tổng lãi phải trả chia cho 1 tỷ
-  
+    SUM([SDBQ]) / 1e9 AS [SDBQ],  -- Tính tổng SDBQ và chia cho 1 tỷ
+    SUM([Lãi dự chi]) / 1e9 AS [thulai]  -- Tính tổng lãi dự chi và chia cho 1 tỷ
 FROM 
     chitiet
 GROUP BY 
