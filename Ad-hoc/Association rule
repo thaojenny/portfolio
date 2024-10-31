@@ -128,3 +128,69 @@ where b.[PhanKhuc] is not null and
 group by  a.[mã khách hàng],  i.[Sub_Product] 
 				,h.[Phí 2], k.[Phí 1]
 ) thao
+----> KH có CCTG và MBNT/CTQT có khả năng cao sử dụng sản phẩm còn lại---------
+
+------------DS KH CCTG có 1 trong 2 MBNT/CTQT----------
+with abc as (
+
+select	distinct dp.[mã kh],
+		case when m.[Mã khách hàng] is not null then 'MBNT' else null end [MBNT],
+		case when ctqt.[Mã KH] is not null then 'CTQT' else null end [CTQT]
+
+from 
+(
+----Danh sách khách hàng có chứng chỉ tiền gửi từ 2021 đến nay---
+(select distinct [Mã kh]
+from BI_DATA.dbo.DP_104 a 
+left join (select * from MAPPING.dbo.[PhanKhuc] where [PhanKhuc] ='1.KHCN') b
+on a.[Nhóm khách hàng] = b.NhomKH
+left join (select * from mapping.dbo.SP_dacthu where [LoaiSp] = 'FD') d
+on a.[Tên sản phẩm] = d.[TenSP]
+left join (select distinct [Core_Name], [Sub_Product] from MAPPING.dbo.Sanpham_KHCN where [Product] ='CKH') e
+on a.[Tên sản phẩm] = e.Core_Name
+where d.LoaiSp is null and e.Sub_Product like N'CCTG%' and Rpt_date >= '20210101'
+) dp
+left join 
+(
+-----DS KH có MBNT nhưng không có CTQT---
+select distinct [Mã khách hàng]								 -----MBNT----
+from BI_DATA.dbo.FX_100 a                        
+		left join (select * from MAPPING.dbo.[PhanKhuc] where [PhanKhuc] ='1.KHCN') b
+		on a.[Nhóm khách hàng] = b.NhomKH
+		left join 
+		(select distinct [Mã kh]							------CTQT----
+						from BI_DATA.dbo.TF_301
+						where year([ngày mở]) >= 2021) ct
+		on a.[Mã khách hàng] = ct.[Mã kh] 
+where b.PhanKhuc is not null and year([ngày ký hợp đồng]) >= 2021 and ct.[Mã kh] is null
+) m
+on dp.[mã kh] = m.[mã khách hàng]
+
+-----DS KH có CTQT nhưng không có MBNT---
+left join 
+(select distinct [Mã kh]							------CTQT----
+from BI_DATA.dbo.TF_301 a
+		left join 
+		(select [mã khách hàng] from BI_DATA.dbo.CU_401 b
+			left join (select * from MAPPING.dbo.[PhanKhuc] where [PhanKhuc] ='1.KHCN') c
+			on b.[Nhóm Khách hàng] = c.NhomKH
+			where c.PhanKhuc is not null
+			) khcn
+		on a.[Mã KH] = khcn.[Mã Khách hàng]
+		left join 
+		(select distinct [Mã khách hàng]								 -----MBNT----
+			from BI_DATA.dbo.FX_100 a                        
+				left join (select * from MAPPING.dbo.[PhanKhuc] where [PhanKhuc] ='1.KHCN') b
+			on a.[Nhóm khách hàng] = b.NhomKH
+			where b.NhomKH is not null) mbnt
+		on a.[Mã KH] = mbnt.[Mã khách hàng]
+where year([ngày mở]) >= 2021 and khcn.[Mã Khách hàng] is not null and mbnt.[Mã khách hàng] is null
+) ctqt
+on dp.[Mã KH] = ctqt.[Mã KH]
+) 
+where (case when m.[Mã khách hàng] is null then 0 else 1 end +
+			case when ctqt.[Mã KH] is null then 0 else 1 end) > 0
+
+) select distinct [mã kh], 
+		coalesce([MBNT],[CTQT]) [MBNT/CTQT]
+from abc 
