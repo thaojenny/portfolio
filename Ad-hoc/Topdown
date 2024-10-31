@@ -28,12 +28,7 @@ chitiet AS (
             ELSE a.[ngày đến hạn]
         END AS [Ngày kết thúc],
 
-        -- Tính AMT TG (tổng số dư thực tế dựa trên số ngày trong năm)
-        a.[số dư] * (DATEDIFF(day, 
-                CASE WHEN a.[ngày mở tài khoản] < DATEFROMPARTS(y.[Năm], 1, 1) THEN DATEFROMPARTS(y.[Năm], 1, 1) ELSE a.[ngày mở tài khoản] END, 
-                CASE WHEN a.[ngày đến hạn] > DATEFROMPARTS(y.[Năm], 12, 31) THEN DATEFROMPARTS(y.[Năm], 12, 31) ELSE a.[ngày đến hạn] END)) AS [AMT TG thực tế],
-
-        -- Tính số dư bình quân (SDBQ) cho từng tài khoản
+           -- Tính số dư bình quân (SDBQ) cho từng tài khoản
         a.[số dư] * (DATEDIFF(day, 
                 CASE WHEN a.[ngày mở tài khoản] < DATEFROMPARTS(y.[Năm], 1, 1) THEN DATEFROMPARTS(y.[Năm], 1, 1) ELSE a.[ngày mở tài khoản] END, 
                 CASE WHEN a.[ngày đến hạn] > DATEFROMPARTS(y.[Năm], 12, 31) THEN DATEFROMPARTS(y.[Năm], 12, 31) ELSE a.[ngày đến hạn] END) / 365.0) AS [SDBQ],
