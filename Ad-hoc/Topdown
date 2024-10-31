@@ -56,6 +56,65 @@ select [Năm] ,
 		sum([Số dư])/1e9 [AMT TG],
 		sum([lãi dự chi])/1e9 [AMT dự chi]
 
+--------------------------other way---reference--------------------------
+-- Tạo CTE1: Danh sách các năm từ 2024 đến 2030 với cột `fd` (first day) và `ld` (last day) tương ứng
+with CTE1 as (
+    select convert(date,'20240101',112) fd, convert(date,'20241231',112) ld
+    union all
+    select convert(date,'20250101',112) fd, convert(date,'20251231',112) ld
+    union all
+    select convert(date,'20260101',112) fd, convert(date,'20261231',112) ld
+    union all
+    select convert(date,'20270101',112) fd, convert(date,'20271231',112) ld
+    union all
+    select convert(date,'20280101',112) fd, convert(date,'20281231',112) ld
+    union all
+    select convert(date,'20290101',112) fd, convert(date,'20291231',112) ld
+    union all
+    select convert(date,'20300101',112) fd, convert(date,'20301231',112) ld
+),
+-- Tạo CTE2: Lọc các tài khoản phù hợp trong bảng `dp_100` tại thời điểm `rpt_date = '20240930'` và thêm 1 dòng giả định
+CTE2 as (
+    select case when [TK cầm cố SLH] = 'Y' then 'ALCO' else 'KHCN' end segment, -- Xác định loại tài khoản là 'ALCO' nếu có 'TK cầm cố SLH' là 'Y', ngược lại là 'KHCN'
+           [Số dư],
+           [Lãi suất],
+           [Ngày mở tài khoản],
+           [Ngày đến hạn]
+    from bi_data..dp_100
+    where rpt_date = '20240930' -- Chỉ lấy dữ liệu tại thời điểm 30/09/2024
+          and ([Tên sản Phẩm] like '%CCTG%' or [Tên sản Phẩm] like N'%Chứng chỉ%' or [Tên sản Phẩm] like N'%Chung chi%') -- Lọc các sản phẩm có tên liên quan đến chứng chỉ
+    union all
+    select 'KHCN', 565.5e9, 8, '20241101', '20311201' -- Thêm dòng dữ liệu giả định cho loại tài khoản 'KHCN'
+),
+-- Tạo CTE3: Kết hợp CTE1 và CTE2, tính `ngaydau` và `ngaycuoi` cho mỗi tài khoản trong từng năm
+CTE3 as (
+    select *,
+           -- Xác định `ngaydau`: chọn giá trị lớn nhất giữa `Ngày mở tài khoản` và `fd` (ngày đầu tiên của năm)
+           (select max(x) from (values ([Ngày mở tài khoản]), (fd)) a(x)) as ngaydau,
+           -- Xác định `ngaycuoi`: chọn ngày nhỏ nhất giữa `Ngày đến hạn` và `ld` (ngày cuối cùng của năm), nếu `Ngày đến hạn` < `fd`, thì đặt `ngaycuoi` là ngày trước `fd`
+           case when [ngày đến hạn] < fd then dateadd(day, -1, fd) else 
+                (select min(x) from (values ([Ngày đến hạn]), (ld)) a(x)) end as ngaycuoi
+    from CTE1
+    cross join CTE2
+),
+-- Tạo CTE4: Tính toán `Songaytinhlai`, `SDBQ` (số dư bình quân) và `Laiphaitra` (lãi phải trả) cho mỗi dòng trong CTE3
+CTE4 as (
+    select *,
+           datediff(day, ngaydau, ngaycuoi) + 1 as Songaytinhlai, -- Tính số ngày tính lãi (từ `ngaydau` đến `ngaycuoi`), cộng thêm 1 để bao gồm cả ngày cuối
+           [Số dư] * (datediff(day, ngaydau, ngaycuoi) + 1) / (datediff(day, fd, ld) + 1) as SDBQ, -- Tính số dư bình quân dựa trên tỷ lệ ngày
+           [Số dư] * [Lãi suất] / 100 * (datediff(day, ngaydau, ngaycuoi) + 1) / (datediff(day, fd, ld) + 1) as Laiphaitra -- Tính lãi phải trả dựa trên số dư bình quân và lãi suất
+    from CTE3
+)
+
+-- Truy vấn cuối: Tổng hợp kết quả, tính tổng số dư bình quân và lãi phải trả cho từng `segment` và từng `ld` (năm)
+select segment,
+       ld,
+       sum(SDBQ) / 1e9 as SDBQ, -- Tính tổng SDBQ và chia cho 1 tỷ để có đơn vị tính dễ nhìn hơn
+       sum(Laiphaitra) / 1e9 as thulai -- Tính tổng lãi phải trả và chia cho 1 tỷ
+from CTE4
+group by ld, segment -- Nhóm theo `ld` và `segment` để lấy kết quả cuối cùng
+
+
 from chitiet
 --where rn = 1
 group by [Năm]
