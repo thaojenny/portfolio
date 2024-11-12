@@ -638,3 +638,37 @@ group by [Date_Maturity], [Kỳ hạn],
 			, [Vùng]
 			,[Sản phẩm]
 order by [Date_Maturity]
+
+----------------------------------------------Contribution of New Customer to Benefits (CASA, DP, LD)---------------------------------------
+select rpt_date,cu.[mã khách hàng],  sum([SDBQ]) [CASA], sum(dp.[AMT]) [DP], sum(ld.[AMT]) [LD]
+from (
+select [Mã Khách hàng]
+from BI_DATA.dbo.CU_401 a
+left join (select * from MAPPING.dbo.PhanKhuc where [PhanKhuc] = '1.KHCN') b
+on a.[Nhóm Khách hàng] = b.NhomKH
+where eomonth([Ngày tạo CIF]) = '2024-10-31' and b.PhanKhuc is not null
+) cu
+left join 
+(select rpt_date, [mã kh], sum([số dư BQ quy đổi]) [SDBQ]
+	from BI_DATA.dbo.AC_101 a
+	left join (select * from MAPPING.dbo.SP_dacthu where [LoaiSp] = 'CASA') b
+	on a.[Tên Sản phẩm] = b.[TenSP]
+where b.[LoaiSp] is null and Rpt_date = '20241031'
+group by rpt_date, [mã kh] ) ac 
+on cu.[Mã Khách hàng] = ac.[Mã KH]
+left join (select [Mã KH], sum([Số dư BQ quy đổi]) [AMT]
+			from BI_DATA.dbo.DP_104 a
+			left join (select * from MAPPING.dbo.SP_dacthu where [LoaiSp] = 'FD') b
+			on b.TenSP = a.[Tên Sản phẩm]
+			where b.LoaiSp is null and Rpt_date = '20241031' 
+			group by [Mã KH] )dp
+on cu.[Mã Khách hàng] = dp.[Mã KH]
+left join (select [Mã khách hàng], sum([số dư BQ qui đổi]) [AMT]
+			from BI_DATA.dbo.LD_104 a
+			left join (select * from MAPPING.dbo.SP_dacthu where [LoaiSp] = 'Lending') b
+			on b.TenSP = a.[Tên SP]
+			where b.LoaiSp is null and RPT_DATE = '20241031'
+			group by [Mã khách hàng]) ld
+on cu.[Mã Khách hàng] = ld.[Mã khách hàng]
+where Rpt_date is not null
+group by rpt_date,cu.[mã khách hàng]
