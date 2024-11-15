@@ -224,3 +224,7 @@ WHERE condition;
 -------------------change data type-------------
 ALTER TABLE tablename
 ALTER COLUMN  columnname datatype;
+-----------------
+---------------delete a row--------------
+delete from table_name
+where condition
