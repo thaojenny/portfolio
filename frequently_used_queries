@@ -228,3 +228,14 @@ ALTER COLUMN  columnname datatype;
 ---------------delete a row--------------
 delete from table_name
 where condition
+
+----------------- delete duplicate from an existing table---------
+  WITH CTE_Duplicates AS (
+    SELECT 
+        *,
+        ROW_NUMBER() OVER (PARTITION BY column_name ORDER BY (SELECT NULL)) AS row_num
+    FROM 
+        table_name
+)
+DELETE FROM CTE_Duplicates 
+WHERE row_num > 1;
