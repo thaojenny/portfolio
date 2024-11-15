@@ -128,3 +128,48 @@ order by [Bankcode];'
 
 EXEC (@sql)
 
+-----------------------------------------updated query------------------------------------------------------------
+Note: avoid column names with unicode
+DECLARE 
+  @table_id NVARCHAR(MAX) = (SELECT OBJECT_ID('BCTC_bank.dbo.sheet1')), 
+  @key_column NVARCHAR(MAX) = N'[Asset]',
+  @colNames NVARCHAR(MAX) = N'', 
+  @assetNames NVARCHAR(MAX) = N'',
+  @sql NVARCHAR(MAX) = N'';
+
+-- Lấy tên các cột cho phần UNPIVOT
+SELECT @colNames = STRING_AGG(QUOTENAME([name]), ',') 
+FROM sys.columns
+WHERE column_id > 2 AND object_id = @table_id;
+
+-- Lấy danh sách các giá trị cho phần PIVOT
+SELECT @assetNames = STRING_AGG(QUOTENAME([Asset]), ',') 
+FROM (SELECT DISTINCT [Asset] FROM BCTC_bank.dbo.sheet1) AS assetList;
+
+-- Tạo câu lệnh SQL động
+SET @sql = 
+N'INSERT INTO dbo.Taisan ([Bankcode], [Year], [Quarter], [BankName], ' + @assetNames + ')
+SELECT [Bankcode], 
+       RIGHT([Bankcode], 4) AS [Year], 
+       CASE 
+           WHEN LEN([Bankcode]) = 7 THEN ''A''
+           ELSE SUBSTRING([Bankcode], 4, 2) 
+       END AS [Quarter], 
+       LEFT([Bankcode], 3) AS [BankName],
+       ' + @assetNames + '
+FROM (
+    SELECT [Asset], [Bankcode], AMT
+    FROM (
+        SELECT * FROM BCTC_bank.dbo.sheet1 
+    ) AS t
+    UNPIVOT (
+        AMT FOR [Bankcode] IN (' + @colNames + ')
+    ) AS unpivot_table
+) AS unpivot_table
+PIVOT (
+    SUM(AMT) FOR [Asset] IN (' + @assetNames + ')
+) AS pivot_table
+ORDER BY [Bankcode];';
+
+-- Thực thi câu lệnh SQL động
+EXEC sp_executesql @sql;
