@@ -672,3 +672,42 @@ left join (select [Mã khách hàng], sum([số dư BQ qui đổi]) [AMT]
 on cu.[Mã Khách hàng] = ld.[Mã khách hàng]
 where Rpt_date is not null
 group by rpt_date,cu.[mã khách hàng]
+
+-------------------Thẻ tín dụng mới và lũy kế---------------------
+select a1.[rpt_date], a1.[loại thẻ], [SLKH LK], [SL thẻ LK], [SLKH mở mới], [SL thẻ mở mới]
+ from 
+ 
+ (
+ select d.[rpt_date], [loại thẻ]
+		,count(distinct [cif khách hàng]) [SLKH LK]
+		, count(distinct concat([cif khách hàng],[số thẻ])) [SL thẻ LK]
+ FROM [BI_DATA].[dbo].[CARD_101] c
+ left join (select distinct  EOMONTH([Ngày phát hành]) rpt_date
+	    	from [BI_DATA].[dbo].[CARD_101]
+			where [ngày phát hành] >= '2022-01-01') d
+ on c.[Ngày phát hành] <= d.Rpt_date 
+ where [CIF Khách hàng] in
+							(select [mã khách hàng]
+							 from [BI_DATA].[dbo].CU_401 c
+							 left join MAPPING.dbo.PhanKhuc p
+							 on c.[Nhóm Khách hàng] = p.NhomKH
+							 where p.PhanKhuc ='1.KHCN' )
+	and [Trạng thái thẻ] like 'CSTS0000%' 
+ group by d.[rpt_date] , [loại thẻ]
+ ) a1
+left join 
+(
+  select EOMONTH([Ngày phát hành]) [rpt_date], [loại thẻ]
+		,count(distinct [cif khách hàng]) [SLKH mở mới]
+		, count(distinct concat([cif khách hàng],[số thẻ])) [SL thẻ mở mới]
+ FROM [BI_DATA].[dbo].[CARD_101] c
+ where [CIF Khách hàng] in
+							(select [mã khách hàng]
+							 from [BI_DATA].[dbo].CU_401 c
+							 left join MAPPING.dbo.PhanKhuc p
+							 on c.[Nhóm Khách hàng] = p.NhomKH
+							 where p.PhanKhuc ='1.KHCN' )
+	and [Trạng thái thẻ] like 'CSTS0000%' and eomonth([Ngày phát hành]) >= '2022-01-01'
+ group by EOMONTH([Ngày phát hành]) , [loại thẻ]
+ ) a2
+ on a1.rpt_date = a2.rpt_date and a1.[loại thẻ] = a2.[loại thẻ]
