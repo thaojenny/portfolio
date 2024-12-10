@@ -775,3 +775,23 @@ group by abc.rpt_date, abc.Vùng, c.[Giới tính], c.PLKH, abc.[PKTGTT]
 				when [tuổi KH] >= 50 and  [tuổi KH] < 65 then N'4. 50t - <65t'
 				else N'5. >=65t' end
 		, abc.[KH vay]
+
+
+---------------------------------------check casa KH mới mỗi tháng--------------------------------------------
+select sum([AMT])
+from 
+(select [mã khách hàng]
+from bi_data.dbo.cu_401
+left join (select * from [MAPPING].[dbo].[PhanKhuc] where [PhanKhuc] = '1.KHCN') p
+on l1.[Nhóm KH] = p.NhomKH
+where eomonth([ngày mở cif]) = '2024-11-30' and p.[Phankhuc] = '1.KHCN') a
+left join 
+(select [mã khách hàng], sum([số dư BQ quy đổi]) [AMT]
+from bi_data.dbo.ac_101
+left join (select * from [MAPPING].[dbo].[PhanKhuc] where [PhanKhuc] = '1.KHCN') p
+on l1.[Nhóm KH] = p.NhomKH
+left join (select * from [MAPPING].[dbo].[SP_dacthu] where [LoaiSp] ='CASA') s
+on l1.[Tên SP] = s.TenSP
+where p.[Phankhuc] = '1.KHCN' and s.[LoaiSp] is null  and rpt_date = '20241130'
+group by [mã khách hàng] ) b
+on a.[mã khách hàng] = b.[mã khách hàng]
