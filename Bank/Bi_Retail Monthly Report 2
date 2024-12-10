@@ -715,6 +715,7 @@ left join
 
 ------------------------------------------------------------CASA KHCN lọc các yếu tố bất thường---------------------------------------------------------------
 
+
 select abc.rpt_date, abc.Vùng, c.[Giới tính],c.PLKH, abc.[PKTGTT]
 		,case when [tuổi KH] <23 then N'1. <23t'
 				when [tuổi KH] >=23 and  [tuổi KH] < 35 then N'2. 23t - <35t'
@@ -723,7 +724,7 @@ select abc.rpt_date, abc.Vùng, c.[Giới tính],c.PLKH, abc.[PKTGTT]
 				else N'5. >=65t' end [Age_group]
 		, abc.[KH vay]
 		,count(abc.[mã kh]) [SLKH]
-		, sum(abc.[SDBQ]) [AMT]
+		, sum(abc.[SDBQ])/1e9 [AMT]
 		
 from --------------------Thông tin Casa-----------------------------------------------
 (
@@ -759,8 +760,8 @@ from --------------------Thông tin Casa----------------------------------------
 -----------------------Thông tin cá nhân------------------------------------------
 left join 
 (	select  [Mã Khách hàng], [Giới tính]
-		,case when left([loại khách hàng],4) in ('2119','2121') then N'None'
-				when left([loại khách hàng],4) in ('2100','2101','2103','2104','2114','2115','2116','2301','2302','2303') then N'KHUT'
+		,case when left([loại khách hàng],4) in ('2119%','2121%') then N'None'
+				when left([loại khách hàng],4) in ('2100%','2101%','2103%','2104%','2114%','2115%','2116%','2301%','2302%','2303%') then N'KHUT'
 				else N'KH thường' end [PLKH]
 		,DATEDIFF(year, [ngày sinh],getdate()) [tuổi KH]
 	from [BI_DATA].[dbo].[CU_401]  c4
@@ -776,5 +777,4 @@ group by abc.rpt_date, abc.Vùng, c.[Giới tính], c.PLKH, abc.[PKTGTT]
 				when [tuổi KH] >= 50 and  [tuổi KH] < 65 then N'4. 50t - <65t'
 				else N'5. >=65t' end
 		, abc.[KH vay]
-
 
