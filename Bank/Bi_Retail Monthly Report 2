@@ -711,3 +711,70 @@ left join
  group by EOMONTH([Ngày phát hành]) , [loại thẻ]
  ) a2
  on a1.rpt_date = a2.rpt_date and a1.[loại thẻ] = a2.[loại thẻ]
+
+
+------------------------------------------------------------CASA KHCN lọc các yếu tố bất thường---------------------------------------------------------------
+
+select abc.rpt_date, abc.Vùng, c.[Giới tính],c.PLKH, abc.[PKTGTT]
+		,case when [tuổi KH] <23 then N'1. <23t'
+				when [tuổi KH] >=23 and  [tuổi KH] < 35 then N'2. 23t - <35t'
+				when [tuổi KH] >= 35 and  [tuổi KH] < 50 then N'3. 35t - <50t'
+				when [tuổi KH] >= 50 and  [tuổi KH] < 65 then N'4. 50t - <65t'
+				else N'5. >=65t' end [Age_group]
+		, abc.[KH vay]
+		,count(abc.[mã kh]) [SLKH]
+		, sum(abc.[SDBQ]) [AMT]
+		
+from --------------------Thông tin Casa-----------------------------------------------
+(
+	select EOMONTH([date_in]) [Rpt_date], [Mã KH], dv.Vùng
+			, case when sum([Số dư BQ quy đổi]) < 1e6 then N'1. 50k - <1tr'
+					when sum([Số dư BQ quy đổi]) >=1e6 and sum([Số dư BQ quy đổi]) <5e6 then N'2. Từ 1tr-<5tr'
+					when sum([Số dư BQ quy đổi]) >=5e6 and sum([Số dư BQ quy đổi]) <1e7 then N'3. Từ 5tr-<10tr'
+					when sum([Số dư BQ quy đổi]) >=1e7 and sum([Số dư BQ quy đổi]) <5e7 then N'4. Từ 10tr-<50tr'
+					else N'5. 50tr -100tr' end [PKTGTT]
+			, case when ld.[Mã khách hàng] is not null then 'KH lending' else 'None' end [KH vay]
+			, sum([Số dư BQ quy đổi]) [SDBQ]
+	from BI_DATA.dbo.AC_101 d
+	left join (select * from [MAPPING].[dbo].[SP_dacthu] where [LoaiSp] ='CASA') s
+		on d.[Tên sản Phẩm] = s.TenSP
+	left join (select * from [MAPPING].[dbo].[PhanKhuc] where [PhanKhuc] = '1.KHCN') p
+		on d.[Nhóm khách hàng] = p.[NhomKH]
+	left join [MAPPING].[dbo].[DS_DVKD] dv
+		on d.[mã chi nhánh] = dv.Ma_DVKD
+	----------------Thông tin dư nợ trong 3 năm gần nhất sv thời gian báo cáo & AMT dư nợ >1tr---------
+	left join 
+	(	select EOMONTH([date in]) [Rpt_date] ,[Mã khách hàng], sum([Số dư BQ qui đổi]) [Dư nợ] 
+		from BI_DATA.dbo.LD_104
+		where DATEDIFF(year,EOMONTH([date in]),GETDATE()) = 3
+		group by EOMONTH([date in]),[Mã khách hàng]
+		having sum([Số dư BQ qui đổi]) > 1e6
+	) ld
+	on d.[mã kh] = ld.[mã khách hàng]
+	where d.Rpt_date >= '20220101' and s.LoaiSp is null and p.NhomKH is not null
+	group by EOMONTH([date_in]) , [Mã KH], dv.Vùng
+				,  case when ld.[Mã khách hàng] is not null then 'KH lending' else 'None' end
+	having  sum([Số dư BQ quy đổi]) <= 1e8 and sum([Số dư BQ quy đổi]) >= 5e4
+) abc
+-----------------------Thông tin cá nhân------------------------------------------
+left join 
+(	select  [Mã Khách hàng], [Giới tính]
+		,case when left([loại khách hàng],4) in ('2119','2121') then N'None'
+				when left([loại khách hàng],4) in ('2100','2101','2103','2104','2114','2115','2116','2301','2302','2303') then N'KHUT'
+				else N'KH thường' end [PLKH]
+		,DATEDIFF(year, [ngày sinh],getdate()) [tuổi KH]
+	from [BI_DATA].[dbo].[CU_401]  c4
+						
+) c 
+on abc.[Mã KH] = c.[Mã Khách hàng]
+
+where c.PLKH <> 'None'
+group by abc.rpt_date, abc.Vùng, c.[Giới tính], c.PLKH, abc.[PKTGTT]
+		,case when [tuổi KH] <23 then N'1. <23t'
+				when [tuổi KH] >=23 and  [tuổi KH] < 35 then N'2. 23t - <35t'
+				when [tuổi KH] >= 35 and  [tuổi KH] < 50 then N'3. 35t - <50t'
+				when [tuổi KH] >= 50 and  [tuổi KH] < 65 then N'4. 50t - <65t'
+				else N'5. >=65t' end
+		, abc.[KH vay]
+
+
