@@ -1,0 +1,49 @@
+with abc as 
+(
+select [mã khách hàng], [rpt_date], [Nhóm nợ KH],
+		ROW_NUMBER() over (partition by [mã khách hàng] order by rpt_date) as rpt_rank
+
+from BI_DATA.dbo.LD_100 d
+left join (select * from [MAPPING].[dbo].[PhanKhuc] where [PhanKhuc] = '1.KHCN') p
+ on d.[Nhóm khách hàng] = p.[NhomKH]
+ left join (select * from [MAPPING].[dbo].[SP_dacthu] where [LoaiSp] ='Lending') s
+on d.[Sub product.Tên sản phẩm] = s.TenSP
+where left([rpt_date],4) = '2023' and p.[NhomKH] is not null and s.LoaiSp is null  and [Nhóm nợ KH] is not null
+),
+ cd as
+ (
+select 
+	[mã khách hàng],
+
+MAX(CASE WHEN rpt_rank = 1 THEN cast(isnull(rpt_date,0) as int) END) AS Rpt_date_1, 
+   MAX(CASE WHEN rpt_rank = 1 THEN cast(cast(isnull([Nhóm nợ KH],0) as int) as int) END) AS DebtGroup_1, 
+MAX(CASE WHEN rpt_rank = 2 THEN cast(isnull(rpt_date,0) as int) END) AS Rpt_date_2,
+  MAX(CASE WHEN rpt_rank = 2 THEN cast(isnull([Nhóm nợ KH],0) as int) END) AS DebtGroup_2,
+  
+ MAX(CASE WHEN rpt_rank = 3 THEN cast(isnull(rpt_date,0) as int) END) AS Rpt_date_3,
+  MAX(CASE WHEN rpt_rank = 3 THEN cast(isnull([Nhóm nợ KH],0) as int) END) AS DebtGroup_3,
+MAX(CASE WHEN rpt_rank = 4 THEN cast(isnull(rpt_date,0) as int) END) AS Rpt_date_4,
+  MAX(CASE WHEN rpt_rank = 4 THEN cast(isnull([Nhóm nợ KH],0) as int) END) AS DebtGroup_4,
+	MAX(CASE WHEN rpt_rank = 5 THEN cast(isnull(rpt_date,0) as int) END) AS Rpt_date_5,
+ MAX(CASE WHEN rpt_rank = 5 THEN cast(isnull([Nhóm nợ KH],0) as int) END) AS DebtGroup_5,
+MAX(CASE WHEN rpt_rank = 6 THEN cast(isnull(rpt_date,0) as int) END) AS Rpt_date_6,
+  MAX(CASE WHEN rpt_rank = 6 THEN cast(isnull([Nhóm nợ KH],0) as int) END) AS DebtGroup_6,
+MAX(CASE WHEN rpt_rank = 7 THEN cast(isnull(rpt_date,0) as int) END) AS Rpt_date_7,
+ MAX(CASE WHEN rpt_rank = 7 THEN cast(isnull([Nhóm nợ KH],0) as int) END) AS DebtGroup_7,
+MAX(CASE WHEN rpt_rank = 8 THEN cast(isnull(rpt_date,0) as int) END) AS Rpt_date_8,
+  MAX(CASE WHEN rpt_rank = 8THEN cast(isnull([Nhóm nợ KH],0) as int) END) AS DebtGroup_8,
+MAX(CASE WHEN rpt_rank = 9 THEN cast(isnull(rpt_date,0) as int) END) AS Rpt_date_9,
+  MAX(CASE WHEN rpt_rank = 9THEN cast(isnull([Nhóm nợ KH],0) as int) END) AS DebtGroup_9,
+MAX(CASE WHEN rpt_rank = 10THEN cast(isnull(rpt_date,0) as int) END) AS Rpt_date_10,
+ MAX(CASE WHEN rpt_rank = 10 then cast(isnull([Nhóm nợ KH],0) as int) END) AS DebtGroup_10,
+MAX(CASE WHEN rpt_rank = 11THEN cast(isnull(rpt_date,0) as int) END) AS Rpt_date_11,
+ MAX(CASE WHEN rpt_rank = 11 then cast(isnull([Nhóm nợ KH],0) as int) END) AS DebtGroup_11,
+MAX(CASE WHEN rpt_rank = 12THEN cast(isnull(rpt_date,0) as int) END) AS Rpt_date_12,
+  MAX(CASE WHEN rpt_rank = 12 then cast(isnull([Nhóm nợ KH],0) as int) END) AS DebtGroup_12
+from abc 
+group by [mã khách hàng], rpt_rank
+)
+select *,
+	case when DebtGroup_1+DebtGroup_2+DebtGroup_3+DebtGroup_4+DebtGroup_5+DebtGroup_6+DebtGroup_7+DebtGroup_8+DebtGroup_9+DebtGroup_10+DebtGroup_11+DebtGroup_12 <= 12 then N'No change'
+	else 'Change' end [Group]
+from cd
