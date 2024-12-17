@@ -1,3 +1,53 @@
+--------------------------------------------Calculate the rate for 1 group of customer (T1/2023) after 6M & 1Y----------------------
+-- Bước 1: Lấy dữ liệu ban đầu
+WITH abc AS (
+    SELECT [Mã khách hàng],  
+           [Rpt_date], 
+           [Nhóm nợ KH]
+    FROM BI_DATA.dbo.LD_100 d
+    LEFT JOIN (SELECT * FROM [MAPPING].[dbo].[PhanKhuc] WHERE [PhanKhuc] = '1.KHCN') p
+        ON d.[Nhóm khách hàng] = p.[NhomKH]
+    LEFT JOIN (SELECT * FROM [MAPPING].[dbo].[SP_dacthu] WHERE [LoaiSp] ='Lending') s
+        ON d.[Sub product.Tên sản phẩm] = s.TenSP
+    WHERE Rpt_date IN ('20230131', '20230630', '20231231') 
+      AND p.[NhomKH] IS NOT NULL 
+      AND s.LoaiSp IS NULL  
+      AND [Nhóm nợ KH] IS NOT NULL
+      AND DATEDIFF(YEAR, [ngày hiệu lực], [ngày hết hạn]) >= 1  ------------ >= 1y để test trong 2 khung sau 6M và 1Y --> null values là do thanh toán trước hạn----------------
+      AND [ngày hiệu lực] BETWEEN '2023-01-01' AND '2023-01-31' ---------chỉ lấy KH mở T1/2023----------
+      AND [Source Type] = 'LD' --------------filter only LD customer (loại OD do phát sinh gd khi dùng, nên phát sinh null trong các tháng tiếp theo-------
+),
+-- Bước 2: PIVOT dữ liệu để xoay thời gian thành cột
+pivot_data AS (
+    SELECT [Mã khách hàng], 
+           [20230131], 
+           [20230630], 
+           [20231231]
+    FROM (
+        SELECT [Mã khách hàng], 
+               [Rpt_date], 
+               [Nhóm nợ KH]
+        FROM abc
+    ) AS SourceTable
+    PIVOT (
+        MAX([Nhóm nợ KH])
+        FOR [Rpt_date] IN ([20230131], [20230630], [20231231])
+    ) AS PVT
+)
+-- Bước 3: Áp dụng CASE WHEN và tính tỷ lệ
+SELECT 
+    N'KH vay T1/2023' AS [Group_KH],
+    COUNT(*) AS Total_Customers,
+   ( SUM(CASE WHEN [20230630] IN (3, 4, 5) THEN 1 ELSE 0 END) * 1.0 / COUNT(*))*100 AS [Rate_after 6M],
+    (SUM(CASE WHEN [20231231] IN (3, 4, 5) THEN 1 ELSE 0 END) * 1.0 / COUNT(*))*100 AS [Rate_after 1Y]
+FROM pivot_data
+;
+
+
+
+
+
+--------------------------------Test data raw-------------------------------------------------------
 with abc as 
 (
 select [mã khách hàng], [rpt_date], [Nhóm nợ KH],
