@@ -101,6 +101,8 @@ select [Date], 'Huydong' as [Group_product],
 	on (ab.Date = f.Rpt_date and ab.Group_product = f.Group_product and ab.Product = f.Product and ab.Sub_Product = f.Sub_Product
 			and ab.Vùng = f.Vùng and ab.Ten_DVKD = f.Ten_DVKD  and ab.[Kỳ hạn] = f.[Kỳ hạn] and ab.Condition = f.Condition)
 group by  ab.Date,ab.Group_product, ab.Product,ab.Sub_Product,ab.Vùng,ab.Ten_DVKD,ab.[Kỳ hạn], ab.Condition		
+
+union all
 ------------------2. TG_KKH-------------------
 -------------2.1. Quy mô -------------------
 select ab.[Date],	ab.[Group_product],ab.[Product],	
