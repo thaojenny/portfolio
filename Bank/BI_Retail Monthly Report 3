@@ -101,3 +101,85 @@ select [Date], 'Huydong' as [Group_product],
 	on (ab.Date = f.Rpt_date and ab.Group_product = f.Group_product and ab.Product = f.Product and ab.Sub_Product = f.Sub_Product
 			and ab.Vùng = f.Vùng and ab.Ten_DVKD = f.Ten_DVKD  and ab.[Kỳ hạn] = f.[Kỳ hạn] and ab.Condition = f.Condition)
 group by  ab.Date,ab.Group_product, ab.Product,ab.Sub_Product,ab.Vùng,ab.Ten_DVKD,ab.[Kỳ hạn], ab.Condition		
+------------------2. TG_KKH-------------------
+-------------2.1. Quy mô -------------------
+select ab.[Date],	ab.[Group_product],ab.[Product],	
+		ab.[Sub_Product],		ab.[Vùng],			
+		ab.[Ten_DVKD],	
+		ab.[Kỳ hạn],
+		ab.[condition],
+		sum([số dư BQ]) [SDBQ],
+		sum([Thu lãi]) [Thu lãi],
+		sum([chi lãi]) [Chi lãi]
+from (
+select  [Date],'Huydong' as [Group_product],
+		 [Product],
+		 [sub_product],
+		[Vùng],
+		[Ten_DVKD],
+		'0M' as [Kỳ hạn],
+		[condition],
+		sum([SD]) [Số dư BQ]
+		
+	from (
+	select eomonth([date_in]) [Date],
+				N'TG_KKH' [Product] , 
+				N'CASA' as [sub_product],
+					dv.Vùng,
+					dv.[ten_DVKD],
+				case when [Mã sp] in ('1001','1022','1020','1028','1021','1019','1027','1003','1002','1023') then N'ĐK KHCN' else 'None' end [Condition],
+			sum([Số dư BQ quy đổi]) [SD]
+	
+		 from [BI_DATA].[dbo].[AC_101] d
+		left join [MAPPING].[dbo].[DS_DVKD] dv
+		on d.[mã chi nhánh] = dv.Ma_DVKD
+		 left join (select * from [MAPPING].[dbo].[PhanKhuc] where [PhanKhuc] = '1.KHCN') p
+		 on d.[Nhóm khách hàng] = p.[NhomKH]
+		 left join (select * from [MAPPING].[dbo].[SP_dacthu] where [LoaiSp] ='CASA') s
+		 on d.[Tên sản Phẩm] = s.TenSP
+		 where EOMONTH([date_in]) >= '2022-01-31'  and p.[NhomKH] is not null and s.[LoaiSp] is null
+		 group by  eomonth([date_in]) ,[Mã KH],  
+				
+						dv.Vùng, dv.[ten_DVKD]
+						,case when [Mã sp] in ('1001','1022','1020','1028','1021','1019','1027','1003','1002','1023') then N'ĐK KHCN' else 'None' end
+		 ) b
+  group by [Date],		[Product],		[Sub_Product],			[Vùng],			[Ten_DVKD],			[condition]
+)ab
+
+left join 
+----------------2.2. Thu thuần---------------
+(
+select EOMONTH([từ ngày]) [Rpt_date],
+		'Huydong' as [Group_product],
+	 'TG_KKH'as [Product]
+	  , 'CASA' as [Sub_Product]
+	, dv.Vùng
+	, dv.Ten_DVKD
+	  ,  '0M' as [Kỳ hạn]
+	, case when [Mã sản phẩm] in ('1001','1022','1020','1028','1021','1019','1027','1003','1002','1023') then N'ĐK KHCN' else 'None' end [Condition]
+
+	  ,sum([Chi phí thực tế]* isnull([DTNB quy đổi]/nullif([DTNB quy đổi],0),1)) [Chi lãi]
+	,sum([DTNB quy đổi]) [Thu lãi]
+
+from BI_DATA.dbo.FTP_CASA a
+left join 
+(SELECT * FROM MAPPING.dbo.SP_dacthu WHERE LoaiSp = 'CASA') b
+on a.[tên sản phẩm] = b.[TenSP]
+left join [MAPPING].[dbo].[DS_DVKD] dv
+		on a.[Mã đơn vị ]= dv.Ma_DVKD
+
+where  a.[Tên khối khách hàng] = N'Khối KHCN' and b.LoaiSp is null and eomonth([từ ngày]) >= '2022-01-31'
+group by  EOMONTH([từ ngày]) 
+		
+	, dv.Vùng,dv.Ten_DVKD
+	,case when [Mã sản phẩm] in ('1001','1022','1020','1028','1021','1019','1027','1003','1002','1023') then N'ĐK KHCN' else 'None' end
+
+	) f
+on (ab.Date = f.Rpt_date and ab.Group_product = f.Group_product and ab.Product = f.Product
+	and ab.sub_product = f.Sub_Product and ab.Vùng = f.Vùng and ab.Ten_DVKD = f.Ten_DVKD
+	and ab.[Kỳ hạn] = f.[Kỳ hạn] and ab.Condition = f.Condition)
+group by  ab.[Date],	ab.[Group_product],ab.[Product],	
+		ab.[Sub_Product],		ab.[Vùng],			
+		ab.[Ten_DVKD],	
+		ab.[Kỳ hạn],
+		ab.[condition]
