@@ -185,3 +185,126 @@ group by  ab.[Date],	ab.[Group_product],ab.[Product],
 		ab.[Ten_DVKD],	
 		ab.[Kỳ hạn],
 		ab.[condition]
+
+union all
+-----------------------3. Tín dụng --------------------
+-------------3.1. Quy mô-----------------
+select th.[Date],th.[Group_product],th.[Product],
+		th.[Sub_product],th.[Vùng],
+		th.[Ten_DVKD],th.[Kỳ hạn],
+		th.[condition],
+		sum([Số dư BQ]) [SDBQ],
+		sum([Thu lãi]) [Thu lãi],
+		sum([Chi lãi]) [Chi lãi]
+from (
+select [Date], 'Chovay' as [Group_product],
+		[Product],
+		[Sub_product],
+		[Vùng],
+		[Ten_DVKD],
+		case when left([kỳ hạn],3) <=12 then N'Ngắn hạn'
+			when left([kỳ hạn],3) > 5*12 then N'Dài hạn'
+			else N'Trung hạn' end [Kỳ hạn],
+		[condition],
+		sum([SD]) [Số dư BQ]
+	from (
+	select eomonth([Date in]) [Date],d.[kỳ hạn],
+				case when d.[Tên SP] like N'%thấu chi%' or d.[Tên SP] like N'%Thau chi%' then 'OD'
+	  else 'LD' end [Product],
+	  sp.[Sub_Product],
+				dv.Vùng,
+				dv.[Ten_DVKD],
+				case when [Tên sp] in (N'Cho vay đầu tư kinh doanh BĐS',N'Cho vay hạn mức khác',N'Cho vay tái tài trợ dành cho KHCN',N'Cho vay tiêu dùng có TSĐB',N'Cho vay từng lần khác – KHCN',N'Cho vay tài trợ vốn SXKD đối với CN,HKD',N'Cho vay từng lần - K.KHDN',N'Cho vay KHCN mua, xây, sửa nhà',N'Cho vay hạn mức - K.KHDN',N'Cho vay KHCN mua ô tô',N'CV thấu chi chuyên dụng',N'Cho vay thấu chi CBNV',N'CV thau chi thong thuong',N'Cho vay thấu chi CBNV TT39',N'Cho vay thấu chi thong thuong TT39',N'CV thấu chi chuyên dụng TT39',N'Cho vay thấu chi – Quá hạn',N'Cho vay trả góp')
+						then N'ĐK KHCN' else 'None' end [Condition],
+			sum([Số dư BQ qui đổi]) [SD]
+		 from [BI_DATA].[dbo].[LD_104] d
+		left join [MAPPING].[dbo].[DS_DVKD] dv
+		on d.[mã chi nhánh GD] = dv.Ma_DVKD
+		 left join (select * from [MAPPING].[dbo].[PhanKhuc] where [PhanKhuc] = '1.KHCN') p
+		 on d.[Nhóm kh] = p.[NhomKH]
+		 left join (select * from [MAPPING].[dbo].[SP_dacthu] where [LoaiSp] ='Lending') s
+		 on d.[Tên SP] = s.TenSP
+		 left join (select distinct [Core_Name], [Sub_Product]  from [MAPPING].[dbo].[Sanpham_KHCN] where [Product] ='CV') sp
+		 on d.[Tên SP] = sp.Core_Name
+		 where  eomonth([Date in])>= '2022-01-31' and [Mã chi nhánh GD] <> 'VN0010001' and p.[NhomKH] is not null and s.[LoaiSp] is null
+		
+		group by 	 eomonth([Date in]) ,d.[kỳ hạn], 
+				case when d.[Tên SP] like N'%thấu chi%' or d.[Tên SP] like N'%Thau chi%' then 'OD'
+	  else 'LD' end ,
+	  sp.[Sub_Product],		dv.Vùng, dv.Ten_DVKD
+				,case when [Tên sp] in (N'Cho vay đầu tư kinh doanh BĐS',N'Cho vay hạn mức khác',N'Cho vay tái tài trợ dành cho KHCN',N'Cho vay tiêu dùng có TSĐB',N'Cho vay từng lần khác – KHCN',N'Cho vay tài trợ vốn SXKD đối với CN,HKD',N'Cho vay từng lần - K.KHDN',N'Cho vay KHCN mua, xây, sửa nhà',N'Cho vay hạn mức - K.KHDN',N'Cho vay KHCN mua ô tô',N'CV thấu chi chuyên dụng',N'Cho vay thấu chi CBNV',N'CV thau chi thong thuong',N'Cho vay thấu chi CBNV TT39',N'Cho vay thấu chi thong thuong TT39',N'CV thấu chi chuyên dụng TT39',N'Cho vay thấu chi – Quá hạn',N'Cho vay trả góp')
+					then N'ĐK KHCN' else 'None' end
+		 ) b
+  group by  [Date], 
+		[Product],
+		[Sub_product],
+		case when left([kỳ hạn],3) <=12 then N'Ngắn hạn'
+			when left([kỳ hạn],3) > 5*12 then N'Dài hạn'
+			else N'Trung hạn' end ,
+			[Vùng],
+			[Ten_DVKD],
+			[condition]
+
+) th
+
+left join 
+-------------------3.2. Thu thuần ------------------------
+(
+select EOMONTH([từ ngày]) [Rpt_date],
+		'Chovay' as [Group_product],
+		
+	 case when a.[Tên Sản phẩm] like N'%thấu chi%' or [Tên sản phẩm] like N'%Thau chi%' then 'OD'
+	  else 'LD' end as [Product]
+	  	, dv.Vùng
+		, dv.Ten_DVKD	
+	 , sp.Sub_Product
+	   ,  case when left(ld.[kỳ hạn],3) <=12 then N'Ngắn hạn'
+			when left(ld.[kỳ hạn],3) > 5*12 then N'Dài hạn'
+			else N'Trung hạn' end  [Kỳ hạn]
+	, case when [Tên sản phẩm] in (N'Cho vay đầu tư kinh doanh BĐS',N'Cho vay hạn mức khác',N'Cho vay tái tài trợ dành cho KHCN',N'Cho vay tiêu dùng có TSĐB',N'Cho vay từng lần khác – KHCN',N'Cho vay tài trợ vốn SXKD đối với CN,HKD',N'Cho vay từng lần - K.KHDN',N'Cho vay KHCN mua, xây, sửa nhà',N'Cho vay hạn mức - K.KHDN',N'Cho vay KHCN mua ô tô',N'CV thấu chi chuyên dụng',N'Cho vay thấu chi CBNV',N'CV thau chi thong thuong',N'Cho vay thấu chi CBNV TT39',N'Cho vay thấu chi thong thuong TT39',N'CV thấu chi chuyên dụng TT39',N'Cho vay thấu chi – Quá hạn',N'Cho vay trả góp')
+						then N'ĐK KHCN' else 'None' end [Condition]
+
+	  ,sum([CPNB quy đổi])  [Chi lãi]
+,sum([DTTT]* isnull([CPNB quy đổi]/nullif([CPNB nguyên tệ],0),1)) [Thu lãi]
+
+from BI_DATA.dbo.FTP_LD a
+left join 
+(SELECT * FROM MAPPING.dbo.SP_dacthu WHERE LoaiSp = 'Lending') b
+on a.[tên sản phẩm] = b.[TenSP]
+left join (select distinct [core_name], [sub_product] from MAPPING.dbo.Sanpham_KHCN where [Product] ='CV') sp
+on a.[Tên sản phẩm] = sp.Core_Name
+left join [MAPPING].[dbo].[DS_DVKD] dv
+on a.[Mã đơn vị] = dv.Ma_DVKD
+left join (select RPT_DATE , [số khế ước], [kỳ hạn], [nhóm kh],
+				ROW_NUMBER() OVER (PARTITION BY RPT_DATE,[Số khế ước] ORDER BY [SỐ DƯ CUỐI KỲ QUI ĐỔI] DESC,[SỐ DƯ BQ QUI ĐỔI] DESC,STT ASC,[LÃI SUẤT] DESC ) [rank]
+							from [BI_DATA].[dbo].[LD_104]  l1
+							left join MAPPING.dbo.PhanKhuc p
+							on l1.[Nhóm KH] = p.NhomKH
+							left join (select * from MAPPING.dbo.SP_dacthu where [LoaiSp] = 'Lending') sp
+							on l1.[Tên SP] = sp.TenSP 
+				where [Mã chi nhánh GD] <> 'VN0010001' and p.PhanKhuc = '1.KHCN' and sp.LoaiSp is null
+			) ld
+on  CONVERT(NVARCHAR(8),EOMONTH(a.[Từ ngày],0),112) = ld.RPT_DATE and a.[Số khế ước] = ld.[Số khế ước] and ld.[rank] = 1
+
+where   b.LoaiSp is null and [Mã đơn vị] <> 'VN0010001' and ld.[Nhóm KH] is not null and year([từ ngày]) >= 2022
+group by  EOMONTH([từ ngày]),
+		
+	 case when a.[Tên Sản phẩm] like N'%thấu chi%' or [Tên sản phẩm] like N'%Thau chi%' then 'OD'
+	  else 'LD' end 
+	  , sp.Sub_Product
+	, dv.Ten_DVKD
+	  ,  case when left(ld.[kỳ hạn],3) <=12 then N'Ngắn hạn'
+			when left(ld.[kỳ hạn],3) > 5*12 then N'Dài hạn'
+			else N'Trung hạn' end 
+	
+	, dv.Vùng
+
+	, case when [Tên sản phẩm] in (N'Cho vay đầu tư kinh doanh BĐS',N'Cho vay hạn mức khác',N'Cho vay tái tài trợ dành cho KHCN',N'Cho vay tiêu dùng có TSĐB',N'Cho vay từng lần khác – KHCN',N'Cho vay tài trợ vốn SXKD đối với CN,HKD',N'Cho vay từng lần - K.KHDN',N'Cho vay KHCN mua, xây, sửa nhà',N'Cho vay hạn mức - K.KHDN',N'Cho vay KHCN mua ô tô',N'CV thấu chi chuyên dụng',N'Cho vay thấu chi CBNV',N'CV thau chi thong thuong',N'Cho vay thấu chi CBNV TT39',N'Cho vay thấu chi thong thuong TT39',N'CV thấu chi chuyên dụng TT39',N'Cho vay thấu chi – Quá hạn',N'Cho vay trả góp')
+						then N'ĐK KHCN' else 'None' end
+) e
+on (th.Date = e.Rpt_date and th.Group_product = e.Group_product and th.Product = e.Product and th.Sub_Product = e.Sub_Product
+		and th.Vùng = e.Vùng and th.Ten_DVKD = e.Ten_DVKD and th.[Kỳ hạn] = e.[Kỳ hạn] and th.Condition = e.Condition)
+group by th.[Date],th.[Group_product],th.[Product],
+		th.[Sub_product],th.[Vùng],
+		th.[Ten_DVKD],th.[Kỳ hạn],
+		th.[condition]
