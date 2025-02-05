@@ -1,6 +1,10 @@
 ------------------------------------------------------------------------Lãi suất & Vùng -------------------------------------------------------------
 ---------------1.TG_CKH & GTCG--------------------
 ----------------1.1. Quy mô------------------
+
+select ab.Date,ab.Group_product, ab.Product,ab.Sub_Product,ab.Vùng,ab.Ten_DVKD,ab.[Kỳ hạn], ab.Condition,
+		sum([Số dư BQ]) [SDBQ], sum([Thu lãi]) [Thu lãi], sum([chi lãi]) [Chi lãi]
+from (
 select [Date], 'Huydong' as [Group_product],
 		[Product],
 		[Sub_Product],
@@ -12,7 +16,7 @@ select [Date], 'Huydong' as [Group_product],
 		,sum([SD]) [Số dư BQ]
 		
 	from (
-	select eomonth([date_in]) [Date],[Mã KH],d.[kỳ hạn], 
+	select eomonth([date_in]) [Date],d.[kỳ hạn], 
 				case when ( [tên sản phẩm] like N'%Chứng chỉ%' or [tên sản phẩm] like N'%Chung chi%'  or [tên sản phẩm] like N'%CCTG%' ) then 'GTCG'
 	  else 'TG_CKH'end [Product],
 					sp.[sub_product],				
@@ -34,11 +38,12 @@ select [Date], 'Huydong' as [Group_product],
 		 left join (select distinct [Core_Name], [Sub_Product]  from [MAPPING].[dbo].[Sanpham_KHCN] where [Product] ='CKH') sp
 		 on d.[Tên Sản phẩm] = sp.Core_Name
 		
-		 where eomonth([date_in]) >= '2022-01-31' and [Cầm cố STK SLH] <> 'Y' and p.[NhomKH] is not null and s.[LoaiSp] is null and dv.[Vùng] is not null and dv.Vùng <> 'NA'
-		 group by eomonth([date_in]), [Mã KH],d.[kỳ hạn],
+		 where eomonth([date_in]) >= '2022-01-31' and [Cầm cố STK SLH] <> 'Y' and p.[NhomKH] is not null and s.[LoaiSp] is null 
+		 group by eomonth([date_in]),d.[kỳ hạn],
 				case when ( [tên sản phẩm] like N'%Chứng chỉ%' or [tên sản phẩm] like N'%Chung chi%'  or [tên sản phẩm] like N'%CCTG%' ) then 'GTCG'
 				else 'TG_CKH'end, 
 				dv.Vùng,dv.[Ten_DVKD],
+				sp.[sub_product],
 				case when [Tên sản phẩm] in (N'CHUNG CHI TIEN GUI CUOI KY - THANG',N'IB DAI CHUNG TRA LAI CUOI KY - TUAN',N'IB DAI CHUNG TRA LAI CUOI KY-THANG',N'IB DAI CHUNG TRA LAI QUY',N'IB DAI CHUNG TRA LAI THANG',N'IB LAI SUAT BAC THANG CA NHAN',N'TG DAI CHUNG TRA LAI CUOI KY',N'TG DAI CHUNG TRA LAI THANG',N'TG KY QUY THANH LAP DOANH NGHIEP',N'TG LAI SUAT BAC THANG 6+ CA NHAN',N'TG trả lãi trước địnhkỳ(discounted)',
 							N'TIEN GUI AN THINH',N'TIEN GUI AN THINH (ROLLED)',N'TIEN GUI NHU Y',N'TIET KIEM DU THUONG CA NHAN',N'TIET KIEM DU THUONG CA NHAN (ROLL)',N'Tiết kiệm Đại chúng trả lãi trước',N'Tiết kiệm tích luỹ',N'TK DAI CHUNG TRA LAI CUOI KY - TUAN',N'TK DAI CHUNG TRA LAI CUOI KY-THANG',N'TK DAI CHUNG TRA LAI QUY',N'TK DAI CHUNG TRA LAI THANG',N'TK KY QUY DU HOC',N'TK LAI SUAT BAC THANG CA NHAN'
 							,N'TIEN GUI THAP SANG NIEM TIN',N'TK LAI SUAT BAC THANG DOANH NGHIEP',N'TIEN GUI DA KY HAN'	,N'Tiền gửi trung niên',N'Chứng chỉ tiền gửi trả lãi trước',N'Tiền gửi Yêu thương cho con',N'CCTG TRA LAI HANG THANG',N'TIEN GUI BAO TOAN LAI SUAT',N'TIEN GUI TRA LAI CUOI KY',N'TG DAI CHUNG TRA LAI QUY',N'TIEN GUI TRA LAI THANG',N'TIEN GUI TRA LAI QUY',N'TK KY QUY DU HOC (ROLLED)')
@@ -52,8 +57,11 @@ select [Date], 'Huydong' as [Group_product],
 			when left([kỳ hạn],3) > 5*12 then N'Dài hạn'
 			else N'Trung hạn' end 
 			,[condition]
+) ab
 ----------------1.2. Thu thuần ------------------
-select EOMONTH([từ ngày]) [Rpt_date],
+	left join 
+	(
+	select EOMONTH([từ ngày]) [Rpt_date],
 		'Huydong' as [Group_product],
 		case when ( [tên sản phẩm] like N'%Chứng chỉ%' or [tên sản phẩm] like N'%Chung chi%'  or [tên sản phẩm] like N'%CCTG%' ) then 'GTCG'
 	  else 'TG_CKH'end [Product]
@@ -68,24 +76,28 @@ select EOMONTH([từ ngày]) [Rpt_date],
 	  ,sum([Chi phí thực tế]* isnull([DTNB quy đổi]/nullif([DTNB quy đổi],0),1)) [Chi lãi]
 		,sum([DTNB quy đổi]) [Thu lãi]
 
-from BI_DATA.dbo.FTP_FD a
-left join 
-(SELECT * FROM MAPPING.dbo.SP_dacthu WHERE LoaiSp = 'FD') b
-on a.[tên sản phẩm] = b.[TenSP]
-left join (select distinct [core_name], [sub_product] from MAPPING.dbo.Sanpham_KHCN where [Product] ='CKH') sp
-on a.[Tên sản phẩm] = sp.Core_Name
-left join [MAPPING].[dbo].[DS_DVKD] dv
+		from BI_DATA.dbo.FTP_FD a
+		left join 
+		(SELECT * FROM MAPPING.dbo.SP_dacthu WHERE LoaiSp = 'FD') b
+		on a.[tên sản phẩm] = b.[TenSP]
+		left join (select distinct [core_name], [sub_product] from MAPPING.dbo.Sanpham_KHCN where [Product] ='CKH') sp
+		on a.[Tên sản phẩm] = sp.Core_Name
+		left join [MAPPING].[dbo].[DS_DVKD] dv
 		on a.[Mã đơn vị] = dv.Ma_DVKD
 
-where a.[Kỳ hạn (KKH/CKH)] = 'CKH' and a.[Trạng thái cầm cố] <> 'Y' and  a.[Tên khối khách hàng] = N'Khối KHCN' and EOMONTH([từ ngày]) >= '2022-01-31'
-group by  EOMONTH([từ ngày]),
-	case when ( [tên sản phẩm] like N'%Chứng chỉ%' or [tên sản phẩm] like N'%Chung chi%'  or [tên sản phẩm] like N'%CCTG%' ) then 'GTCG'
-	  else 'TG_CKH'end 
-	  , sp.Sub_Product
-	 , case when DATEDIFF(month,[ngày mở], [ngày đến hạn]) <= 12 then N'Ngắn hạn'
-			when  DATEDIFF(month,[ngày mở], [ngày đến hạn]) > 5*12	then N'Dài hạn' else  N'Trung hạn'	end
-	, dv.Vùng, dv.Ten_DVKD
-	,case when [Tên sản phẩm] in (N'CHUNG CHI TIEN GUI CUOI KY - THANG',N'IB DAI CHUNG TRA LAI CUOI KY - TUAN',N'IB DAI CHUNG TRA LAI CUOI KY-THANG',N'IB DAI CHUNG TRA LAI QUY',N'IB DAI CHUNG TRA LAI THANG',N'IB LAI SUAT BAC THANG CA NHAN',N'TG DAI CHUNG TRA LAI CUOI KY',N'TG DAI CHUNG TRA LAI THANG',N'TG KY QUY THANH LAP DOANH NGHIEP',N'TG LAI SUAT BAC THANG 6+ CA NHAN',N'TG trả lãi trước địnhkỳ(discounted)',
-									N'TIEN GUI AN THINH',N'TIEN GUI AN THINH (ROLLED)',N'TIEN GUI NHU Y',N'TIET KIEM DU THUONG CA NHAN',N'TIET KIEM DU THUONG CA NHAN (ROLL)',N'Tiết kiệm Đại chúng trả lãi trước',N'Tiết kiệm tích luỹ',N'TK DAI CHUNG TRA LAI CUOI KY - TUAN',N'TK DAI CHUNG TRA LAI CUOI KY-THANG',N'TK DAI CHUNG TRA LAI QUY',N'TK DAI CHUNG TRA LAI THANG',N'TK KY QUY DU HOC',N'TK LAI SUAT BAC THANG CA NHAN'
-									,N'TIEN GUI THAP SANG NIEM TIN',N'TK LAI SUAT BAC THANG DOANH NGHIEP',N'TIEN GUI DA KY HAN'	,N'Tiền gửi trung niên',N'Chứng chỉ tiền gửi trả lãi trước',N'Tiền gửi Yêu thương cho con',N'CCTG TRA LAI HANG THANG',N'TIEN GUI BAO TOAN LAI SUAT',N'TIEN GUI TRA LAI CUOI KY',N'TG DAI CHUNG TRA LAI QUY',N'TIEN GUI TRA LAI THANG',N'TIEN GUI TRA LAI QUY',N'TK KY QUY DU HOC (ROLLED)')
-									then N'ĐK KHCN' else 'None' end
+		where a.[Kỳ hạn (KKH/CKH)] = 'CKH' and a.[Trạng thái cầm cố] <> 'Y' and  a.[Tên khối khách hàng] = N'Khối KHCN' and EOMONTH([từ ngày]) >= '2022-01-31'
+		group by  EOMONTH([từ ngày]),
+			case when ( [tên sản phẩm] like N'%Chứng chỉ%' or [tên sản phẩm] like N'%Chung chi%'  or [tên sản phẩm] like N'%CCTG%' ) then 'GTCG'
+			  else 'TG_CKH'end 
+			  , sp.Sub_Product
+			 , case when DATEDIFF(month,[ngày mở], [ngày đến hạn]) <= 12 then N'Ngắn hạn'
+					when  DATEDIFF(month,[ngày mở], [ngày đến hạn]) > 5*12	then N'Dài hạn' else  N'Trung hạn'	end
+			, dv.Vùng, dv.Ten_DVKD
+			,case when [Tên sản phẩm] in (N'CHUNG CHI TIEN GUI CUOI KY - THANG',N'IB DAI CHUNG TRA LAI CUOI KY - TUAN',N'IB DAI CHUNG TRA LAI CUOI KY-THANG',N'IB DAI CHUNG TRA LAI QUY',N'IB DAI CHUNG TRA LAI THANG',N'IB LAI SUAT BAC THANG CA NHAN',N'TG DAI CHUNG TRA LAI CUOI KY',N'TG DAI CHUNG TRA LAI THANG',N'TG KY QUY THANH LAP DOANH NGHIEP',N'TG LAI SUAT BAC THANG 6+ CA NHAN',N'TG trả lãi trước địnhkỳ(discounted)',
+											N'TIEN GUI AN THINH',N'TIEN GUI AN THINH (ROLLED)',N'TIEN GUI NHU Y',N'TIET KIEM DU THUONG CA NHAN',N'TIET KIEM DU THUONG CA NHAN (ROLL)',N'Tiết kiệm Đại chúng trả lãi trước',N'Tiết kiệm tích luỹ',N'TK DAI CHUNG TRA LAI CUOI KY - TUAN',N'TK DAI CHUNG TRA LAI CUOI KY-THANG',N'TK DAI CHUNG TRA LAI QUY',N'TK DAI CHUNG TRA LAI THANG',N'TK KY QUY DU HOC',N'TK LAI SUAT BAC THANG CA NHAN'
+											,N'TIEN GUI THAP SANG NIEM TIN',N'TK LAI SUAT BAC THANG DOANH NGHIEP',N'TIEN GUI DA KY HAN'	,N'Tiền gửi trung niên',N'Chứng chỉ tiền gửi trả lãi trước',N'Tiền gửi Yêu thương cho con',N'CCTG TRA LAI HANG THANG',N'TIEN GUI BAO TOAN LAI SUAT',N'TIEN GUI TRA LAI CUOI KY',N'TG DAI CHUNG TRA LAI QUY',N'TIEN GUI TRA LAI THANG',N'TIEN GUI TRA LAI QUY',N'TK KY QUY DU HOC (ROLLED)')
+										then N'ĐK KHCN' else 'None' end
+		) f
+	on (ab.Date = f.Rpt_date and ab.Group_product = f.Group_product and ab.Product = f.Product and ab.Sub_Product = f.Sub_Product
+			and ab.Vùng = f.Vùng and ab.Ten_DVKD = f.Ten_DVKD  and ab.[Kỳ hạn] = f.[Kỳ hạn] and ab.Condition = f.Condition)
+group by  ab.Date,ab.Group_product, ab.Product,ab.Sub_Product,ab.Vùng,ab.Ten_DVKD,ab.[Kỳ hạn], ab.Condition		
