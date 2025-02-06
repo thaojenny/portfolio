@@ -247,7 +247,7 @@ select [Date], 'Chovay' as [Group_product],
 
 ) th
 
-left join 
+full join 
 -------------------3.2. Thu thuần ------------------------
 (
 select EOMONTH([từ ngày]) [Rpt_date],
