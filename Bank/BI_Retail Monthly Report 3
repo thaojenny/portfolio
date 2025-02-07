@@ -2,6 +2,9 @@
 ---------------1.TG_CKH & GTCG--------------------
 ----------------1.1. Quy mô------------------
 
+select *
+into dbo.JVungnLS
+from (
 select ab.Date,ab.Group_product, ab.Product,ab.Sub_Product,ab.Vùng,ab.Ten_DVKD,ab.[Kỳ hạn], ab.Condition,
 		sum([Số dư BQ]) [SDBQ], sum([Thu lãi]) [Thu lãi], sum([chi lãi]) [Chi lãi]
 from (
@@ -27,7 +30,7 @@ select [Date], 'Huydong' as [Group_product],
 							then N'ĐK KHCN' else 'None' end [Condition],
 			sum([Số dư BQ quy đổi]) [SD]
 			
-		 from [BI_DATA].[dbo].[DP_104] d
+		 from (select * from [BI_DATA].[dbo].[DP_104] where eomonth([date_in])>= '2022-01-31')d
 		
 		left join [MAPPING].[dbo].[DS_DVKD] dv
 		on d.[mã chi nhánh] = dv.Ma_DVKD
@@ -38,7 +41,7 @@ select [Date], 'Huydong' as [Group_product],
 		 left join (select distinct [Core_Name], [Sub_Product]  from [MAPPING].[dbo].[Sanpham_KHCN] where [Product] ='CKH') sp
 		 on d.[Tên Sản phẩm] = sp.Core_Name
 		
-		 where eomonth([date_in]) >= '2022-01-31' and [Cầm cố STK SLH] <> 'Y' and p.[NhomKH] is not null and s.[LoaiSp] is null 
+		 where  [Cầm cố STK SLH] <> 'Y' and p.[NhomKH] is not null and s.[LoaiSp] is null 
 		 group by eomonth([date_in]),d.[kỳ hạn],
 				case when ( [tên sản phẩm] like N'%Chứng chỉ%' or [tên sản phẩm] like N'%Chung chi%'  or [tên sản phẩm] like N'%CCTG%' ) then 'GTCG'
 				else 'TG_CKH'end, 
@@ -66,7 +69,8 @@ select [Date], 'Huydong' as [Group_product],
 		case when ( [tên sản phẩm] like N'%Chứng chỉ%' or [tên sản phẩm] like N'%Chung chi%'  or [tên sản phẩm] like N'%CCTG%' ) then 'GTCG'
 	  else 'TG_CKH'end [Product]
 	  , sp.Sub_Product
-	  , dv.Vùng, dv.Ten_DVKD
+	  , coalesce(dv.Vùng,N'Vùng 2') [Vùng]
+		, coalesce(dv.Ten_DVKD, N'Hội sở') [Ten_DVKD]
 	    , case when DATEDIFF(month,[ngày mở], [ngày đến hạn]) <= 12 then N'Ngắn hạn'
 			when  DATEDIFF(month,[ngày mở], [ngày đến hạn]) > 5*12	then N'Dài hạn' else  N'Trung hạn'	end [Kỳ hạn]
 			, case when [Tên sản phẩm] in (N'CHUNG CHI TIEN GUI CUOI KY - THANG',N'IB DAI CHUNG TRA LAI CUOI KY - TUAN',N'IB DAI CHUNG TRA LAI CUOI KY-THANG',N'IB DAI CHUNG TRA LAI QUY',N'IB DAI CHUNG TRA LAI THANG',N'IB LAI SUAT BAC THANG CA NHAN',N'TG DAI CHUNG TRA LAI CUOI KY',N'TG DAI CHUNG TRA LAI THANG',N'TG KY QUY THANH LAP DOANH NGHIEP',N'TG LAI SUAT BAC THANG 6+ CA NHAN',N'TG trả lãi trước địnhkỳ(discounted)',
@@ -76,7 +80,7 @@ select [Date], 'Huydong' as [Group_product],
 	  ,sum([Chi phí thực tế]* isnull([DTNB quy đổi]/nullif([DTNB quy đổi],0),1)) [Chi lãi]
 		,sum([DTNB quy đổi]) [Thu lãi]
 
-		from BI_DATA.dbo.FTP_FD a
+		from (select * from BI_DATA.dbo.FTP_FD where EOMONTH([từ ngày])>= '2022-01-31')a
 		left join 
 		(SELECT * FROM MAPPING.dbo.SP_dacthu WHERE LoaiSp = 'FD') b
 		on a.[tên sản phẩm] = b.[TenSP]
@@ -90,9 +94,10 @@ select [Date], 'Huydong' as [Group_product],
 			case when ( [tên sản phẩm] like N'%Chứng chỉ%' or [tên sản phẩm] like N'%Chung chi%'  or [tên sản phẩm] like N'%CCTG%' ) then 'GTCG'
 			  else 'TG_CKH'end 
 			  , sp.Sub_Product
-			 , case when DATEDIFF(month,[ngày mở], [ngày đến hạn]) <= 12 then N'Ngắn hạn'
+			, coalesce(dv.Vùng,N'Vùng 2') 
+		, coalesce(dv.Ten_DVKD, N'Hội sở')
+		 , case when DATEDIFF(month,[ngày mở], [ngày đến hạn]) <= 12 then N'Ngắn hạn'
 					when  DATEDIFF(month,[ngày mở], [ngày đến hạn]) > 5*12	then N'Dài hạn' else  N'Trung hạn'	end
-			, dv.Vùng, dv.Ten_DVKD
 			,case when [Tên sản phẩm] in (N'CHUNG CHI TIEN GUI CUOI KY - THANG',N'IB DAI CHUNG TRA LAI CUOI KY - TUAN',N'IB DAI CHUNG TRA LAI CUOI KY-THANG',N'IB DAI CHUNG TRA LAI QUY',N'IB DAI CHUNG TRA LAI THANG',N'IB LAI SUAT BAC THANG CA NHAN',N'TG DAI CHUNG TRA LAI CUOI KY',N'TG DAI CHUNG TRA LAI THANG',N'TG KY QUY THANH LAP DOANH NGHIEP',N'TG LAI SUAT BAC THANG 6+ CA NHAN',N'TG trả lãi trước địnhkỳ(discounted)',
 											N'TIEN GUI AN THINH',N'TIEN GUI AN THINH (ROLLED)',N'TIEN GUI NHU Y',N'TIET KIEM DU THUONG CA NHAN',N'TIET KIEM DU THUONG CA NHAN (ROLL)',N'Tiết kiệm Đại chúng trả lãi trước',N'Tiết kiệm tích luỹ',N'TK DAI CHUNG TRA LAI CUOI KY - TUAN',N'TK DAI CHUNG TRA LAI CUOI KY-THANG',N'TK DAI CHUNG TRA LAI QUY',N'TK DAI CHUNG TRA LAI THANG',N'TK KY QUY DU HOC',N'TK LAI SUAT BAC THANG CA NHAN'
 											,N'TIEN GUI THAP SANG NIEM TIN',N'TK LAI SUAT BAC THANG DOANH NGHIEP',N'TIEN GUI DA KY HAN'	,N'Tiền gửi trung niên',N'Chứng chỉ tiền gửi trả lãi trước',N'Tiền gửi Yêu thương cho con',N'CCTG TRA LAI HANG THANG',N'TIEN GUI BAO TOAN LAI SUAT',N'TIEN GUI TRA LAI CUOI KY',N'TG DAI CHUNG TRA LAI QUY',N'TIEN GUI TRA LAI THANG',N'TIEN GUI TRA LAI QUY',N'TK KY QUY DU HOC (ROLLED)')
@@ -101,10 +106,12 @@ select [Date], 'Huydong' as [Group_product],
 	on (ab.Date = f.Rpt_date and ab.Group_product = f.Group_product and ab.Product = f.Product and ab.Sub_Product = f.Sub_Product
 			and ab.Vùng = f.Vùng and ab.Ten_DVKD = f.Ten_DVKD  and ab.[Kỳ hạn] = f.[Kỳ hạn] and ab.Condition = f.Condition)
 group by  ab.Date,ab.Group_product, ab.Product,ab.Sub_Product,ab.Vùng,ab.Ten_DVKD,ab.[Kỳ hạn], ab.Condition		
-
+)abcd
 union all
 ------------------2. TG_KKH-------------------
 -------------2.1. Quy mô -------------------
+select *
+from (
 select ab.[Date],	ab.[Group_product],ab.[Product],	
 		ab.[Sub_Product],		ab.[Vùng],			
 		ab.[Ten_DVKD],	
@@ -132,14 +139,14 @@ select  [Date],'Huydong' as [Group_product],
 				case when [Mã sp] in ('1001','1022','1020','1028','1021','1019','1027','1003','1002','1023') then N'ĐK KHCN' else 'None' end [Condition],
 			sum([Số dư BQ quy đổi]) [SD]
 	
-		 from [BI_DATA].[dbo].[AC_101] d
+		 from (select * from [BI_DATA].[dbo].[AC_101] where eomonth([date_in]) >= '2022-01-31') d
 		left join [MAPPING].[dbo].[DS_DVKD] dv
 		on d.[mã chi nhánh] = dv.Ma_DVKD
 		 left join (select * from [MAPPING].[dbo].[PhanKhuc] where [PhanKhuc] = '1.KHCN') p
 		 on d.[Nhóm khách hàng] = p.[NhomKH]
 		 left join (select * from [MAPPING].[dbo].[SP_dacthu] where [LoaiSp] ='CASA') s
 		 on d.[Tên sản Phẩm] = s.TenSP
-		 where EOMONTH([date_in]) >= '2022-01-31'  and p.[NhomKH] is not null and s.[LoaiSp] is null
+		 where p.[NhomKH] is not null and s.[LoaiSp] is null
 		 group by  eomonth([date_in]) ,[Mã KH],  
 				
 						dv.Vùng, dv.[ten_DVKD]
@@ -155,25 +162,26 @@ select EOMONTH([từ ngày]) [Rpt_date],
 		'Huydong' as [Group_product],
 	 'TG_KKH'as [Product]
 	  , 'CASA' as [Sub_Product]
-	, dv.Vùng
-	, dv.Ten_DVKD
+	, coalesce(dv.Vùng,N'Vùng 2') [Vùng]
+		, coalesce(dv.Ten_DVKD, N'Hội sở') [Ten_DVKD]
 	  ,  '0M' as [Kỳ hạn]
 	, case when [Mã sản phẩm] in ('1001','1022','1020','1028','1021','1019','1027','1003','1002','1023') then N'ĐK KHCN' else 'None' end [Condition]
 
 	  ,sum([Chi phí thực tế]* isnull([DTNB quy đổi]/nullif([DTNB quy đổi],0),1)) [Chi lãi]
 	,sum([DTNB quy đổi]) [Thu lãi]
 
-from BI_DATA.dbo.FTP_CASA a
+from (select * from BI_DATA.dbo.FTP_CASA where EOMONTH([từ ngày]) >= '2022-01-31' )a
 left join 
 (SELECT * FROM MAPPING.dbo.SP_dacthu WHERE LoaiSp = 'CASA') b
 on a.[tên sản phẩm] = b.[TenSP]
 left join [MAPPING].[dbo].[DS_DVKD] dv
 		on a.[Mã đơn vị ]= dv.Ma_DVKD
 
-where  a.[Tên khối khách hàng] = N'Khối KHCN' and b.LoaiSp is null and eomonth([từ ngày]) >= '2022-01-31'
+where  a.[Tên khối khách hàng] = N'Khối KHCN' and b.LoaiSp is null 
 group by  EOMONTH([từ ngày]) 
 		
-	, dv.Vùng,dv.Ten_DVKD
+		, coalesce(dv.Vùng,N'Vùng 2') 
+		, coalesce(dv.Ten_DVKD, N'Hội sở')
 	,case when [Mã sản phẩm] in ('1001','1022','1020','1028','1021','1019','1027','1003','1002','1023') then N'ĐK KHCN' else 'None' end
 
 	) f
@@ -181,14 +189,19 @@ on (ab.Date = f.Rpt_date and ab.Group_product = f.Group_product and ab.Product =
 	and ab.sub_product = f.Sub_Product and ab.Vùng = f.Vùng and ab.Ten_DVKD = f.Ten_DVKD
 	and ab.[Kỳ hạn] = f.[Kỳ hạn] and ab.Condition = f.Condition)
 group by  ab.[Date],	ab.[Group_product],ab.[Product],	
-		ab.[Sub_Product],		ab.[Vùng],			
-		ab.[Ten_DVKD],	
-		ab.[Kỳ hạn],
+		ab.[Sub_Product]
+		,  ab.[Vùng]
+		, ab.[Ten_DVKD]
+		,ab.[Kỳ hạn],
 		ab.[condition]
+)abcd
+
 
 union all
 -----------------------3. Tín dụng --------------------
 -------------3.1. Quy mô-----------------
+select *
+from (
 select th.[Date],th.[Group_product],th.[Product],
 		th.[Sub_product],th.[Vùng],
 		th.[Ten_DVKD],th.[Kỳ hạn],
@@ -217,7 +230,7 @@ select [Date], 'Chovay' as [Group_product],
 				case when [Tên sp] in (N'Cho vay đầu tư kinh doanh BĐS',N'Cho vay hạn mức khác',N'Cho vay tái tài trợ dành cho KHCN',N'Cho vay tiêu dùng có TSĐB',N'Cho vay từng lần khác – KHCN',N'Cho vay tài trợ vốn SXKD đối với CN,HKD',N'Cho vay từng lần - K.KHDN',N'Cho vay KHCN mua, xây, sửa nhà',N'Cho vay hạn mức - K.KHDN',N'Cho vay KHCN mua ô tô',N'CV thấu chi chuyên dụng',N'Cho vay thấu chi CBNV',N'CV thau chi thong thuong',N'Cho vay thấu chi CBNV TT39',N'Cho vay thấu chi thong thuong TT39',N'CV thấu chi chuyên dụng TT39',N'Cho vay thấu chi – Quá hạn',N'Cho vay trả góp')
 						then N'ĐK KHCN' else 'None' end [Condition],
 			sum([Số dư BQ qui đổi]) [SD]
-		 from [BI_DATA].[dbo].[LD_104] d
+		 from (select * from [BI_DATA].[dbo].[LD_104] where eomonth([Date in]) >= '2022-01-31')d
 		left join [MAPPING].[dbo].[DS_DVKD] dv
 		on d.[mã chi nhánh GD] = dv.Ma_DVKD
 		 left join (select * from [MAPPING].[dbo].[PhanKhuc] where [PhanKhuc] = '1.KHCN') p
@@ -226,7 +239,7 @@ select [Date], 'Chovay' as [Group_product],
 		 on d.[Tên SP] = s.TenSP
 		 left join (select distinct [Core_Name], [Sub_Product]  from [MAPPING].[dbo].[Sanpham_KHCN] where [Product] ='CV') sp
 		 on d.[Tên SP] = sp.Core_Name
-		 where  eomonth([Date in])>= '2022-01-31' and [Mã chi nhánh GD] <> 'VN0010001' and p.[NhomKH] is not null and s.[LoaiSp] is null
+		 where  [Mã chi nhánh GD] <> 'VN0010001' and p.[NhomKH] is not null and s.[LoaiSp] is null
 		
 		group by 	 eomonth([Date in]) ,d.[kỳ hạn], 
 				case when d.[Tên SP] like N'%thấu chi%' or d.[Tên SP] like N'%Thau chi%' then 'OD'
@@ -238,16 +251,16 @@ select [Date], 'Chovay' as [Group_product],
   group by  [Date], 
 		[Product],
 		[Sub_product],
-		case when left([kỳ hạn],3) <=12 then N'Ngắn hạn'
+		[Vùng],
+			[Ten_DVKD],
+			case when left([kỳ hạn],3) <=12 then N'Ngắn hạn'
 			when left([kỳ hạn],3) > 5*12 then N'Dài hạn'
 			else N'Trung hạn' end ,
-			[Vùng],
-			[Ten_DVKD],
 			[condition]
 
 ) th
 
-full join 
+full outer join 
 -------------------3.2. Thu thuần ------------------------
 (
 select EOMONTH([từ ngày]) [Rpt_date],
@@ -255,8 +268,8 @@ select EOMONTH([từ ngày]) [Rpt_date],
 		
 	 case when a.[Tên Sản phẩm] like N'%thấu chi%' or [Tên sản phẩm] like N'%Thau chi%' then 'OD'
 	  else 'LD' end as [Product]
-	  	, dv.Vùng
-		, dv.Ten_DVKD	
+	  	, coalesce(dv.Vùng,N'Vùng 2') [Vùng]
+		, coalesce(dv.Ten_DVKD, N'Hội sở') [Ten_DVKD]
 	 , sp.Sub_Product
 	   ,  case when left(ld.[kỳ hạn],3) <=12 then N'Ngắn hạn'
 			when left(ld.[kỳ hạn],3) > 5*12 then N'Dài hạn'
@@ -267,7 +280,7 @@ select EOMONTH([từ ngày]) [Rpt_date],
 	  ,sum([CPNB quy đổi])  [Chi lãi]
 ,sum([DTTT]* isnull([CPNB quy đổi]/nullif([CPNB nguyên tệ],0),1)) [Thu lãi]
 
-from BI_DATA.dbo.FTP_LD a
+from (select * from BI_DATA.dbo.FTP_LD where EOMONTH([từ ngày])>= '2022-01-31')a
 left join 
 (SELECT * FROM MAPPING.dbo.SP_dacthu WHERE LoaiSp = 'Lending') b
 on a.[tên sản phẩm] = b.[TenSP]
@@ -286,19 +299,17 @@ left join (select RPT_DATE , [số khế ước], [kỳ hạn], [nhóm kh],
 			) ld
 on  CONVERT(NVARCHAR(8),EOMONTH(a.[Từ ngày],0),112) = ld.RPT_DATE and a.[Số khế ước] = ld.[Số khế ước] and ld.[rank] = 1
 
-where   b.LoaiSp is null and [Mã đơn vị] <> 'VN0010001' and ld.[Nhóm KH] is not null and year([từ ngày]) >= 2022
+where   b.LoaiSp is null and [Mã đơn vị] <> 'VN0010001' and ld.[Nhóm KH] is not null 
 group by  EOMONTH([từ ngày]),
 		
 	 case when a.[Tên Sản phẩm] like N'%thấu chi%' or [Tên sản phẩm] like N'%Thau chi%' then 'OD'
 	  else 'LD' end 
 	  , sp.Sub_Product
-	, dv.Ten_DVKD
-	  ,  case when left(ld.[kỳ hạn],3) <=12 then N'Ngắn hạn'
+	 ,  coalesce(dv.Vùng,N'Vùng 2')
+		, coalesce(dv.Ten_DVKD, N'Hội sở') 
+	 ,  case when left(ld.[kỳ hạn],3) <=12 then N'Ngắn hạn'
 			when left(ld.[kỳ hạn],3) > 5*12 then N'Dài hạn'
 			else N'Trung hạn' end 
-	
-	, dv.Vùng
-
 	, case when [Tên sản phẩm] in (N'Cho vay đầu tư kinh doanh BĐS',N'Cho vay hạn mức khác',N'Cho vay tái tài trợ dành cho KHCN',N'Cho vay tiêu dùng có TSĐB',N'Cho vay từng lần khác – KHCN',N'Cho vay tài trợ vốn SXKD đối với CN,HKD',N'Cho vay từng lần - K.KHDN',N'Cho vay KHCN mua, xây, sửa nhà',N'Cho vay hạn mức - K.KHDN',N'Cho vay KHCN mua ô tô',N'CV thấu chi chuyên dụng',N'Cho vay thấu chi CBNV',N'CV thau chi thong thuong',N'Cho vay thấu chi CBNV TT39',N'Cho vay thấu chi thong thuong TT39',N'CV thấu chi chuyên dụng TT39',N'Cho vay thấu chi – Quá hạn',N'Cho vay trả góp')
 						then N'ĐK KHCN' else 'None' end
 ) e
@@ -308,3 +319,4 @@ group by th.[Date],th.[Group_product],th.[Product],
 		th.[Sub_product],th.[Vùng],
 		th.[Ten_DVKD],th.[Kỳ hạn],
 		th.[condition]
+	)jenny
