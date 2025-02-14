@@ -173,3 +173,48 @@ ORDER BY [Bankcode];';
 
 -- Thực thi câu lệnh SQL động
 EXEC sp_executesql @sql;
+
+----------------------------order column of updated query table---------------------------------------------------------------
+DECLARE 
+  @table_id NVARCHAR(MAX) = (select OBJECT_ID('BCTC_bank.dbo.sheet1')), 
+  @key_column    NVARCHAR(MAX) = N'[TTThuyetMinh]',
+  @colNames  NVARCHAR(MAX) = N'', 
+  @assetNames nvarchar(max) = N'',
+  @sql       NVARCHAR(MAX) = N'';
+
+
+select @colNames = string_agg(quotename([name]) ,',') 
+from sys.columns
+where column_id >2 and  object_id = @table_id;
+
+SELECT @assetNames = STRING_AGG(QUOTENAME([TTThuyetMinh]), ',') 
+FROM (SELECT distinct top 100 percent [stt], [TTThuyetMinh] FROM BCTC_bank.dbo.sheet1 order by [stt] ) AS assetList;
+
+
+SET @sql = 
+
+N'INSERT INTO dbo.TTThuyetMinh ([Bankcode], [Year], [Quarter], [BankName], ' + @assetNames + ')
+select [Bankcode], 
+		RIGHT([Bankcode], 4) AS [Year], 
+    CASE 
+        WHEN LEN([Bankcode]) = 7 THEN ''A''
+        ELSE SUBSTRING([Bankcode], 4, 2) 
+    END AS [Quarter], 
+    LEFT([Bankcode], 3) AS [BankName]
+		,' + @assetNames + '
+
+from (' +N'
+SELECT [TTThuyetMinh], [Bankcode], AMT
+FROM
+(SELECT  * FROM BCTC_bank.dbo.sheet1 ) AS t
+UNPIVOT
+(AMT FOR [Bankcode] IN ('+@ColNames+')) AS up
+) unpivot_table
+pivot'+N'
+(
+ SUM(AMT) FOR [TTThuyetMinh] IN (' + @assetNames + ')
+ ) pivot_table
+order by [Bankcode];'
+ ;
+
+EXEC (@sql)
