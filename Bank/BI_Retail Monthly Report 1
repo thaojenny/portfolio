@@ -557,9 +557,9 @@ select EOMONTH([từ ngày]) [Rpt_date],
 	 case when a.[Tên Sản phẩm] like N'%thấu chi%' or [Tên sản phẩm] like N'%Thau chi%' then 'OD'
 	  else 'LD' end as [Product]
 	  , sp.Sub_Product
-	  , ld.[Kỳ hạn] as  [Period 1-month]
-	  ,  case when left(ld.[kỳ hạn],3) <=12 then N'Ngắn hạn'
-			when left(ld.[kỳ hạn],3) > 5*12 then N'Dài hạn'
+	  , left(ld.[Kỳ hạn],3) as  [Period 1-month]
+	  ,  case when datediff(month,[ngày mở],[ngày đến hạn]) <=12 then N'Ngắn hạn'
+			when datediff(month,[ngày mở],[ngày đến hạn]) > 5*12 then N'Dài hạn'
 			else N'Trung hạn' end  [Period 2]
 	  , case when c.[loại khách hàng] =N'Nhân viên nội bộ' then N'NV nội bộ'
 						else N'Khách hàng' end [Customer Type]
@@ -609,9 +609,9 @@ group by  EOMONTH([từ ngày]),
 	  else 'LD' end 
 	  , sp.Sub_Product
 	  , ld.[Kỳ hạn] 
-	  ,  case when left(ld.[kỳ hạn],3) <=12 then N'Ngắn hạn'
-			when left(ld.[kỳ hạn],3) > 5*12 then N'Dài hạn'
-			else N'Trung hạn' end 
+	  ,  case when datediff(month,[ngày mở],[ngày đến hạn]) <=12 then N'Ngắn hạn'
+			when datediff(month,[ngày mở],[ngày đến hạn]) > 5*12 then N'Dài hạn'
+			else N'Trung hạn' end
 	  , case when c.[loại khách hàng] =N'Nhân viên nội bộ' then N'NV nội bộ'
 						else N'Khách hàng' end 
 	,case when c.[tuổi KH] < 23 then N'Dưới 23 tuổi'
