@@ -667,7 +667,7 @@ group by [Rpt_date], m.Vùng, sp.[Sub_Product],
 
 union all
 ---------------Giải ngân mới (Cho vay)----------------------
-SELECT EOMONTH([ngày giải ngân]) [Rpt_date], 'Huydong' as [Group], m.Vùng, sp.Sub_Product, [Kỳ hạn],  sum([gốc vay giải ngân])/1e9 [AMT]
+SELECT EOMONTH([ngày giải ngân]) [Rpt_date], 'Chovay' as [Group], m.Vùng, sp.Sub_Product, [Kỳ hạn],  sum([gốc vay giải ngân])/1e9 [AMT]
   FROM [BI_DATA].[dbo].[LD_101] l
   left join (select * from [MAPPING].[dbo].[PhanKhuc] where [PhanKhuc] ='1.KHCN') p
   on l.[Nhóm khách hàng] = p.NhomKH
